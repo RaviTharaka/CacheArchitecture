@@ -12,10 +12,10 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="236000001fs"></ZoomEndTime>
-      <Cursor1Time time="82200000fs"></Cursor1Time>
+      <ZoomEndTime time="236000002fs"></ZoomEndTime>
+      <Cursor1Time time="80701000fs"></Cursor1Time>
    </zoom_setting>
-   <WVObjectSize size="11" />
+   <WVObjectSize size="12" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
       <obj_property name="ObjectShortName">CLK</obj_property>
@@ -93,13 +93,13 @@
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/word_address" type="array">
-         <obj_property name="ElementShortName">word_address[0:0]</obj_property>
-         <obj_property name="ObjectShortName">word_address[0:0]</obj_property>
+         <obj_property name="ElementShortName">word_address[2:0]</obj_property>
+         <obj_property name="ObjectShortName">word_address[2:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/line_address" type="array">
-         <obj_property name="ElementShortName">line_address[9:0]</obj_property>
-         <obj_property name="ObjectShortName">line_address[9:0]</obj_property>
+         <obj_property name="ElementShortName">line_address[7:0]</obj_property>
+         <obj_property name="ObjectShortName">line_address[7:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/tag_address" type="array">
@@ -113,8 +113,8 @@
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/section_address" type="array">
-         <obj_property name="ElementShortName">section_address[2:0]</obj_property>
-         <obj_property name="ObjectShortName">section_address[2:0]</obj_property>
+         <obj_property name="ElementShortName">section_address[0:0]</obj_property>
+         <obj_property name="ObjectShortName">section_address[0:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>
@@ -153,8 +153,8 @@
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /DATA_IN" type="array">
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">DATA_IN[26:0]</obj_property>
-         <obj_property name="ObjectShortName">DATA_IN[26:0]</obj_property>
+         <obj_property name="ElementShortName">DATA_IN[20:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_IN[20:0]</obj_property>
          <obj_property name="label">data_in</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /RD_ENB" type="logic">
@@ -175,8 +175,8 @@
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /DATA_OUT" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">DATA_OUT[26:0]</obj_property>
-            <obj_property name="ObjectShortName">DATA_OUT[26:0]</obj_property>
+            <obj_property name="ElementShortName">DATA_OUT[20:0]</obj_property>
+            <obj_property name="ObjectShortName">DATA_OUT[20:0]</obj_property>
             <obj_property name="label">data_out_0</obj_property>
          </wvobject>
       </wvobject>
@@ -192,8 +192,8 @@
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[1].tag_memory /DATA_OUT" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">DATA_OUT[26:0]</obj_property>
-            <obj_property name="ObjectShortName">DATA_OUT[26:0]</obj_property>
+            <obj_property name="ElementShortName">DATA_OUT[20:0]</obj_property>
+            <obj_property name="ObjectShortName">DATA_OUT[20:0]</obj_property>
             <obj_property name="label">data_out_1</obj_property>
          </wvobject>
       </wvobject>
@@ -203,20 +203,20 @@
       <obj_property name="DisplayName">label</obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].line_memory /ADDR_R" type="array">
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">ADDR_R[9:0]</obj_property>
-         <obj_property name="ObjectShortName">ADDR_R[9:0]</obj_property>
+         <obj_property name="ElementShortName">ADDR_R[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ADDR_R[7:0]</obj_property>
          <obj_property name="label">read_address</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].line_memory /ADDR_W" type="array">
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">ADDR_W[9:0]</obj_property>
-         <obj_property name="ObjectShortName">ADDR_W[9:0]</obj_property>
+         <obj_property name="ElementShortName">ADDR_W[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ADDR_W[7:0]</obj_property>
          <obj_property name="label">write_address</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].line_memory /DATA_IN" type="array">
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">DATA_IN[63:0]</obj_property>
-         <obj_property name="ObjectShortName">DATA_IN[63:0]</obj_property>
+         <obj_property name="ElementShortName">DATA_IN[255:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_IN[255:0]</obj_property>
          <obj_property name="label">data_in</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[1].line_memory /RD_ENB" type="logic">
@@ -243,8 +243,8 @@
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].line_memory /DATA_OUT" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">DATA_OUT[63:0]</obj_property>
-            <obj_property name="ObjectShortName">DATA_OUT[63:0]</obj_property>
+            <obj_property name="ElementShortName">DATA_OUT[255:0]</obj_property>
+            <obj_property name="ObjectShortName">DATA_OUT[255:0]</obj_property>
             <obj_property name="label">data_out_0</obj_property>
          </wvobject>
       </wvobject>
@@ -260,8 +260,8 @@
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[1].line_memory /DATA_OUT" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">DATA_OUT[63:0]</obj_property>
-            <obj_property name="ObjectShortName">DATA_OUT[63:0]</obj_property>
+            <obj_property name="ElementShortName">DATA_OUT[255:0]</obj_property>
+            <obj_property name="ObjectShortName">DATA_OUT[255:0]</obj_property>
             <obj_property name="label">data_out_1</obj_property>
          </wvobject>
       </wvobject>
@@ -467,6 +467,19 @@
             <obj_property name="ElementShortName">FALSE</obj_property>
             <obj_property name="ObjectShortName">FALSE</obj_property>
          </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group330" type="group">
+      <obj_property name="label">Data From L2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/DATA_FROM_L2_VALID" type="logic">
+         <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/DATA_FROM_L2_READY" type="logic">
+         <obj_property name="ElementShortName">DATA_FROM_L2_READY</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_L2_READY</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group59" type="group">

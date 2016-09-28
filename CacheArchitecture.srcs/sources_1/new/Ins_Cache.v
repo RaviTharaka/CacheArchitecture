@@ -151,15 +151,16 @@ module Ins_Cache #(
     
     initial begin
         // Processor always starts with the zeroth instruction
-        pc = 5;   
+        pc = 4;   
         pc_del_1 = 72;
-        pc_del_2 = 133;
+        pc_del_2 = 132;
         tag_valid = 0;
         tag_match = 0;  
         tag_del_1 = 0;
         section_address_del_1 = 0;
         addr_to_L2_full = 0;
         ADDR_TO_L2 = 0;
+        DATA_FROM_L2_READY = 1;
     end
         
     always @(posedge CLK) begin
