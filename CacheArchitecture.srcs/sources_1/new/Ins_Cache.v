@@ -385,7 +385,7 @@ module Ins_Cache #(
     
     wire data_from_L2_buffer_ready;
     wire data_from_L2_buffer_valid;    
-    assign data_from_L2_buffer_ready = 0;                                                                   // Temproaray
+    assign data_from_L2_buffer_ready = stream_buffer_ready | 1'b0;                                          // Temporary
     
     // Control unit for Data_From_L2 buffer
     Data_From_L2_Buffer_Control #(
@@ -410,6 +410,8 @@ module Ins_Cache #(
     wire [clogb2(N + 1) - 1 : 0] lin_mem_data_in_sel; 
     wire [N - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full, stream_buf_reset;   
     wire [T - 1 : 0] stream_buf_section_sel; 
+    
+    wire stream_buffer_ready;
         
     // Set of stream buffers
     generate 
@@ -437,12 +439,21 @@ module Ins_Cache #(
         .N(N),
         .ADDR_WIDTH(TAG_WIDTH + LINE_ADDR_WIDTH)
     ) stream_buffer_control (
+        .DATA_FROM_L2_SRC(data_from_L2_src),
+        .DATA_FROM_L2_BUFFER_READY(stream_buffer_ready),
+        .STREAM_BUF_RESET(stream_buf_reset),
+        .STREAM_BUF_SECTION_SEL(stream_buf_section_sel),
         .STREAM_BUF_WR_ENB(stream_buf_wr_enb),              // These are all N wide buses
         .STREAM_BUF_RD_ENB(stream_buf_rd_enb),
         .STREAM_BUF_FULL(stream_buf_full),
         .STREAM_BUF_EMPTY(stream_buf_empty),
-        .STREAM_BUF_SECTION_SEL(stream_buf_section_sel),
-        .STREAM_BUF_RESET(stream_buf_reset)
+        .PREFETCH_QUEUE_WR_ENB(prefetch_queue_wr_enb),
+        .PREFETCH_QUEUE_FULL(prefetch_queue_full),
+        .PREFETCH_QUEUE_ADDR_IN(prefetch_queue_addr_in),
+        .PREFETCH_QUEUE_SRC_IN(prefetch_queue_src_in),
+        .PC_IN(),
+        .HIT(),
+        .HIT_COMMIT()
     );
     
     // Line RAM data in multiplexer
