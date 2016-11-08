@@ -67,7 +67,6 @@ module Ins_Cache_Control #(
         output CACHE_PIPE_ENB,                                              // Enable for cache's pipeline registers
         output PC_PIPE_ENB,                                                 // Enable for PC's pipeline registers
         output DATA_TO_PROC_ENB,                                            // Enable signal for the IR register
-        output [LINE_RAM_WIDTH / L2_BUS_WIDTH - 1 : 0] DATA_FROM_L2_ENB,    // Enable bus determining where the incoming L2 data is stored in the cache section buffer  
         
         // Tag memory control signals
         output TAG_MEM_RD_ENB,                                       // Common read enable for the tag memories
@@ -88,8 +87,6 @@ module Ins_Cache_Control #(
         input PREFETCH_QUEUE_FULL,
         
         // Ongoing queue control signals
-        output ONGOING_QUEUE_RD_ENB,
-        output ONGOING_QUEUE_WR_ENB,
         input ONGOING_QUEUE_EMPTY,
         input ONGOING_QUEUE_FULL,
         

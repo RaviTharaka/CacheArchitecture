@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 08/28/2016 12:03:06 PM
+// Create Date: 10/03/2016 07:31:38 PM
 // Design Name: 
-// Module Name: FIFO
+// Module Name: Stream_Buffer
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -15,21 +15,26 @@
 // 
 // Revision:
 // Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Additional Comments: This doesn't behave exactly like a FIFO. It always sends
+//                      out the memory at rd_pointer. Thus it takes two clock cycles
+//                      to become valid. So to get the value at time T, send rd_enb at T-2
+//                      and section_address at T-1
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module FIFO #(
+module Stream_Buffer #(
         // Primary parameters
-        parameter WIDTH = 8,
-        parameter DEPTH = 8,
+        parameter WIDTH = 128,               // Width of an entry in the stream buffer
+        parameter DEPTH = 4,                 // Number of cache blocks that can be stored within the buffer
+        parameter T = 1,                     // 2^T is the number of stream buffer lines per cache block
         
         // Calculated parameters
-        localparam ADDR_WIDTH = clogb2(DEPTH)
+        localparam ADDR_WIDTH = clogb2(DEPTH),
+        localparam BLOCK_SECTIONS = 1 << T
     ) (
         input CLK,
-        input RSTN,
+        input RESET,
+        input [T - 1 : 0] SECTION_SEL,
         input RD_ENB,
         input WR_ENB,
         input [WIDTH - 1 : 0] DATA_IN,
@@ -38,17 +43,18 @@ module FIFO #(
         output FULL
     );
     
-    reg [ADDR_WIDTH - 1 : 0] ele_count;
-    reg [ADDR_WIDTH - 1 : 0] rd_counter;
-    reg [ADDR_WIDTH - 1 : 0] wr_counter;
-        
-    reg [WIDTH - 1 : 0] memory [0 : DEPTH - 1];
+    reg [WIDTH - 1 : 0] memory [0 : DEPTH * BLOCK_SECTIONS - 1];
     
-    assign FULL = (ele_count == DEPTH - 1);
-    assign EMPTY = (ele_count == 0);
+    reg [ADDR_WIDTH - 1 : 0] rd_counter;
+    reg [ADDR_WIDTH + T - 1 : 0] wr_counter;
+        
+    reg [ADDR_WIDTH + T - 1 : 0] ele_count;
+    
+    assign FULL = (ele_count[ADDR_WIDTH + T - 1 : T] == DEPTH - 1);
+    assign EMPTY = (ele_count[ADDR_WIDTH + T - 1 : T] == 0);
     
     always @(posedge CLK) begin
-        if (!RSTN) begin
+        if (RESET) begin
             rd_counter <= 0;
             wr_counter <= 0;
             DATA_OUT <= 0;
@@ -56,8 +62,9 @@ module FIFO #(
         end else begin
             if (RD_ENB & !EMPTY) begin
                 rd_counter <= rd_counter + 1;
-                DATA_OUT <= memory[rd_counter];
             end
+            
+            DATA_OUT <= memory[{rd_counter, SECTION_SEL}];
             
             if (WR_ENB & !FULL) begin
                 wr_counter <= wr_counter + 1;
@@ -67,7 +74,9 @@ module FIFO #(
             if (!(RD_ENB & !EMPTY) & (WR_ENB & !FULL)) begin
                 ele_count <= ele_count + 1;
             end else if ((RD_ENB & !EMPTY) & !(WR_ENB & !FULL)) begin
-                ele_count <= ele_count - 1;
+                ele_count <= ele_count[ADDR_WIDTH + T - 1 : T] - 1;
+            end else if ((RD_ENB & !EMPTY) & (WR_ENB & !FULL)) begin
+                ele_count <= ele_count + 1 - (1 << T);
             end
         end
     end
@@ -88,12 +97,14 @@ module FIFO #(
 endmodule
 
 /*
-FIFO #(
+Stream_Buffer #(
     .DEPTH(),
-    .WIDTH()
-) your_instance_name (
+    .WIDTH(),
+    .T()
+) stream_buffer (
     .CLK(),
-    .RSTN(),
+    .RESET(),
+    .SECTION_SEL(),
     .WR_ENB(),
     .RD_ENB(),
     .FULL(),

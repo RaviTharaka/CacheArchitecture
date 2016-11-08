@@ -30,7 +30,6 @@ module Test_Ins_Cache ();
     parameter a = 1;                     // Associativity of the cache would be 2^a
     parameter T = 1;                     // Width to depth translation amount
     parameter W = 7;                     // Width of the L2-L1 bus would be 2^W
-        
     parameter L2_DELAY = 7;
     
     // Calculated parameters
@@ -63,7 +62,8 @@ module Test_Ins_Cache ();
         .B(B),
         .a(a),
         .T(T),
-        .W(W)
+        .W(W),
+        .L2_DELAY(L2_DELAY)
     ) uut (
         .CLK(CLK),
         .RSTN(RSTN),
@@ -89,11 +89,11 @@ module Test_Ins_Cache ();
     
     initial begin
         CLK = 0;
-        RSTN = 0;
+        RSTN = 1;
         PROC_READY = 0;
         BRANCH = 0;
         l2_ready = 1;
-        fileTrace = $fopen("K:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/trace.txt", "r");
+        fileTrace = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/trace.txt", "r");
         
         #106;
         RSTN = 1;

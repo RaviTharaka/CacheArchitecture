@@ -34,6 +34,7 @@ module Ins_Cache #(
         parameter L2_DELAY          = 7,                     // Delay of the second level of cache
         parameter N                 = 3,                     // Number of stream buffers
         parameter n                 = 3,                     // Depth of stream buffers would be 2^n
+        parameter p                 = 4,                     // Prefetch queue's depth is 2^p
         
         // Calculated parameters
         localparam BYTES_PER_WORD   = clogb2(DATA_WIDTH/8 - 1),
@@ -42,6 +43,7 @@ module Ins_Cache #(
         localparam BLOCK_SIZE       = 1 << B,
         localparam ASSOCIATIVITY    = 1 << a,
         localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
+        localparam LINE_ADDR_WIDTH  = S - a - B + T,
         localparam L2_BUS_WIDTH     = 1 << W,
         localparam BLOCK_SECTIONS   = 1 << T,
         
@@ -51,6 +53,7 @@ module Ins_Cache #(
         localparam TAG_RAM_WIDTH    = TAG_WIDTH + BLOCK_SECTIONS,
         localparam TAG_RAM_DEPTH    = 1 << (S - a - B),
         
+        localparam PREFETCH_QUEUE_DEPTH = 1 << p,
         localparam STREAM_BUF_DEPTH = 1 << n,
         localparam STREAM_SEL_BITS  = clogb2(N + 1),
         
@@ -74,7 +77,7 @@ module Ins_Cache #(
         // Input data bus from L2 cache        
         input [L2_BUS_WIDTH - 1 : 0] DATA_FROM_L2,
         input DATA_FROM_L2_VALID,
-        output reg DATA_FROM_L2_READY,
+        output DATA_FROM_L2_READY,
         
         // Output address bus to L2 cache
         output reg [ADDR_WIDTH - 2 - 1 : 0] ADDR_TO_L2,
@@ -126,43 +129,24 @@ module Ins_Cache #(
     reg [ADDR_WIDTH - 1 : 0] pc, pc_del_1, pc_del_2;
     
     // Sections of address bus
-    wire [BYTES_PER_WORD - 1 : 0]   byte_address        = pc[0                             +: BYTES_PER_WORD   ];
-    wire [B - T - 5      - 1 : 0]   word_address        = pc[BYTES_PER_WORD                +: (B - T - 5)      ];
-    wire [S - a - B + T  - 1 : 0]   line_address        = pc[(BYTES_PER_WORD + B - T - 5)  +: (S - a - B + T)  ];
-    wire [S - a - B      - 1 : 0]   tag_address         = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
-    wire [TAG_WIDTH      - 1 : 0]   tag                 = pc[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
-    wire [T              - 1 : 0]   section_address     = pc[(BYTES_PER_WORD + B - T - 5)  +: T                ];
+    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = pc[0                             +: BYTES_PER_WORD   ];
+    wire [B - T - 5       - 1 : 0]   word_address        = pc[BYTES_PER_WORD                +: (B - T - 5)      ];
+    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = pc[(BYTES_PER_WORD + B - T - 5)  +: (S - a - B + T)  ];
+    wire [S - a - B       - 1 : 0]   tag_address         = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+    wire [TAG_WIDTH       - 1 : 0]   tag                 = pc[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+    wire [T               - 1 : 0]   section_address     = pc[(BYTES_PER_WORD + B - T - 5)  +: T                ];
     
     // Address to L2 related wires
-    wire [ADDR_WIDTH - 2 - 1 : 0] addr_to_L2, prefetch_queue_addr_out, prefetch_queue_addr_in, addr_of_data;
+    wire [ADDR_WIDTH - 2 - 1 : 0] addr_to_L2;
+    wire [TAG_WIDTH + LINE_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
     wire [STREAM_SEL_BITS - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
     reg [STREAM_SEL_BITS - 1 : 0] addr_to_L2_src;
+    wire [STREAM_SEL_BITS - 1 : 0] data_from_L2_src;
     wire prefetch_queue_wr_enb, prefetch_queue_rd_enb, prefetch_queue_full, prefetch_queue_empty;
     wire ongoing_queue_wr_enb, ongoing_queue_rd_enb, ongoing_queue_full, ongoing_queue_empty;
         
-    // Line RAM refill path wires and registers
-    wire [LINE_RAM_WIDTH / L2_BUS_WIDTH - 1 : 0] data_from_L2_enb;
-    reg [LINE_RAM_WIDTH - 1 : 0] data_from_L2;
-    wire [LINE_RAM_WIDTH * N - 1 : 0] stream_buf_out;   
-    wire [clogb2(N + 1) - 1 : 0] lin_mem_data_in_sel; 
-    wire [N - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full;    
-        
     integer j;
-    
-    initial begin
-        // Processor always starts with the zeroth instruction
-        pc = 4;   
-        pc_del_1 = 72;
-        pc_del_2 = 132;
-        tag_valid = 0;
-        tag_match = 0;  
-        tag_del_1 = 0;
-        section_address_del_1 = 0;
-        addr_to_L2_full = 0;
-        ADDR_TO_L2 = 0;
-        DATA_FROM_L2_READY = 1;
-    end
-        
+         
     always @(posedge CLK) begin
         // Output regsiter for the cache architecture
         if (data_to_proc_enb) begin
@@ -279,15 +263,19 @@ module Ins_Cache #(
         .OUT(data_to_proc)
     );
         
+        
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - Deciding whether to refill                                 //
-    //////////////////////////////////////////////////////////////////////////////    
+    //////////////////////////////////////////////////////////////////////////////   
+     
     wire pc_del_1_equals_2 = (pc_del_2[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)] == pc_del_1[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)]);
     wire pc_del_0_equals_2 = (pc_del_2[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)] == pc[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)]);
+        
         
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - Address to L2 section                                      //
     //////////////////////////////////////////////////////////////////////////////
+    
     // The activation signal for the Address to L2 Section (from the main control unit)
     wire send_addr_to_L2;                                                                  
     
@@ -311,9 +299,9 @@ module Ins_Cache #(
     );
      
     // Low priority queue for storing prefetch requests
-    FIFO #(
-        .DEPTH(16),                                                                                       // Undecided as of yet
-        .WIDTH(ADDR_WIDTH - 2 + STREAM_SEL_BITS)
+    FIFO_FWFT #(
+        .DEPTH(PREFETCH_QUEUE_DEPTH),                                                                                      
+        .WIDTH(TAG_WIDTH + LINE_ADDR_WIDTH + STREAM_SEL_BITS)
     ) prefetch_queue (
         .CLK(CLK),
         .RSTN(RSTN),
@@ -333,7 +321,7 @@ module Ins_Cache #(
         .WIDTH(ADDR_WIDTH - 2)
     ) addr_to_L2_mux (
         .SELECT(addr_to_L2_sel),
-        .IN({pc_del_2[ADDR_WIDTH - 1 : 2], prefetch_queue_addr_out,  fetch_queue_out, fetch_queue_out}),
+        .IN({pc_del_2[ADDR_WIDTH - 1 : 2], {prefetch_queue_addr_out, {(B - T - 5){1'b0}}},  fetch_queue_out, fetch_queue_out}),
         .OUT(addr_to_L2)
     );
     
@@ -355,17 +343,19 @@ module Ins_Cache #(
         end
     end
     
+    assign ongoing_queue_wr_enb = ADDR_TO_L2_VALID & ADDR_TO_L2_READY;
     assign ADDR_TO_L2_VALID = addr_to_L2_full;
     assign addr_to_L2_ready = !addr_to_L2_full | ADDR_TO_L2_READY;
+    
     
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - L2 delay path                                              //
     //////////////////////////////////////////////////////////////////////////////
-             
+            
     // Queue for requests currently being serviced by the L2 cache
-    FIFO #(
+    FIFO_FWFT #(
         .DEPTH(L2_DELAY / L2_BURST + 2),                                                                                       
-        .WIDTH(ADDR_WIDTH - 2 + STREAM_SEL_BITS)
+        .WIDTH(STREAM_SEL_BITS)
     ) ongoing_L2_queue (
         .CLK(CLK),
         .RSTN(RSTN),
@@ -373,41 +363,87 @@ module Ins_Cache #(
         .RD_ENB(ongoing_queue_rd_enb),
         .FULL(ongoing_queue_full),
         .EMPTY(ongoing_queue_empty),
-        .DATA_IN({addr_to_L2_src, ADDR_TO_L2}),
-        .DATA_OUT({data_from_L2_src, addr_of_data})
+        .DATA_IN(addr_to_L2_src),
+        .DATA_OUT(data_from_L2_src)
     );
     
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - Data from L2 section                                       //
     //////////////////////////////////////////////////////////////////////////////
-        
+    
+    wire [LINE_RAM_WIDTH / L2_BUS_WIDTH - 1 : 0] data_from_L2_buffer_enb;
+    reg [LINE_RAM_WIDTH - 1 : 0] data_from_L2_buffer;
+    
+    // Buffer for storing data from L2, until they are read into the Stream Buffers or Line RAMs
     always @(posedge CLK) begin
-        // Input data register from the L2 cache
         for (j = 0; j < LINE_RAM_WIDTH / L2_BUS_WIDTH; j = j + 1) begin
-            if (data_from_L2_enb[j]) begin
-                data_from_L2[j * L2_BUS_WIDTH +: L2_BUS_WIDTH] <= DATA_FROM_L2;  
+            if (data_from_L2_buffer_enb[j]) begin
+                data_from_L2_buffer[j * L2_BUS_WIDTH +: L2_BUS_WIDTH] <= DATA_FROM_L2;  
             end
         end
     end
     
+    wire data_from_L2_buffer_ready;
+    wire data_from_L2_buffer_valid;    
+    assign data_from_L2_buffer_ready = 0;                                                                   // Temproaray
+    
+    // Control unit for Data_From_L2 buffer
+    Data_From_L2_Buffer_Control #(
+        .L2_BUS_WIDTH(L2_BUS_WIDTH),
+        .BUFFER_WIDTH(LINE_RAM_WIDTH)
+    ) data_from_L2_buffer_control (
+        .CLK(CLK),
+        .DATA_FROM_L2_READY(DATA_FROM_L2_READY),
+        .DATA_FROM_L2_VALID(DATA_FROM_L2_VALID),
+        .DATA_FROM_L2_BUFFER_READY(data_from_L2_buffer_ready),
+        .DATA_FROM_L2_BUFFER_VALID(data_from_L2_buffer_valid),
+        .DATA_FROM_L2_BUFFER_ENB(data_from_L2_buffer_enb),
+        .ONGOING_QUEUE_RD_ENB(ongoing_queue_rd_enb)
+    );
+    
+    
+    //////////////////////////////////////////////////////////////////////////////
+    // Refill path - Stream buffers and cache write units                       //
+    //////////////////////////////////////////////////////////////////////////////
+            
+    wire [LINE_RAM_WIDTH * N - 1 : 0] stream_buf_out;   
+    wire [clogb2(N + 1) - 1 : 0] lin_mem_data_in_sel; 
+    wire [N - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full, stream_buf_reset;   
+    wire [T - 1 : 0] stream_buf_section_sel; 
+        
     // Set of stream buffers
     generate 
         for (i = 0; i < N; i = i + 1) begin : STREAM_BUF_LOOP
-            FIFO #(
+            Stream_Buffer #(
                 .DEPTH(STREAM_BUF_DEPTH),
-                .WIDTH(LINE_RAM_WIDTH)
+                .WIDTH(LINE_RAM_WIDTH),
+                .T(T)
             ) stream_buffer (
                 .CLK(CLK),
-                .RSTN(RSTN),
+                .RESET(stream_buf_reset),
+                .SECTION_SEL(stream_buf_section_sel),
                 .WR_ENB(stream_buf_wr_enb[i]),
                 .RD_ENB(stream_buf_rd_enb[i]),
                 .FULL(stream_buf_full[i]),
                 .EMPTY(stream_buf_empty[i]),
-                .DATA_IN(data_from_L2),
+                .DATA_IN(data_from_L2_buffer),
                 .DATA_OUT(stream_buf_out[i * LINE_RAM_WIDTH +: LINE_RAM_WIDTH])
             );
+            
         end
     endgenerate
+    
+    Stream_Buffer_Control #(
+        .N(N),
+        .ADDR_WIDTH(TAG_WIDTH + LINE_ADDR_WIDTH)
+    ) stream_buffer_control (
+        .STREAM_BUF_WR_ENB(stream_buf_wr_enb),              // These are all N wide buses
+        .STREAM_BUF_RD_ENB(stream_buf_rd_enb),
+        .STREAM_BUF_FULL(stream_buf_full),
+        .STREAM_BUF_EMPTY(stream_buf_empty),
+        .STREAM_BUF_SECTION_SEL(stream_buf_section_sel),
+        .STREAM_BUF_RESET(stream_buf_reset)
+    );
     
     // Line RAM data in multiplexer
     Multiplexer #(
@@ -415,8 +451,14 @@ module Ins_Cache #(
         .WIDTH(LINE_RAM_WIDTH)
     ) lin_mem_data_in_mux (
         .SELECT(lin_mem_data_in_sel),
-        .IN({stream_buf_out, data_from_L2}),
+        .IN({stream_buf_out, data_from_L2_buffer}),
         .OUT(lin_mem_data_in)
+    );
+    
+    Refill_Control #(
+    
+    ) refill_control (
+        
     );
     
     //////////////////////////////////////////////////////////////////////////////
@@ -449,7 +491,6 @@ module Ins_Cache #(
         .PC_PIPE_ENB(pc_pipe_enb),                          // Enable for PC's pipeline registers
         .CACHE_PIPE_ENB(cache_pipe_enb),                    // Enable for cache's pipeline registers
         .DATA_TO_PROC_ENB(data_to_proc_enb),                // Enable for the IR register
-        .DATA_FROM_L2_ENB(data_from_L2_enb),                // Enable bus determining where the incoming L2 data is stored in the cache section buffer  
         // Memories
         .TAG_MEM_WR_ENB(tag_mem_wr_enb),                    // Individual write enables for the tag memories
         .TAG_MEM_RD_ENB(tag_mem_rd_enb),                    // Common read enable for the tag memories
@@ -462,16 +503,23 @@ module Ins_Cache #(
         // Queues
         .PREFETCH_QUEUE_WR_ENB(prefetch_queue_wr_enb),
         .PREFETCH_QUEUE_FULL(prefetch_queue_full),
-        .ONGOING_QUEUE_WR_ENB(ongoing_queue_wr_enb),
-        .ONGOING_QUEUE_RD_ENB(ongoing_queue_rd_enb),
         .ONGOING_QUEUE_FULL(ongoing_queue_full),
-        .ONGOING_QUEUE_EMPTY(ongoing_queue_empty),
-        .STREAM_BUF_WR_ENB(stream_buf_wr_enb),              // These are all N wide buses
-        .STREAM_BUF_RD_ENB(stream_buf_rd_enb),
-        .STREAM_BUF_FULL(stream_buf_full),
-        .STREAM_BUF_EMPTY(stream_buf_empty)
+        .ONGOING_QUEUE_EMPTY(ongoing_queue_empty)
     );
     
+    initial begin
+        // Processor always starts with the zeroth instruction
+        pc = 4;   
+        pc_del_1 = 72;
+        pc_del_2 = 132;
+        tag_valid = 0;
+        tag_match = 0;  
+        tag_del_1 = 0;
+        section_address_del_1 = 0;
+        addr_to_L2_full = 0;
+        ADDR_TO_L2 = 0;
+    end
+           
     // Log value calculation
     function integer clogb2;
         input integer depth;
