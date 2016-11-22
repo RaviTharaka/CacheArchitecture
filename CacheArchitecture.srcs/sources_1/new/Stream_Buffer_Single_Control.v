@@ -22,8 +22,8 @@
 
 module Stream_Buffer_Single_Control #(
         // Primary parameters
-        parameter ADDR_WIDTH = 5,
-        parameter p = 4
+        parameter ADDR_WIDTH = 5,                                   // Width needed to address a cache line
+        parameter p = 4                                             // Prefetch queue's depth is 2^p
                 
     ) (
         input CLK,
@@ -47,7 +47,7 @@ module Stream_Buffer_Single_Control #(
     reg [p + 1 : 0] commit_counter;                                 // Number of requests which has finished arriving
                                                                     // Negative commit means arriving data will be discarded
                                                                     
-    assign REFILL_ENB = commit_counter[p + 1];
+    assign REFILL_ENB = !commit_counter[p + 1];
     
     // Hit miss status of the stream buffer
     always @(posedge CLK) begin
@@ -104,9 +104,11 @@ module Stream_Buffer_Single_Control #(
     end
     
     initial begin
-        top_of_queue = 0;
+        top_of_queue = 1270;
         request_counter = 0;
         commit_counter = 0;
+        NEXT_REQ = 0;
+        STREAM_BUFFER_HIT = 0;
     end
     
 endmodule

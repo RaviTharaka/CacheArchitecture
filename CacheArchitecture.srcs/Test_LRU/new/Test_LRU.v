@@ -20,12 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module Test_LRU ();
-    parameter N = 4;                         // Number of units
+    parameter N = 3;                         // Number of units
     
     reg CLK;
-    reg [N - 1 : 0] USE;
+    reg [0 : N - 1] USE;
        
-    wire [N - 1 : 0] LRU;
+    wire [0 : N - 1] LRU;
     
     LRU #(
         .N(N)
@@ -40,23 +40,23 @@ module Test_LRU ();
         USE = 0;
         #101;
         
-        USE = 4'b0001;
+        USE = 3'b001;
         #10;
-        USE = 4'b0001;
+        USE = 3'b001;
         #10;
-        USE = 4'b0010;
+        USE = 3'b000;
         #10;
-        USE = 4'b0100;
+        USE = 3'b010;
         #10;
-        USE = 4'b0001;
+        USE = 3'b001;
         #10;
-        USE = 4'b1000;
+        USE = 3'b100;
         #10;
-        USE = 4'b0100;
+        USE = 3'b010;
         #10;
-        USE = 4'b1000;
+        USE = 3'b100;
         #10;
-        USE = 4'b1000;
+        USE = 3'b100;
         #10;
     end
     

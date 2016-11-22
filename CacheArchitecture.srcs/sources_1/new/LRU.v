@@ -25,7 +25,7 @@ module LRU #(
     ) (
         input CLK,
         input [0 : N - 1] USE,
-        output reg [0 : N - 1] LRU
+        output reg [N - 1 : 0] LRU
     );
     
     reg [0 : N - 1] memory [0 : N - 1];
@@ -59,3 +59,13 @@ module LRU #(
         end
     end
 endmodule
+
+/*
+LRU #(
+    .N()
+) your_instance (
+    .CLK(),
+    .USE(),
+    .LRU()
+);
+*/    

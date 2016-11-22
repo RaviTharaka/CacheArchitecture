@@ -33,8 +33,7 @@ module Data_From_L2_Buffer_Control #(
         input DATA_FROM_L2_BUFFER_READY,
         output DATA_FROM_L2_BUFFER_VALID,
         
-        output [(BUFFER_WIDTH / L2_BUS_WIDTH) - 1 : 0] DATA_FROM_L2_BUFFER_ENB,
-        output ONGOING_QUEUE_RD_ENB
+        output [(BUFFER_WIDTH / L2_BUS_WIDTH) - 1 : 0] DATA_FROM_L2_BUFFER_ENB
     );
     
     reg [(BUFFER_WIDTH / L2_BUS_WIDTH) - 1 : 0] state;
@@ -42,7 +41,6 @@ module Data_From_L2_Buffer_Control #(
     assign DATA_FROM_L2_BUFFER_ENB = state;
     assign DATA_FROM_L2_BUFFER_VALID = (state == 0);
     assign DATA_FROM_L2_READY = !(state == 0) | DATA_FROM_L2_BUFFER_READY;
-    assign ONGOING_QUEUE_RD_ENB = DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY;
     
     always @(posedge CLK) begin
         if (state == 0) begin

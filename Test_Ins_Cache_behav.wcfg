@@ -12,10 +12,10 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="157950003fs"></ZoomEndTime>
-      <Cursor1Time time="2095000fs"></Cursor1Time>
+      <ZoomEndTime time="159995070fs"></ZoomEndTime>
+      <Cursor1Time time="2066000fs"></Cursor1Time>
    </zoom_setting>
-   <WVObjectSize size="12" />
+   <WVObjectSize size="16" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
       <obj_property name="ObjectShortName">CLK</obj_property>
@@ -23,7 +23,6 @@
    <wvobject fp_name="group7" type="group">
       <obj_property name="label">From Proc</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/PROC_READY" type="logic">
          <obj_property name="ElementShortName">PROC_READY</obj_property>
          <obj_property name="ObjectShortName">PROC_READY</obj_property>
@@ -41,7 +40,6 @@
    <wvobject fp_name="group55" type="group">
       <obj_property name="label">To Proc</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/CACHE_READY" type="logic">
          <obj_property name="ElementShortName">CACHE_READY</obj_property>
          <obj_property name="ObjectShortName">CACHE_READY</obj_property>
@@ -86,7 +84,6 @@
    <wvobject fp_name="group48" type="group">
       <obj_property name="label">Current PC</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/byte_address" type="array">
          <obj_property name="ElementShortName">byte_address[1:0]</obj_property>
          <obj_property name="ObjectShortName">byte_address[1:0]</obj_property>
@@ -138,7 +135,6 @@
    <wvobject fp_name="group62" type="group">
       <obj_property name="label">Tag memories</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /ADDR_R" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">ADDR_R[6:0]</obj_property>
@@ -282,6 +278,7 @@
    <wvobject fp_name="group583" type="group">
       <obj_property name="label">Main Control</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group584" type="group">
          <obj_property name="label">Send_Addr_To_L2</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -312,7 +309,6 @@
    <wvobject fp_name="group48" type="group">
       <obj_property name="label">Address To L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/addr_to_L2_mux/SELECT" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">SELECT[1:0]</obj_property>
@@ -484,7 +480,6 @@
    <wvobject fp_name="group330" type="group">
       <obj_property name="label">Data From L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/DATA_FROM_L2_VALID" type="logic">
          <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
          <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
@@ -1584,12 +1579,12 @@
             <obj_property name="ObjectShortName">ongoing_queue_rd_enb</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/addr_to_L2_src" type="array">
-            <obj_property name="ElementShortName">addr_to_L2_src[2:0]</obj_property>
-            <obj_property name="ObjectShortName">addr_to_L2_src[2:0]</obj_property>
+            <obj_property name="ElementShortName">addr_to_L2_src[1:0]</obj_property>
+            <obj_property name="ObjectShortName">addr_to_L2_src[1:0]</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_src" type="array">
-            <obj_property name="ElementShortName">data_from_L2_src[2:0]</obj_property>
-            <obj_property name="ObjectShortName">data_from_L2_src[2:0]</obj_property>
+            <obj_property name="ElementShortName">data_from_L2_src[1:0]</obj_property>
+            <obj_property name="ObjectShortName">data_from_L2_src[1:0]</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/ongoing_queue_full" type="logic">
             <obj_property name="ElementShortName">ongoing_queue_full</obj_property>
@@ -1601,10 +1596,159 @@
          </wvobject>
       </wvobject>
    </wvobject>
+   <wvobject fp_name="group1026" type="group">
+      <obj_property name="label">Stream buffers</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group632" type="group">
+         <obj_property name="label">Buffer resets</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /BUFFER_RESET" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">BUFFER_RESET</obj_property>
+            <obj_property name="ObjectShortName">BUFFER_RESET</obj_property>
+            <obj_property name="label">1</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /BUFFER_RESET" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">BUFFER_RESET</obj_property>
+            <obj_property name="ObjectShortName">BUFFER_RESET</obj_property>
+            <obj_property name="label">2</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /BUFFER_RESET" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">BUFFER_RESET</obj_property>
+            <obj_property name="ObjectShortName">BUFFER_RESET</obj_property>
+            <obj_property name="label">3</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group625" type="group">
+         <obj_property name="label">Hit commits</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /HIT_COMMIT" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">HIT_COMMIT</obj_property>
+            <obj_property name="ObjectShortName">HIT_COMMIT</obj_property>
+            <obj_property name="label">1</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /HIT_COMMIT" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">HIT_COMMIT</obj_property>
+            <obj_property name="ObjectShortName">HIT_COMMIT</obj_property>
+            <obj_property name="label">2</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /HIT_COMMIT" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">HIT_COMMIT</obj_property>
+            <obj_property name="ObjectShortName">HIT_COMMIT</obj_property>
+            <obj_property name="label">3</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group594" type="group">
+         <obj_property name="label">LRU Unit</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/lru" type="array">
+            <obj_property name="ElementShortName">lru[2:0]</obj_property>
+            <obj_property name="ObjectShortName">lru[2:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/used" type="array">
+            <obj_property name="ElementShortName">used[2:0]</obj_property>
+            <obj_property name="ObjectShortName">used[2:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group588" type="group">
+         <obj_property name="label">Top of Queues</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /top_of_queue" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="ObjectShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="label">1</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /top_of_queue" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="ObjectShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="label">2</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /top_of_queue" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="ObjectShortName">top_of_queue[26:0]</obj_property>
+            <obj_property name="label">3</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group1025" type="group">
+         <obj_property name="label">Main pipeline</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/PC_IN" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">PC_IN[26:0]</obj_property>
+            <obj_property name="ObjectShortName">PC_IN[26:0]</obj_property>
+            <obj_property name="label">PC cache line</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="vbus559" type="vbus">
+            <obj_property name="label">Individual hit</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /STREAM_BUFFER_HIT" type="logic">
+               <obj_property name="DisplayName">label</obj_property>
+               <obj_property name="ElementShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="ObjectShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="label">Hit1</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /STREAM_BUFFER_HIT" type="logic">
+               <obj_property name="DisplayName">label</obj_property>
+               <obj_property name="ElementShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="ObjectShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="label">Hit2</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /STREAM_BUFFER_HIT" type="logic">
+               <obj_property name="DisplayName">label</obj_property>
+               <obj_property name="ElementShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="ObjectShortName">STREAM_BUFFER_HIT</obj_property>
+               <obj_property name="label">Hit3</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/HIT" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">HIT</obj_property>
+            <obj_property name="ObjectShortName">HIT</obj_property>
+            <obj_property name="label">Overall hit</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/HIT_BUF_NO" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">HIT_BUF_NO[1:0]</obj_property>
+            <obj_property name="ObjectShortName">HIT_BUF_NO[1:0]</obj_property>
+            <obj_property name="label">Hit buffer number</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/STREAM_BUF_FULL" type="array">
+      <obj_property name="ElementShortName">STREAM_BUF_FULL[2:0]</obj_property>
+      <obj_property name="ObjectShortName">STREAM_BUF_FULL[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/DATA_FROM_L2_SRC" type="array">
+      <obj_property name="ElementShortName">DATA_FROM_L2_SRC[1:0]</obj_property>
+      <obj_property name="ObjectShortName">DATA_FROM_L2_SRC[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/DATA_FROM_L2_BUFFER_READY" type="logic">
+      <obj_property name="ElementShortName">DATA_FROM_L2_BUFFER_READY</obj_property>
+      <obj_property name="ObjectShortName">DATA_FROM_L2_BUFFER_READY</obj_property>
+   </wvobject>
    <wvobject fp_name="group59" type="group">
       <obj_property name="label">Simulation</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/l2_input_state" type="array">
          <obj_property name="ElementShortName">l2_input_state[3:0]</obj_property>
          <obj_property name="ObjectShortName">l2_input_state[3:0]</obj_property>
