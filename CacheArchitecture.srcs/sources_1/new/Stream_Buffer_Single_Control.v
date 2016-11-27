@@ -73,26 +73,31 @@ module Stream_Buffer_Single_Control #(
     end  
     
     // Request counter management
+    reg [p - 1 : 0] request_counter_wire;
+    always @(*) begin
+        case ({PREFETCH_REQUESTED, HIT_COMMIT})
+            2'b00 : request_counter_wire <= request_counter;    
+            2'b10 : begin
+                        if (request_counter != {p{1'b1}})
+                            request_counter_wire <= request_counter + 1;
+                    end
+            2'b01 : request_counter_wire <= request_counter - 1;
+            2'b11 : request_counter_wire <= request_counter;
+        endcase
+    end
+    
     always @(posedge CLK) begin
         if (BUFFER_RESET) begin
             request_counter <= 0;
         end else begin
-            case ({PREFETCH_REQUESTED, HIT_COMMIT})
-                2'b00 : request_counter <= request_counter;    
-                2'b10 : begin
-                            if (request_counter != {p{1'b1}})
-                                request_counter <= request_counter + 1;
-                        end
-                2'b01 : request_counter <= request_counter - 1;
-                2'b11 : request_counter <= request_counter;
-            endcase
+            request_counter <= request_counter_wire;
         end
     end
     
     // Commit counter management
     always @(posedge CLK) begin
         if (BUFFER_RESET) begin
-            commit_counter <= commit_counter - {2'b00, request_counter};
+            commit_counter <= commit_counter - {2'b00, request_counter_wire};
         end else begin
             case ({PREFETCH_COMMITED, HIT_COMMIT})
                 2'b00 : commit_counter <= commit_counter;    

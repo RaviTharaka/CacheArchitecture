@@ -44,14 +44,15 @@ module Ins_Cache #(
         localparam ASSOCIATIVITY    = 1 << a,
         localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
         localparam LINE_ADDR_WIDTH  = S - a - B + T,
+        localparam TAG_ADDR_WIDTH   = S - a - B,
         localparam L2_BUS_WIDTH     = 1 << W,
         localparam BLOCK_SECTIONS   = 1 << T,
         
         localparam SET_SIZE         = CACHE_SIZE / ASSOCIATIVITY,
         localparam LINE_RAM_WIDTH   = 1 << (B - T),
-        localparam LINE_RAM_DEPTH   = 1 << (S - a - B + T),
+        localparam LINE_RAM_DEPTH   = 1 << LINE_ADDR_WIDTH,
         localparam TAG_RAM_WIDTH    = TAG_WIDTH + BLOCK_SECTIONS,
-        localparam TAG_RAM_DEPTH    = 1 << (S - a - B),
+        localparam TAG_RAM_DEPTH    = 1 << TAG_ADDR_WIDTH,
         
         localparam PREFETCH_QUEUE_DEPTH = 1 << p,
         localparam STREAM_BUF_DEPTH = 1 << n,
@@ -138,7 +139,7 @@ module Ins_Cache #(
     
     // Address to L2 related wires
     wire [ADDR_WIDTH - 2 - 1 : 0] addr_to_L2;
-    wire [TAG_WIDTH + LINE_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
+    wire [TAG_WIDTH + TAG_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
     wire [STREAM_SEL_BITS - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
     reg [STREAM_SEL_BITS - 1 : 0] addr_to_L2_src;
     wire [STREAM_SEL_BITS - 1 : 0] data_from_L2_src;
@@ -305,7 +306,7 @@ module Ins_Cache #(
     // Low priority queue for storing prefetch requests
     FIFO_FWFT #(
         .DEPTH(PREFETCH_QUEUE_DEPTH),                                                                                      
-        .WIDTH(TAG_WIDTH + LINE_ADDR_WIDTH + STREAM_SEL_BITS)
+        .WIDTH(TAG_WIDTH + TAG_ADDR_WIDTH + STREAM_SEL_BITS)
     ) prefetch_queue (
         .CLK(CLK),
         .RSTN(RSTN),
@@ -325,7 +326,7 @@ module Ins_Cache #(
         .WIDTH(ADDR_WIDTH - 2)
     ) addr_to_L2_mux (
         .SELECT(addr_to_L2_sel),
-        .IN({pc_del_2[ADDR_WIDTH - 1 : 2], {prefetch_queue_addr_out, {(B - T - 5){1'b0}}},  fetch_queue_out, fetch_queue_out}),
+        .IN({pc_del_2[ADDR_WIDTH - 1 : 2], {prefetch_queue_addr_out, {(B - 5){1'b0}}},  fetch_queue_out, fetch_queue_out}),
         .OUT(addr_to_L2)
     );
     
@@ -437,9 +438,24 @@ module Ins_Cache #(
         end
     endgenerate
     
+   // Temporary
+   reg x,y,z;
+   always @(posedge CLK) begin
+       x <= cache_hit;
+       y <= x;
+       z <= y;
+   end   
+   initial begin
+       x = 1;
+       y = 1;
+       z = 1;
+   end
+   
     Stream_Buffer_Control #(
         .N(N),
-        .ADDR_WIDTH(TAG_WIDTH + LINE_ADDR_WIDTH)
+        .ADDR_WIDTH(TAG_WIDTH + TAG_ADDR_WIDTH),
+        .p(p),
+        .T(T)
     ) stream_buffer_control (
         .CLK(CLK),
         .DATA_FROM_L2_SRC(data_from_L2_src),
@@ -456,13 +472,15 @@ module Ins_Cache #(
         .PREFETCH_QUEUE_FULL(prefetch_queue_full),
         .PREFETCH_QUEUE_ADDR(prefetch_queue_addr_in),
         .PREFETCH_QUEUE_SRC(prefetch_queue_src_in),
-        .PC_IN(pc[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH)]),
+        .PC_IN(pc[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH + T)]),
         .HIT(),
         .HIT_BUF_NO(),
         .SECTION_COMMIT(),
-        .ALLOCATE(!cache_hit),                                                                              // Temporary
-        .ALLOCATE_ADDR(pc_del_2[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH)])                           // Temporary
+        .ALLOCATE(!cache_hit & !(!x & !y & !z)),                                                            // Temporary
+        .ALLOCATE_ADDR(pc_del_2[ADDR_WIDTH - 1 -: (TAG_WIDTH + TAG_ADDR_WIDTH)] + 1)                        // Temporary
     );
+    
+   
     
     // Line RAM data in multiplexer
     Multiplexer #(
@@ -474,11 +492,11 @@ module Ins_Cache #(
         .OUT(lin_mem_data_in)
     );
     
-//    Refill_Control #(
+    Refill_Control #(
     
-//    ) refill_control (
+    ) refill_control (
         
-//    );
+    );
     
     //////////////////////////////////////////////////////////////////////////////
     // Primary control system                                                    //

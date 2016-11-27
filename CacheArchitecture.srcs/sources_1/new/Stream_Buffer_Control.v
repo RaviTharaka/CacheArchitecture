@@ -23,7 +23,7 @@
 module Stream_Buffer_Control #(
         // Primary parameters
         parameter N = 3,                                            // Number of stream buffers
-        parameter ADDR_WIDTH = 27,                                  // Width needed to address a cache line
+        parameter ADDR_WIDTH = 26,                                  // Width needed to address a cache line
         parameter p = 4,                                            // Prefetch queue's depth is 2^p
         parameter T = 1,                                            // Width to depth translation amount for the Line Memory
         
@@ -56,7 +56,7 @@ module Stream_Buffer_Control #(
         output [STREAM_SEL_BITS - 1 : 0] PREFETCH_QUEUE_SRC,        // Which buffer is requesting (1,2,3,....N)
         
         // Main pipeline                     
-        input [ADDR_WIDTH - 1 : 0] PC_IN,                           // PC to check whether it hits
+        input [ADDR_WIDTH + T - 1 : 0] PC_IN,                       // PC to check whether it hits
         output reg HIT,                                             // One of the stream buffers has hit
         output reg [STREAM_SEL_BITS - 1 : 0] HIT_BUF_NO,            // Which buffer has hit
         input SECTION_COMMIT,                                       // For the current hit, a section was committed to LineRAM
@@ -204,7 +204,7 @@ module Stream_Buffer_Control #(
                 .CLK(CLK),
                 .BUFFER_RESET(buffer_reset[i]),
                 .INIT_TOQ_VALUE(ALLOCATE_ADDR),
-                .ADDR_IN(PC_IN),
+                .ADDR_IN(PC_IN[ADDR_WIDTH + T - 1 : T]),
                 .STREAM_BUFFER_HIT(stream_buf_hit[i]),
                 .HIT_COMMIT(hit_commit[i]),
                 .PREFETCH_REQUESTED(prefetch_requested[i]),
