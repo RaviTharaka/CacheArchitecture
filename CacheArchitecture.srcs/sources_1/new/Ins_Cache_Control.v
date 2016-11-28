@@ -80,21 +80,9 @@ module Ins_Cache_Control #(
         output [ASSOCIATIVITY - 1 : 0] LIN_MEM_WR_ENB,               // Individual write enables for the line memories
         output [S - a - B + T  - 1 : 0] LIN_MEM_WR_ADDR,             // Common write address for the line memories
         
-        // Prefetch queue control signals
-        output PREFETCH_QUEUE_RD_ENB,
-        output PREFETCH_QUEUE_WR_ENB,
-        input PREFETCH_QUEUE_EMPTY,
-        input PREFETCH_QUEUE_FULL,
-        
         // Ongoing queue control signals
         input ONGOING_QUEUE_EMPTY,
-        input ONGOING_QUEUE_FULL,
-        
-        // Stream buffer queues control signals
-        output [N - 1 : 0] STREAM_BUF_RD_ENB,
-        output [N - 1 : 0] STREAM_BUF_WR_ENB,
-        input [N - 1 : 0] STREAM_BUF_EMPTY,
-        input [N - 1 : 0] STREAM_BUF_FULL
+        input ONGOING_QUEUE_FULL
     );
     
     assign DATA_TO_PROC_ENB = CACHE_HIT;

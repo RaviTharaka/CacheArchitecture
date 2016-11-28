@@ -120,9 +120,10 @@ module Ins_Cache #(
     
     // Cache pipeline registers and their control signals
     wire cache_pipe_enb;
-    reg [TAG_WIDTH - 1 : 0]   tag_del_1;
-    reg [T - 1 : 0] section_address_del_1;
-    reg [B - T - 5 - 1 : 0]   word_addr_del_1, word_addr_del_2;
+    reg [TAG_WIDTH       - 1 : 0] tag_del_1, tag_del_2;
+    reg [TAG_ADDR_WIDTH  - 1 : 0] tag_address_del_1, tag_address_del_2;
+    reg [T               - 1 : 0] section_address_del_1, section_address_del_2;
+    reg [B - T - 5       - 1 : 0] word_addr_del_1, word_addr_del_2;
     
     // PC register and its delays
     wire [1 : 0] pc_sel;                                            // pc_sel = {0(PC + 4), 1 (Delayed PC), 2or3 (Branch path)}
@@ -133,16 +134,16 @@ module Ins_Cache #(
     wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = pc[0                             +: BYTES_PER_WORD   ];
     wire [B - T - 5       - 1 : 0]   word_address        = pc[BYTES_PER_WORD                +: (B - T - 5)      ];
     wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = pc[(BYTES_PER_WORD + B - T - 5)  +: (S - a - B + T)  ];
-    wire [S - a - B       - 1 : 0]   tag_address         = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
     wire [TAG_WIDTH       - 1 : 0]   tag                 = pc[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
     wire [T               - 1 : 0]   section_address     = pc[(BYTES_PER_WORD + B - T - 5)  +: T                ];
     
     // Address to L2 related wires
-    wire [ADDR_WIDTH - 2 - 1 : 0] addr_to_L2;
+    wire [ADDR_WIDTH - 2             - 1 : 0] addr_to_L2;
     wire [TAG_WIDTH + TAG_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
-    wire [STREAM_SEL_BITS - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
-    reg [STREAM_SEL_BITS - 1 : 0] addr_to_L2_src;
-    wire [STREAM_SEL_BITS - 1 : 0] data_from_L2_src;
+    wire [STREAM_SEL_BITS            - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
+    reg [STREAM_SEL_BITS             - 1 : 0] addr_to_L2_src;
+    wire [STREAM_SEL_BITS            - 1 : 0] data_from_L2_src;
     wire prefetch_queue_wr_enb, prefetch_queue_rd_enb, prefetch_queue_full, prefetch_queue_empty;
     wire ongoing_queue_wr_enb, ongoing_queue_rd_enb, ongoing_queue_full, ongoing_queue_empty;
     
@@ -173,9 +174,13 @@ module Ins_Cache #(
         // Pipeline for internal address requests (cache level PC)
         if (cache_pipe_enb) begin
             tag_del_1 <= tag;
+            tag_del_2 <= tag_del_1;
             section_address_del_1 <= section_address;
+            section_address_del_2 <= section_address_del_1;
             word_addr_del_1 <= word_address;
             word_addr_del_2 <= word_addr_del_1;
+            tag_address_del_1 <= tag_address;
+            tag_address_del_2 <= tag_address_del_1;
         end
         
     end
@@ -267,15 +272,7 @@ module Ins_Cache #(
         .IN(lin_mux_out_dearray),
         .OUT(data_to_proc)
     );
-        
-        
-    //////////////////////////////////////////////////////////////////////////////
-    // Refill path - Deciding whether to refill                                 //
-    //////////////////////////////////////////////////////////////////////////////   
-     
-    wire pc_del_1_equals_2 = (pc_del_2[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)] == pc_del_1[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)]);
-    wire pc_del_0_equals_2 = (pc_del_2[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)] == pc[ADDR_WIDTH - 1 : (BYTES_PER_WORD + B - 5)]);
-        
+    
         
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - Address to L2 section                                      //
@@ -451,6 +448,9 @@ module Ins_Cache #(
        z = 1;
    end
    
+    wire [STREAM_SEL_BITS - 1 : 0] hit_buf_no;
+    wire stream_hit;
+    
     Stream_Buffer_Control #(
         .N(N),
         .ADDR_WIDTH(TAG_WIDTH + TAG_ADDR_WIDTH),
@@ -473,8 +473,8 @@ module Ins_Cache #(
         .PREFETCH_QUEUE_ADDR(prefetch_queue_addr_in),
         .PREFETCH_QUEUE_SRC(prefetch_queue_src_in),
         .PC_IN(pc[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH + T)]),
-        .HIT(),
-        .HIT_BUF_NO(),
+        .HIT(stream_hit),
+        .HIT_BUF_NO(hit_buf_no),
         .SECTION_COMMIT(),
         .ALLOCATE(!cache_hit & !(!x & !y & !z)),                                                            // Temporary
         .ALLOCATE_ADDR(pc_del_2[ADDR_WIDTH - 1 -: (TAG_WIDTH + TAG_ADDR_WIDTH)] + 1)                        // Temporary
@@ -493,9 +493,21 @@ module Ins_Cache #(
     );
     
     Refill_Control #(
-    
+        .S(S),
+        .B(B),
+        .a(a),
+        .N(N),
+        .T(T)
     ) refill_control (
-        
+        .CLK(CLK),
+        .CACHE_HIT(cache_hit),
+        .STREAM_HIT(stream_hit),
+        .REFILL_REQ_TAG(tag_del_2),
+        .REFILL_REQ_LINE(tag_address_del_2),
+        .REFILL_REQ_SECT(section_address_del_2),
+        .REFILL_REQ_SRC(hit_buf_no),
+        .REFILL_REQ_SET(set_select),
+        .SEND_ADDR_TO_L2(send_addr_to_L2)                  // Valid signal for the input of Addr_to_L2 section                
     );
     
     //////////////////////////////////////////////////////////////////////////////
@@ -518,7 +530,6 @@ module Ins_Cache #(
         .CACHE_HIT(cache_hit),
         .CACHE_READY(CACHE_READY),                          // Signal from cache to processor that its pipeline is currently ready to work
         .PROC_READY(PROC_READY),                            // Signal from processor to cache that its pipeline is currently ready to work
-        .SEND_ADDR_TO_L2(send_addr_to_L2),                  // Valid signal for the input of Addr_to_L2 section
         .PC_DEL_1_EQUALS_2(pc_del_1_equals_2),              // Whether PC[t-2] == PC[t-1]
         .PC_DEL_0_EQUALS_2(pc_del_0_equals_2),              // Whether PC[t-2] == PC[t]
         // Multiplexers
@@ -536,12 +547,7 @@ module Ins_Cache #(
         .LIN_MEM_WR_ENB(lin_mem_wr_enb),                    // Individual write enables for the line memories
         .LIN_MEM_RD_ENB(lin_mem_rd_enb),                    // Common read enables for the line memories
         .LIN_MEM_OUT_ENB(lin_mem_out_enb),                  // Common output register enable for the line memories
-        .LIN_MEM_WR_ADDR(lin_mem_wr_addr),                  // Common write address for the line memories
-        // Queues
-        .PREFETCH_QUEUE_WR_ENB(prefetch_queue_wr_enb),
-        .PREFETCH_QUEUE_FULL(prefetch_queue_full),
-        .ONGOING_QUEUE_FULL(ongoing_queue_full),
-        .ONGOING_QUEUE_EMPTY(ongoing_queue_empty)
+        .LIN_MEM_WR_ADDR(lin_mem_wr_addr)                   // Common write address for the line memories
     );
     
     initial begin
@@ -549,6 +555,17 @@ module Ins_Cache #(
         pc = 4;   
         pc_del_1 = 72;
         pc_del_2 = 132;
+        
+        word_addr_del_1           = pc_del_1[BYTES_PER_WORD                +: (B - T - 5)      ];
+        tag_address_del_1         = pc_del_1[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+        tag_del_1                 = pc_del_1[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+        section_address_del_1     = pc_del_1[(BYTES_PER_WORD + B - T - 5)  +: T                ];
+        
+        word_addr_del_2          = pc_del_2[BYTES_PER_WORD                +: (B - T - 5)      ];
+        tag_address_del_2        = pc_del_2[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+        tag_del_2                = pc_del_2[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+        section_address_del_2    = pc_del_2[(BYTES_PER_WORD + B - T - 5)  +: T                ];
+            
         tag_valid = 0;
         tag_match = 0;  
         tag_del_1 = 0;

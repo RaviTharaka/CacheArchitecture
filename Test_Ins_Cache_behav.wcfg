@@ -11,11 +11,11 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="74900001fs"></ZoomEndTime>
-      <Cursor1Time time="12300000fs"></Cursor1Time>
+      <ZoomStartTime time="9424000fs"></ZoomStartTime>
+      <ZoomEndTime time="148624001fs"></ZoomEndTime>
+      <Cursor1Time time="91824000fs"></Cursor1Time>
    </zoom_setting>
-   <WVObjectSize size="16" />
+   <WVObjectSize size="14" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
       <obj_property name="ObjectShortName">CLK</obj_property>
@@ -288,18 +288,6 @@
             <obj_property name="ObjectShortName">state[7:0]</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/control/PC_DEL_0_EQUALS_2" type="logic">
-            <obj_property name="ElementShortName">PC_DEL_0_EQUALS_2</obj_property>
-            <obj_property name="ObjectShortName">PC_DEL_0_EQUALS_2</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/control/PC_DEL_1_EQUALS_2" type="logic">
-            <obj_property name="ElementShortName">PC_DEL_1_EQUALS_2</obj_property>
-            <obj_property name="ObjectShortName">PC_DEL_1_EQUALS_2</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/control/send_addr_to_L2" type="logic">
-            <obj_property name="ElementShortName">send_addr_to_L2</obj_property>
-            <obj_property name="ObjectShortName">send_addr_to_L2</obj_property>
-         </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/control/SEND_ADDR_TO_L2" type="logic">
             <obj_property name="ElementShortName">SEND_ADDR_TO_L2</obj_property>
             <obj_property name="ObjectShortName">SEND_ADDR_TO_L2</obj_property>
@@ -493,6 +481,7 @@
    <wvobject fp_name="group330" type="group">
       <obj_property name="label">Data From L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/DATA_FROM_L2_VALID" type="logic">
          <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
          <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
@@ -1600,7 +1589,6 @@
    <wvobject fp_name="group1026" type="group">
       <obj_property name="label">Stream buffers</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group559" type="group">
          <obj_property name="label">Prefetch Queue</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2343,18 +2331,6 @@
          </wvobject>
       </wvobject>
    </wvobject>
-   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/STREAM_BUF_FULL" type="array">
-      <obj_property name="ElementShortName">STREAM_BUF_FULL[2:0]</obj_property>
-      <obj_property name="ObjectShortName">STREAM_BUF_FULL[2:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/DATA_FROM_L2_SRC" type="array">
-      <obj_property name="ElementShortName">DATA_FROM_L2_SRC[1:0]</obj_property>
-      <obj_property name="ObjectShortName">DATA_FROM_L2_SRC[1:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/DATA_FROM_L2_BUFFER_READY" type="logic">
-      <obj_property name="ElementShortName">DATA_FROM_L2_BUFFER_READY</obj_property>
-      <obj_property name="ObjectShortName">DATA_FROM_L2_BUFFER_READY</obj_property>
-   </wvobject>
    <wvobject fp_name="group59" type="group">
       <obj_property name="label">Simulation</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -2905,6 +2881,257 @@
       <wvobject fp_name="/Test_Ins_Cache/DATA_FROM_L2_VALID" type="logic">
          <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
          <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group687" type="group">
+      <obj_property name="label">Refill Control</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="vbus709" type="vbus">
+         <obj_property name="label">Tests</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/equal_n2" type="logic">
+            <obj_property name="ElementShortName">equal_n2</obj_property>
+            <obj_property name="ObjectShortName">equal_n2</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/clash_n2" type="logic">
+            <obj_property name="ElementShortName">clash_n2</obj_property>
+            <obj_property name="ObjectShortName">clash_n2</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/equal_n1" type="logic">
+            <obj_property name="ElementShortName">equal_n1</obj_property>
+            <obj_property name="ObjectShortName">equal_n1</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/clash_n1" type="logic">
+            <obj_property name="ElementShortName">clash_n1</obj_property>
+            <obj_property name="ObjectShortName">clash_n1</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/equal_n0" type="logic">
+            <obj_property name="ElementShortName">equal_n0</obj_property>
+            <obj_property name="ObjectShortName">equal_n0</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/clash_n0" type="logic">
+            <obj_property name="ElementShortName">clash_n0</obj_property>
+            <obj_property name="ObjectShortName">clash_n0</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/no_of_elements" type="array">
+         <obj_property name="ElementShortName">no_of_elements[3:0]</obj_property>
+         <obj_property name="ObjectShortName">no_of_elements[3:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/control/send_addr_to_L2" type="logic">
+         <obj_property name="ElementShortName">send_addr_to_L2</obj_property>
+         <obj_property name="ObjectShortName">send_addr_to_L2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/admit" type="logic">
+         <obj_property name="ElementShortName">admit</obj_property>
+         <obj_property name="ObjectShortName">admit</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/remove" type="logic">
+         <obj_property name="ElementShortName">remove</obj_property>
+         <obj_property name="ObjectShortName">remove</obj_property>
+      </wvobject>
+      <wvobject fp_name="group701" type="group">
+         <obj_property name="label">Request</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="vbus695" type="vbus">
+            <obj_property name="label">Addr_In</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_TAG" type="array">
+               <obj_property name="ElementShortName">REFILL_REQ_TAG[18:0]</obj_property>
+               <obj_property name="ObjectShortName">REFILL_REQ_TAG[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_LINE" type="array">
+               <obj_property name="ElementShortName">REFILL_REQ_LINE[6:0]</obj_property>
+               <obj_property name="ObjectShortName">REFILL_REQ_LINE[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_SECT" type="array">
+               <obj_property name="ElementShortName">REFILL_REQ_SECT[0:0]</obj_property>
+               <obj_property name="ObjectShortName">REFILL_REQ_SECT[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_SRC" type="array">
+            <obj_property name="ElementShortName">REFILL_REQ_SRC[1:0]</obj_property>
+            <obj_property name="ObjectShortName">REFILL_REQ_SRC[1:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_SET" type="array">
+            <obj_property name="ElementShortName">REFILL_REQ_SET[0:0]</obj_property>
+            <obj_property name="ObjectShortName">REFILL_REQ_SET[0:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="vbus763" type="vbus">
+            <obj_property name="label">Current</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_tag" type="array">
+               <obj_property name="ElementShortName">cur_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_line" type="array">
+               <obj_property name="ElementShortName">cur_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_sect" type="array">
+               <obj_property name="ElementShortName">cur_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus765" type="vbus">
+            <obj_property name="label">First</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/fir_tag" type="array">
+               <obj_property name="ElementShortName">fir_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/fir_line" type="array">
+               <obj_property name="ElementShortName">fir_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/fir_sect" type="array">
+               <obj_property name="ElementShortName">fir_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus762" type="vbus">
+            <obj_property name="label">Second</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/sec_tag" type="array">
+               <obj_property name="ElementShortName">sec_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/sec_line" type="array">
+               <obj_property name="ElementShortName">sec_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/sec_sect" type="array">
+               <obj_property name="ElementShortName">sec_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus740" type="vbus">
+            <obj_property name="label">Third</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/thr_tag" type="array">
+               <obj_property name="ElementShortName">thr_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/thr_line" type="array">
+               <obj_property name="ElementShortName">thr_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/thr_sect" type="array">
+               <obj_property name="ElementShortName">thr_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
       </wvobject>
    </wvobject>
 </wave_config>
