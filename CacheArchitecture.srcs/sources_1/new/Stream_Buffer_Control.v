@@ -120,6 +120,9 @@ module Stream_Buffer_Control #(
     // Section select for the stream buffers
     assign STREAM_BUF_SECTION_SEL = (current_section_enb)? section_delayed : (current_section + SECTION_COMMIT + output_state);
     
+    // Read enable for the stream buffers
+    assign STREAM_BUF_RD_ENB = output_buffer & {N{SECTION_COMMIT & (output_state == {T{1'b1}})}};
+    
     
     //////////////////////////////////////////////////////////////////////////////
     // Taking in data coming from L2 cache                                      //

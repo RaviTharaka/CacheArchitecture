@@ -64,9 +64,8 @@ module Ins_Cache_Control #(
         output [1 : 0] LIN_MEM_DATA_IN_SEL,                          // Mux select for line RAM input [lin_mem_data_in_sel = {0(direct path), x (xth stream buffer)}]
         
         // Pipeline enable signals
-        output CACHE_PIPE_ENB,                                              // Enable for cache's pipeline registers
-        output PC_PIPE_ENB,                                                 // Enable for PC's pipeline registers
-        output DATA_TO_PROC_ENB,                                            // Enable signal for the IR register
+        output CACHE_PIPE_ENB,                                       // Enable for cache's pipeline registers
+        output DATA_TO_PROC_ENB,                                     // Enable signal for the IR register
         
         // Tag memory control signals
         output TAG_MEM_RD_ENB,                                       // Common read enable for the tag memories
@@ -88,7 +87,6 @@ module Ins_Cache_Control #(
     assign DATA_TO_PROC_ENB = CACHE_HIT;
     assign PC_SEL[1] = BRANCH;
     assign PC_SEL[0] = !CACHE_HIT;
-    assign PC_PIPE_ENB = 1;
     assign CACHE_PIPE_ENB = 1;
     assign LIN_MEM_RD_ENB = 1;
     assign LIN_MEM_OUT_ENB = 1;

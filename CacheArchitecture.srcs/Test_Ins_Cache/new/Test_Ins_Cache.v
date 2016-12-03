@@ -163,7 +163,8 @@ module Test_Ins_Cache ();
                     for (l = 0; l < (1 << W - 5); l = l + 1) begin
                         DATA_FROM_L2[l * DATA_WIDTH +: 2] <= 2'b00;
                         DATA_FROM_L2[l * DATA_WIDTH + 2 +: W - 5] <= l;
-                        DATA_FROM_L2[l * DATA_WIDTH + W - 3 +: B - W] <= output_addr_reg[2 + W - 5 +: B - W] + k;
+                        DATA_FROM_L2[l * DATA_WIDTH + W - 3 +: B - W] <= {output_addr_reg[2 + W + T - 5 +: B - W - T], {(B - W - T){1'b0}} }+ k;
+                        //{output_addr_reg[2 + W - 5 +: B - W] + k;
                         DATA_FROM_L2[l * DATA_WIDTH + B - 3 +: (ADDR_WIDTH + 3 - B)] <= output_addr_reg[ADDR_WIDTH - 1 : B - 3];
                     end
                 end

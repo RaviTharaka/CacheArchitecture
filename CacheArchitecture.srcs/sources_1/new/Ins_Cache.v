@@ -92,15 +92,16 @@ module Ins_Cache #(
     wire [BLOCK_SECTIONS - 1 : 0] tag_valid_from_ram [0 : ASSOCIATIVITY - 1];
     
     wire tag_mem_rd_enb;
-    wire [S - a - B     - 1 : 0] tag_mem_wr_addr;   
-    wire [TAG_RAM_WIDTH - 1 : 0] tag_mem_data_in; 
+    wire [TAG_ADDR_WIDTH - 1 : 0] tag_mem_wr_addr;   
+    wire [TAG_WIDTH - 1 : 0] tag_to_ram;
+    wire [BLOCK_SECTIONS - 1 : 0] tag_valid_to_ram;
       
     // Line memory wires
     wire [ASSOCIATIVITY - 1 : 0] lin_mem_wr_enb;
     wire [LINE_RAM_WIDTH - 1 : 0] lin_data_out  [0 : ASSOCIATIVITY - 1];
     
     wire lin_mem_rd_enb, lin_mem_out_enb;
-    wire [S - a - B + T  - 1 : 0] lin_mem_wr_addr;   
+    wire [LINE_ADDR_WIDTH - 1 : 0] lin_mem_wr_addr;   
     wire [LINE_RAM_WIDTH - 1 : 0] lin_mem_data_in; 
     
     // Cache line multiplexer wires
@@ -123,10 +124,10 @@ module Ins_Cache #(
     reg [TAG_WIDTH       - 1 : 0] tag_del_1, tag_del_2;
     reg [TAG_ADDR_WIDTH  - 1 : 0] tag_address_del_1, tag_address_del_2;
     reg [T               - 1 : 0] section_address_del_1, section_address_del_2;
-    reg [B - T - 5       - 1 : 0] word_addr_del_1, word_addr_del_2;
+    reg [B - T - 5       - 1 : 0] word_address_del_1, word_address_del_2;
     
     // PC register and its delays
-    wire [1 : 0] pc_sel;                                            // pc_sel = {0(PC + 4), 1 (Delayed PC), 2or3 (Branch path)}
+    wire [1 : 0] pc_sel;                                            // pc_sel = {0(PC + 4), 1 (Branch path), 2or3 (Delayed PC)}
     wire pc_pipe_enb;                                               // Enable the PC pipeline
     reg [ADDR_WIDTH - 1 : 0] pc, pc_del_1, pc_del_2;
     
@@ -149,6 +150,7 @@ module Ins_Cache #(
     
     // Data from L2 related wires
     wire stream_buffer_ready;
+    wire l1_refill_ready;
     wire data_stored_stream_buf, data_stored_lineRAM;
              
     integer j;
@@ -163,8 +165,8 @@ module Ins_Cache #(
         if (pc_pipe_enb) begin
             case (pc_sel) 
                 2'b00 : pc <= pc + 4;
-                2'b01 : pc <= pc_del_2;
-                default : pc <= BRANCH_ADDR_IN;
+                2'b01 : pc <= BRANCH_ADDR_IN;
+                default : pc <= pc_del_2;
             endcase
         
             pc_del_1 <= pc;
@@ -177,8 +179,8 @@ module Ins_Cache #(
             tag_del_2 <= tag_del_1;
             section_address_del_1 <= section_address;
             section_address_del_2 <= section_address_del_1;
-            word_addr_del_1 <= word_address;
-            word_addr_del_2 <= word_addr_del_1;
+            word_address_del_1 <= word_address;
+            word_address_del_2 <= word_address_del_1;
             tag_address_del_1 <= tag_address;
             tag_address_del_2 <= tag_address_del_1;
         end
@@ -198,7 +200,7 @@ module Ins_Cache #(
             ) tag_memory (
                 .ADDR_W(tag_mem_wr_addr),                                   // Write address bus, width determined from RAM_DEPTH
                 .ADDR_R(tag_address),                                       // Read address bus, width determined from RAM_DEPTH
-                .DATA_IN(tag_mem_data_in),                                  // RAM input data, width determined from RAM_WIDTH
+                .DATA_IN({tag_valid_to_ram, tag_to_ram}),                   // RAM input data, width determined from RAM_WIDTH
                 .CLK(CLK),                                                  // Clock
                 .WR_ENB(tag_mem_wr_enb[i]),                                 // Write enable
                 .RD_ENB(tag_mem_rd_enb),                                    // Read Enable, for additional power savings, disable when not in use
@@ -245,7 +247,7 @@ module Ins_Cache #(
                 .ORDER(B - T - 5),
                 .WIDTH(DATA_WIDTH)
             ) line_mux (
-                .SELECT(word_addr_del_2),
+                .SELECT(word_address_del_2),
                 .IN(lin_data_out[i]),
                 .OUT(lin_mux_out[i])
             );
@@ -295,7 +297,7 @@ module Ins_Cache #(
         .CLK(CLK),
         .TOP_VALID(send_addr_to_L2),
         .BOT_READY(addr_to_L2_ready),
-        .DATA_IN(pc_del_2[ADDR_WIDTH - 1 : 2]),
+        .DATA_IN({tag_del_2, tag_address_del_2, section_address_del_2, word_address_del_2}),
         .DATA_OUT(fetch_queue_out),
         .EMPTY(fetch_queue_empty)
     );
@@ -323,7 +325,7 @@ module Ins_Cache #(
         .WIDTH(ADDR_WIDTH - 2)
     ) addr_to_L2_mux (
         .SELECT(addr_to_L2_sel),
-        .IN({pc_del_2[ADDR_WIDTH - 1 : 2], {prefetch_queue_addr_out, {(B - 5){1'b0}}},  fetch_queue_out, fetch_queue_out}),
+        .IN({{tag_del_2, tag_address_del_2, section_address_del_2, word_address_del_2}, {prefetch_queue_addr_out, {(B - 5){1'b0}}},  fetch_queue_out, fetch_queue_out}),
         .OUT(addr_to_L2)
     );
     
@@ -388,7 +390,7 @@ module Ins_Cache #(
     
     wire data_from_L2_buffer_ready;
     wire data_from_L2_buffer_valid;    
-    assign data_from_L2_buffer_ready = stream_buffer_ready | 1'b0;                                          // Temporary
+    assign data_from_L2_buffer_ready = stream_buffer_ready | l1_refill_ready;                                        
     
     // Control unit for Data_From_L2 buffer
     Data_From_L2_Buffer_Control #(
@@ -412,6 +414,7 @@ module Ins_Cache #(
     wire [logb2(N + 1) - 1 : 0] lin_mem_data_in_sel; 
     wire [N - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full, stream_buf_reset;   
     wire [T - 1 : 0] stream_buf_section_sel; 
+    wire section_commit;
            
     // Set of stream buffers
     generate 
@@ -458,9 +461,11 @@ module Ins_Cache #(
         .T(T)
     ) stream_buffer_control (
         .CLK(CLK),
+        // Data from L2 buffer 
         .DATA_FROM_L2_SRC(data_from_L2_src),
         .DATA_FROM_L2_BUFFER_READY(stream_buffer_ready),
         .DATA_FROM_L2_BUFFER_VALID(data_from_L2_buffer_valid),
+        // Controlling the stream buffers themselves
         .STREAM_BUF_RESET(stream_buf_reset),
         .STREAM_BUF_SECTION_SEL(stream_buf_section_sel),
         .STREAM_BUF_WR_ENB(stream_buf_wr_enb),              
@@ -475,13 +480,11 @@ module Ins_Cache #(
         .PC_IN(pc[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH + T)]),
         .HIT(stream_hit),
         .HIT_BUF_NO(hit_buf_no),
-        .SECTION_COMMIT(),
+        .SECTION_COMMIT(section_commit),
         .ALLOCATE(!cache_hit & !(!x & !y & !z)),                                                            // Temporary
-        .ALLOCATE_ADDR(pc_del_2[ADDR_WIDTH - 1 -: (TAG_WIDTH + TAG_ADDR_WIDTH)] + 1)                        // Temporary
+        .ALLOCATE_ADDR({tag_del_2, tag_address_del_2} + 1)                        // Temporary
     );
-    
-   
-    
+                                                       
     // Line RAM data in multiplexer
     Multiplexer #(
         .ORDER(logb2(N + 1)),
@@ -492,6 +495,14 @@ module Ins_Cache #(
         .OUT(lin_mem_data_in)
     );
     
+    reg [ASSOCIATIVITY - 1 : 0] refill_req_dst = 1;
+    always @(posedge CLK) begin                                                                             // Temporary - bogus random replacement policy
+        if (refill_req_dst [ASSOCIATIVITY - 1])
+            refill_req_dst <= 1;
+        else
+            refill_req_dst <= refill_req_dst << 1;    
+    end                                   
+          
     Refill_Control #(
         .S(S),
         .B(B),
@@ -500,14 +511,36 @@ module Ins_Cache #(
         .T(T)
     ) refill_control (
         .CLK(CLK),
+        // Hit miss status 
         .CACHE_HIT(cache_hit),
         .STREAM_HIT(stream_hit),
+        // Data needed for the refill operation
+        .REFILL_REQ_DST(refill_req_dst),                   
         .REFILL_REQ_TAG(tag_del_2),
         .REFILL_REQ_LINE(tag_address_del_2),
         .REFILL_REQ_SECT(section_address_del_2),
-        .REFILL_REQ_SRC(hit_buf_no),
-        .REFILL_REQ_SET(set_select),
-        .SEND_ADDR_TO_L2(send_addr_to_L2)                  // Valid signal for the input of Addr_to_L2 section                
+        // Related to PC select and PC pipeline enable
+        .BRANCH(BRANCH),
+        .PC_PIPE_ENB(pc_pipe_enb),                         // Enable for main pipeline registers
+        .PC_SEL(pc_sel),                                   // Mux select for PC [pc_sel = {0(PC + 4), 1(Branch path), 2 or 3(PC delay 2)}]         
+        // Related to PC pipeline
+        .SEND_ADDR_TO_L2(send_addr_to_L2),                 // Valid signal for the input of Addr_to_L2 section   
+        // Data from L2 buffer 
+        .DATA_FROM_L2_SRC(data_from_L2_src),
+        .DATA_FROM_L2_BUFFER_READY(l1_refill_ready),
+        .DATA_FROM_L2_BUFFER_VALID(data_from_L2_buffer_valid),
+        .ONGOING_QUEUE_RD_ENB(data_stored_lineRAM),
+        // Stream buffers
+        .SECTION_COMMIT(section_commit),
+        // LineRAM and TagRAM
+        .TAG_MEM_WR_ENB(tag_mem_wr_enb),                    // Individual write enables for the tag memories
+        .TAG_MEM_WR_ADDR(tag_mem_wr_addr),                  // Common write address for the the tag memories 
+        .TAG_MEM_TAG_IN(tag_to_ram),                        // Common data in for the tag memories   
+        .TAG_MEM_TAG_VALID_IN(tag_valid_to_ram),            // Common data in for the tag memories   
+        .LIN_MEM_WR_ENB(lin_mem_wr_enb),                    // Individual write enables for the line memories
+        .LIN_MEM_WR_ADDR(lin_mem_wr_addr),                  // Common write address for the line memories 
+        .LIN_MEM_DATA_IN_SEL(lin_mem_data_in_sel)           // 0 for L2 requests, buffer number for others
+               
     );
     
     //////////////////////////////////////////////////////////////////////////////
@@ -526,50 +559,39 @@ module Ins_Cache #(
         .CLK(CLK),
         .RSTN(RSTN),
         // Status signals
-        .BRANCH(BRANCH),
         .CACHE_HIT(cache_hit),
         .CACHE_READY(CACHE_READY),                          // Signal from cache to processor that its pipeline is currently ready to work
         .PROC_READY(PROC_READY),                            // Signal from processor to cache that its pipeline is currently ready to work
         .PC_DEL_1_EQUALS_2(pc_del_1_equals_2),              // Whether PC[t-2] == PC[t-1]
         .PC_DEL_0_EQUALS_2(pc_del_0_equals_2),              // Whether PC[t-2] == PC[t]
-        // Multiplexers
-        .PC_SEL(pc_sel),                                    // Mux select for PC [pc_sel = {0(Branch path), 1(Delayed PC), 2 or 3(PC + 4)}]
-        .LIN_MEM_DATA_IN_SEL(lin_mem_data_in_sel),          // Mux select for line RAM input [lin_mem_data_in_sel = {0(direct path), x (xth stream buffer)}]
         // Register enables
-        .PC_PIPE_ENB(pc_pipe_enb),                          // Enable for PC's pipeline registers
         .CACHE_PIPE_ENB(cache_pipe_enb),                    // Enable for cache's pipeline registers
         .DATA_TO_PROC_ENB(data_to_proc_enb),                // Enable for the IR register
         // Memories
-        .TAG_MEM_WR_ENB(tag_mem_wr_enb),                    // Individual write enables for the tag memories
         .TAG_MEM_RD_ENB(tag_mem_rd_enb),                    // Common read enable for the tag memories
-        .TAG_MEM_WR_ADDR(tag_mem_wr_addr),                  // Common write address for the the tag memories 
-        .TAG_MEM_DATA_IN(tag_mem_data_in),                  // Common data in for the tag memories
-        .LIN_MEM_WR_ENB(lin_mem_wr_enb),                    // Individual write enables for the line memories
         .LIN_MEM_RD_ENB(lin_mem_rd_enb),                    // Common read enables for the line memories
-        .LIN_MEM_OUT_ENB(lin_mem_out_enb),                  // Common output register enable for the line memories
-        .LIN_MEM_WR_ADDR(lin_mem_wr_addr)                   // Common write address for the line memories
+        .LIN_MEM_OUT_ENB(lin_mem_out_enb)                   // Common output register enable for the line memories
+        
     );
     
     initial begin
         // Processor always starts with the zeroth instruction
-        pc = 4;   
-        pc_del_1 = 72;
-        pc_del_2 = 132;
+        pc       = 13235634;   
+        pc_del_1 = 42235213;
+        pc_del_2 = 124537765;
         
-        word_addr_del_1           = pc_del_1[BYTES_PER_WORD                +: (B - T - 5)      ];
+        word_address_del_1        = pc_del_1[BYTES_PER_WORD                +: (B - T - 5)      ];
         tag_address_del_1         = pc_del_1[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
         tag_del_1                 = pc_del_1[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
         section_address_del_1     = pc_del_1[(BYTES_PER_WORD + B - T - 5)  +: T                ];
         
-        word_addr_del_2          = pc_del_2[BYTES_PER_WORD                +: (B - T - 5)      ];
+        word_address_del_2       = pc_del_2[BYTES_PER_WORD                +: (B - T - 5)      ];
         tag_address_del_2        = pc_del_2[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
         tag_del_2                = pc_del_2[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
         section_address_del_2    = pc_del_2[(BYTES_PER_WORD + B - T - 5)  +: T                ];
             
         tag_valid = 0;
         tag_match = 0;  
-        tag_del_1 = 0;
-        section_address_del_1 = 0;
         addr_to_L2_full = 0;
         ADDR_TO_L2 = 0;
     end
