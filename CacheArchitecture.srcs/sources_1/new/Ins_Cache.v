@@ -348,7 +348,7 @@ module Ins_Cache #(
     end
     
     assign ongoing_queue_wr_enb = ADDR_TO_L2_VALID & ADDR_TO_L2_READY;
-    assign ongoing_queue_rd_enb = data_stored_stream_buf | data_stored_lineRAM;
+    assign ongoing_queue_rd_enb = (data_from_L2_src == 0)? data_stored_lineRAM : data_stored_stream_buf;
     assign ADDR_TO_L2_VALID = addr_to_L2_full;
     assign addr_to_L2_ready = !addr_to_L2_full | ADDR_TO_L2_READY;
     
@@ -390,7 +390,7 @@ module Ins_Cache #(
     
     wire data_from_L2_buffer_ready;
     wire data_from_L2_buffer_valid;    
-    assign data_from_L2_buffer_ready = stream_buffer_ready | l1_refill_ready;                                        
+    assign data_from_L2_buffer_ready = (data_from_L2_src == 0)? l1_refill_ready : stream_buffer_ready;                                        
     
     // Control unit for Data_From_L2 buffer
     Data_From_L2_Buffer_Control #(

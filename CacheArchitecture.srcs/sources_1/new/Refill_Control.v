@@ -97,10 +97,20 @@ module Refill_Control #(
     reg [N              - 1 : 0] cur_src,  fir_src,  sec_src,  thr_src;
     reg [ASSOCIATIVITY  - 1 : 0] cur_set,  fir_set,  sec_set,  thr_set;
     
-    // To get admitted to the refill queue, several tests must be passed
+    // To get admitted to the refill queue, several tests must be passed, and also it mustn't readmit a completed refill
+    // (L2 misses, PC pipe disables, IF pipe saturated with PC value, L2 completes and removes from queue, but still IF pipe
+    // saturated, this causes a miss, and readmit)
+    
+    // Solution - Admission only if the IF3 request came from a valid PC on the PC pipeline
+    reg pc_pipe_enb_del_1, pc_pipe_enb_del_2;
+    always @(posedge CLK) begin
+        pc_pipe_enb_del_1 <= PC_PIPE_ENB;
+        pc_pipe_enb_del_2 <= pc_pipe_enb_del_1;
+    end    
+    
     wire admit, remove;
     reg test_pass;
-    assign admit = test_pass & !CACHE_HIT;
+    assign admit = test_pass & !CACHE_HIT & pc_pipe_enb_del_2;
     
     // Number of elements in the queue
     reg [3 : 0] no_of_elements;
@@ -268,8 +278,8 @@ module Refill_Control #(
     // FSM for refill control                                                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
-    localparam IDLE = 0;
-    localparam WAIT = 1;
+    localparam IDLE       = 0;
+    localparam TRANSITION = 1;
     localparam WRITING_SB = 2;
     localparam WRITING_L2 = 3;
     
@@ -277,6 +287,7 @@ module Refill_Control #(
     reg [T - 1 : 0] no_completed;
     reg [1 << T - 1 : 0] commited_sections;
     
+    reg [T - 1 : 0] i;
     always @(posedge CLK) begin
         case (refill_state)
             IDLE : begin
@@ -289,7 +300,9 @@ module Refill_Control #(
                     2'b01 :  begin
                         refill_state <= WRITING_SB;
                         no_completed <= 1;
-                        commited_sections[REFILL_REQ_SECT] <= 1;
+                        for (i = 0; i < (1 << T); i = i + 1) begin
+                            commited_sections[i] <= (i == REFILL_REQ_SECT);
+                        end
                     end
                     2'b10 :  begin
                         refill_state <= IDLE;
@@ -304,72 +317,124 @@ module Refill_Control #(
                 endcase              
             end
             
-            WRITING_SB : begin
-                if (SECTION_COMMIT) begin
-                    no_completed <= no_completed + 1;
-                    // When whole block is finished, go to idle state
-                    if (no_completed == {T{1'b1}}) begin
-                        refill_state <= IDLE;
-                        commited_sections <= 0;
+            TRANSITION : begin
+                if (cur_src == 0) begin
+                    refill_state <= WRITING_SB;
+                    no_completed <= 1;
+                    for (i = 0; i < (1 << T); i = i + 1) begin
+                        commited_sections[i] <= (i == REFILL_REQ_SECT);
+                    end
+                end else begin
+                    if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
+                        refill_state <= WRITING_L2;
+                        no_completed <= 1;
+                        for (i = 0; i < (1 << T); i = i + 1) begin
+                            commited_sections[i] <= (i == REFILL_REQ_SECT);
+                        end
                     end else begin
-                        commited_sections[cur_sect + no_completed] <= 1; 
-                                        
+                        refill_state <= WRITING_L2;
+                        no_completed <= 0;
+                        commited_sections <= 0;
                     end
                 end
             end
             
-            WRITING_L2 : begin
-                if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
-                    no_completed <= no_completed + 1;
-                    // When whole block is fetched, go to idle state
-                    if (no_completed == {T{1'b1}}) begin
+            WRITING_SB : begin
+                // When whole block is finished, go to idle state or transition state
+                if (no_completed == {T{1'b1}}) begin
+                    if (no_of_elements == 4'b0001 & !admit) begin
                         refill_state <= IDLE;
+                    end else begin
+                        refill_state <= TRANSITION;
+                    end  
+                      
+                    commited_sections <= 0;
+                end else begin
+                    for (i = 0; i < (1 << T); i = i + 1) begin
+                        if (i == cur_sect + no_completed) begin
+                            commited_sections[i] <= 1; 
+                        end                        
+                    end
+                end
+                no_completed <= no_completed + 1;
+            end
+            
+            WRITING_L2 : begin
+                if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0)) begin
+                    // When whole block is fetched, go to idle state or transition
+                    if (no_completed == {T{1'b1}}) begin
+                        if (no_of_elements == 4'b0001 & !admit) begin
+                            refill_state <= IDLE;
+                        end else begin
+                            refill_state <= TRANSITION;
+                        end  
+                        
                         commited_sections <= 0;
                     end else begin
-                        commited_sections[cur_sect + no_completed] <= 1; 
+                        for (i = 0; i < (1 << T); i = i + 1) begin
+                            if (i == cur_sect + no_completed) begin
+                                commited_sections[i] <= 1; 
+                            end                      
+                        end
                     end
+                    no_completed <= no_completed + 1;                                        
                 end              
             end
         endcase
     end
     
-    assign remove = (refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}});  
-    
+    assign remove = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}))
+                            | ((refill_state == WRITING_SB) & (no_completed == {T{1'b1}}));
+        
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for writing to tag memory and line memory                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
-            
-    reg [1 << T - 1 : 0] temp;     
-    
-    integer i;
-    always @(*) begin
-        for (i = 0; i < 1 << T ; i = i + 1) begin
-            if (i == REFILL_REQ_SECT) 
-                temp[i] = 1;
-            else 
-                temp[i] = 0;
-        end
-    end
-            
-    assign TAG_MEM_WR_ENB       = (no_of_elements == 0)? REFILL_REQ_DST : cur_set;
-    assign LIN_MEM_WR_ENB       = (no_of_elements == 0)? REFILL_REQ_DST : cur_set;
-    
+         
+    // Addresses        
     assign TAG_MEM_WR_ADDR      = (no_of_elements == 0)? REFILL_REQ_LINE : cur_line;
     assign LIN_MEM_WR_ADDR      = (no_of_elements == 0)? ({REFILL_REQ_LINE, REFILL_REQ_SECT}) : ({cur_line, (cur_sect + no_completed)});
+    
+    // Data
+    reg [(1 << T) - 1 : 0] temp;     
+    reg [T - 1 : 0] j;
+    always @(*) begin
+        for (j = 0; j < (1 << T) ; j = j + 1) begin
+            if (j == REFILL_REQ_SECT) 
+                temp[j] = 1;
+            else 
+                temp[j] = 0;
+        end
+    end
     
     assign TAG_MEM_TAG_IN       = (no_of_elements == 0)? REFILL_REQ_TAG : cur_tag;
     assign TAG_MEM_TAG_VALID_IN = (no_of_elements == 0)? temp : commited_sections;
     assign LIN_MEM_DATA_IN_SEL  = (no_of_elements == 0)? refill_req_src : cur_src;
-        
+    
+    // Write enables
+    reg write_test;
+    always @(*) begin
+        case (refill_state) 
+            IDLE        :   write_test = !CACHE_HIT & STREAM_HIT;
+            TRANSITION  :   write_test = (cur_src != 0);
+            WRITING_SB  :   write_test = 1'b1;
+            WRITING_L2  :   write_test = DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
+        endcase
+    end
+    
+    assign TAG_MEM_WR_ENB       = ((no_of_elements == 0)? REFILL_REQ_DST : cur_set) & {ASSOCIATIVITY{write_test}};
+    assign LIN_MEM_WR_ENB       = ((no_of_elements == 0)? REFILL_REQ_DST : cur_set) & {ASSOCIATIVITY{write_test}};
+       
+       
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for Data from L2 and prefetch control unit                                      //
     //////////////////////////////////////////////////////////////////////////////////////////////////
         
-    assign SECTION_COMMIT = (refill_state == WRITING_SB) | (refill_state == IDLE & !CACHE_HIT & STREAM_HIT);
+    assign SECTION_COMMIT = (refill_state == WRITING_SB) | (refill_state == IDLE & !CACHE_HIT & STREAM_HIT) | (refill_state == TRANSITION & (cur_src != 0));
     
-    assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2);
-    assign ONGOING_QUEUE_RD_ENB = remove;   
+    assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2) | (refill_state == TRANSITION & cur_src == 0);
+    assign ONGOING_QUEUE_RD_ENB = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
+                                        & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}));   
             
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,6 +455,12 @@ module Refill_Control #(
     assign PC_PIPE_ENB = pc_pipe_enb_reg;
     
     always @(posedge CLK) begin
+        case (refill_state)
+            IDLE       : pc_pipe_enb_reg <= CACHE_HIT | STREAM_HIT;
+            WRITING_SB : pc_pipe_enb_reg <= CACHE_HIT; 
+        endcase
+    
+    
         if (!CACHE_HIT & !STREAM_HIT) begin
             pc_pipe_enb_reg <= 1'b0;    
         end else if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
@@ -416,7 +487,10 @@ module Refill_Control #(
         
     initial begin
         no_of_elements = 0;
-        refill_state = 0;    
+        refill_state = 0;   
+        pc_pipe_enb_reg = 1; 
+        pc_pipe_enb_del_1 = 1;
+        pc_pipe_enb_del_2 = 1;
     end
     
     
