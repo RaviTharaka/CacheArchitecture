@@ -283,58 +283,59 @@ module Refill_Control #(
     localparam WRITING_SB = 2;
     localparam WRITING_L2 = 3;
     
-    reg [1 : 0] refill_state;
-    reg [T - 1 : 0] no_completed;
-    reg [1 << T - 1 : 0] commited_sections;
+    reg [1 : 0] refill_state, refill_state_wire;
+    reg [T - 1 : 0] no_completed, no_completed_wire;
+    reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     
-    reg [T - 1 : 0] i;
-    always @(posedge CLK) begin
+    integer i;
+    
+    always @(*) begin
         case (refill_state)
             IDLE : begin
                 case ({CACHE_HIT, STREAM_HIT})
                     2'b00 :  begin
-                        refill_state <= WRITING_L2;
-                        no_completed <= 0;
-                        commited_sections <= 0;
+                        refill_state_wire = WRITING_L2;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end
                     2'b01 :  begin
-                        refill_state <= WRITING_SB;
-                        no_completed <= 1;
-                        for (i = 0; i < (1 << T); i = i + 1) begin
-                            commited_sections[i] <= (i == REFILL_REQ_SECT);
+                        refill_state_wire = WRITING_SB;
+                        no_completed_wire = 1;
+                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                            commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
                         end
                     end
                     2'b10 :  begin
-                        refill_state <= IDLE;
-                        no_completed <= 0;
-                        commited_sections <= 0;
+                        refill_state_wire = IDLE;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end 
                     2'b11 :  begin
-                        refill_state <= IDLE;
-                        no_completed <= 0;
-                        commited_sections <= 0;
+                        refill_state_wire = IDLE;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end
                 endcase              
             end
             
             TRANSITION : begin
-                if (cur_src == 0) begin
-                    refill_state <= WRITING_SB;
-                    no_completed <= 1;
-                    for (i = 0; i < (1 << T); i = i + 1) begin
-                        commited_sections[i] <= (i == REFILL_REQ_SECT);
+                if (cur_src != 0) begin
+                    refill_state_wire = WRITING_SB;
+                    no_completed_wire = 1;
+                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                        commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
                     end
                 end else begin
                     if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
-                        refill_state <= WRITING_L2;
-                        no_completed <= 1;
-                        for (i = 0; i < (1 << T); i = i + 1) begin
-                            commited_sections[i] <= (i == REFILL_REQ_SECT);
+                        refill_state_wire = WRITING_L2;
+                        no_completed_wire = 1;
+                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                            commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
                         end
                     end else begin
-                        refill_state <= WRITING_L2;
-                        no_completed <= 0;
-                        commited_sections <= 0;
+                        refill_state_wire = WRITING_L2;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end
                 end
             end
@@ -343,20 +344,23 @@ module Refill_Control #(
                 // When whole block is finished, go to idle state or transition state
                 if (no_completed == {T{1'b1}}) begin
                     if (no_of_elements == 4'b0001 & !admit) begin
-                        refill_state <= IDLE;
+                        refill_state_wire = IDLE;
                     end else begin
-                        refill_state <= TRANSITION;
-                    end  
-                      
-                    commited_sections <= 0;
+                        refill_state_wire = TRANSITION;
+                    end 
                 end else begin
-                    for (i = 0; i < (1 << T); i = i + 1) begin
-                        if (i == cur_sect + no_completed) begin
-                            commited_sections[i] <= 1; 
-                        end                        
-                    end
+                    refill_state_wire = refill_state;                    
                 end
-                no_completed <= no_completed + 1;
+                
+                for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                    if (i[T - 1 : 0] == cur_sect + no_completed) begin
+                        commited_sections_wire[i] = 1; 
+                    end else begin
+                        commited_sections_wire[i] = commited_sections[i];
+                    end                       
+                end
+                
+                no_completed_wire = no_completed + 1;
             end
             
             WRITING_L2 : begin
@@ -364,23 +368,36 @@ module Refill_Control #(
                     // When whole block is fetched, go to idle state or transition
                     if (no_completed == {T{1'b1}}) begin
                         if (no_of_elements == 4'b0001 & !admit) begin
-                            refill_state <= IDLE;
+                            refill_state_wire = IDLE;
                         end else begin
-                            refill_state <= TRANSITION;
+                            refill_state_wire = TRANSITION;
                         end  
-                        
-                        commited_sections <= 0;
                     end else begin
-                        for (i = 0; i < (1 << T); i = i + 1) begin
-                            if (i == cur_sect + no_completed) begin
-                                commited_sections[i] <= 1; 
-                            end                      
-                        end
+                        refill_state_wire = refill_state;
                     end
-                    no_completed <= no_completed + 1;                                        
-                end              
+                    
+                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                        if (i[T - 1 : 0] == cur_sect + no_completed) begin
+                            commited_sections_wire[i] = 1; 
+                        end else begin
+                            commited_sections_wire[i] = commited_sections[i];
+                        end                       
+                    end
+                                            
+                    no_completed_wire = no_completed + 1;                                        
+                end else begin
+                    no_completed_wire = no_completed;
+                    refill_state_wire = refill_state;
+                    commited_sections_wire = commited_sections;
+                end        
             end
         endcase
+    end
+    
+    always @(posedge CLK) begin
+        no_completed <= no_completed_wire;
+        refill_state <= refill_state_wire;
+        commited_sections <= commited_sections_wire;
     end
     
     assign remove = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}))
@@ -396,19 +413,8 @@ module Refill_Control #(
     assign LIN_MEM_WR_ADDR      = (no_of_elements == 0)? ({REFILL_REQ_LINE, REFILL_REQ_SECT}) : ({cur_line, (cur_sect + no_completed)});
     
     // Data
-    reg [(1 << T) - 1 : 0] temp;     
-    reg [T - 1 : 0] j;
-    always @(*) begin
-        for (j = 0; j < (1 << T) ; j = j + 1) begin
-            if (j == REFILL_REQ_SECT) 
-                temp[j] = 1;
-            else 
-                temp[j] = 0;
-        end
-    end
-    
     assign TAG_MEM_TAG_IN       = (no_of_elements == 0)? REFILL_REQ_TAG : cur_tag;
-    assign TAG_MEM_TAG_VALID_IN = (no_of_elements == 0)? temp : commited_sections;
+    assign TAG_MEM_TAG_VALID_IN = commited_sections_wire;
     assign LIN_MEM_DATA_IN_SEL  = (no_of_elements == 0)? refill_req_src : cur_src;
     
     // Write enables

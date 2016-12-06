@@ -359,7 +359,7 @@ module Ins_Cache #(
             
     // Queue for requests currently being serviced by the L2 cache
     FIFO_FWFT #(
-        .DEPTH(L2_DELAY / L2_BURST + 2),                                                                                       
+        .DEPTH(pwr_ceil($ceil((L2_DELAY + 0.0) / (L2_BURST + 0.0)) + 1)),                                                                                       
         .WIDTH(STREAM_SEL_BITS)
     ) ongoing_L2_queue (
         .CLK(CLK),
@@ -601,6 +601,14 @@ module Ins_Cache #(
         input integer depth;
         for (logb2 = 0; depth > 1; logb2 = logb2 + 1)
             depth = depth >> 1;
+    endfunction
+    
+    function integer pwr_ceil;
+        input integer a;
+        
+        integer k;
+        for (k = 1; k < a; k = k << 1)
+            pwr_ceil = k << 1;
     endfunction
     
 endmodule

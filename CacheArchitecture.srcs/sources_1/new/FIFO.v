@@ -26,7 +26,7 @@ module FIFO #(
         parameter DEPTH = 8,
         
         // Calculated parameters
-        localparam ADDR_WIDTH = clogb2(DEPTH)
+        localparam ADDR_WIDTH = logb2(DEPTH)
     ) (
         input CLK,
         input RSTN,
@@ -80,9 +80,9 @@ module FIFO #(
     end
     
     //  The following function calculates the address width based on specified RAM depth
-    function integer clogb2;
+    function integer logb2;
         input integer depth;
-        for (clogb2 = 0; depth > 0; clogb2 = clogb2 + 1)
+        for (logb2 = 0; depth > 1; logb2 = logb2 + 1)
             depth = depth >> 1;
     endfunction
 endmodule
