@@ -41,9 +41,6 @@ module Refill_Control #(
     ) (
         input                           CLK,
         
-        // Outputs to the main processor pipeline
-        output CACHE_READY,                                             // Signal from cache to processor that its pipeline is currently ready to work     
-                
         // Current request at IF3
         input                           CACHE_HIT,                      // Whether the L1 cache hits or misses 
         input                           STREAM_HIT,                     // Whether any of the stream buffers hit
@@ -487,8 +484,8 @@ module Refill_Control #(
     assign SECTION_COMMIT = (refill_state == WRITING_SB) | (refill_state == IDLE & !CACHE_HIT & STREAM_HIT) | (refill_state == TRANSITION & (cur_src != 0));
     
     assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2) | (refill_state == TRANSITION & cur_src == 0);
-    assign ONGOING_QUEUE_RD_ENB = (refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
-                                        & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}});   
+    assign ONGOING_QUEUE_RD_ENB = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
+                                        & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}));   
             
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -502,99 +499,38 @@ module Refill_Control #(
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for main pipeline and PC select                                                 //
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    localparam HITTING = 0;
-    localparam WAIT = 1;
-    localparam PC0 = 2;
-    localparam PC1 = 3;
-    localparam PC2 = 4;
-    localparam TRANSIT = 5;
-    
-    // FSM for enabling the PC pipeline
-    reg critical_ready, critical_used;
-    reg [1 : 0] critical_no;
         
-    always @(*) begin
+    // Enabling the PC pipeline 
+    reg pc_pipe_enb_reg;
+    reg [1 : 0] no_of_pc_sent;
+    assign PC_PIPE_ENB = pc_pipe_enb_reg;
+    
+    always @(posedge CLK) begin
         case (refill_state)
-            IDLE        :   critical_ready = !CACHE_HIT & STREAM_HIT;
-            TRANSITION  :   critical_ready = (cur_src != 0);
-            WRITING_SB  :   critical_ready = 0;
-            WRITING_L2  :   critical_ready = (no_completed_wire == 1) & DATA_FROM_L2_BUFFER_VALID 
-                                              & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
+            IDLE       : pc_pipe_enb_reg <= CACHE_HIT | STREAM_HIT;
+            WRITING_SB : pc_pipe_enb_reg <= CACHE_HIT; 
         endcase
-        
-        case (pc_state) 
-            HITTING : critical_used = 0;
-            WAIT    : critical_used = critical_ready | critical_no != 0;
-            PC0     : critical_used = 0;
-            PC1     : critical_used = 0;
-            PC2     : critical_used = 0;
-            TRANSIT : critical_used = critical_ready | (no_of_elements != 0) & !CACHE_HIT;
-        endcase
+    
+    
+        if (!CACHE_HIT & !STREAM_HIT) begin
+            pc_pipe_enb_reg <= 1'b0;    
+        end else if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
+            pc_pipe_enb_reg <= 1'b1;
+        end
     end
     
     always @(posedge CLK) begin
-        case ({critical_ready, critical_used}) 
-            2'b00 : critical_no <= critical_no;
-            2'b01 : critical_no <= critical_no - 1;
-            2'b10 : critical_no <= critical_no + 1;
-            2'b11 : critical_no <= critical_no;
-        endcase
-    end 
+        if (!CACHE_HIT & !STREAM_HIT) begin
+            no_of_pc_sent <= 0;
+        end else begin
+            if (pc_pipe_enb_reg) begin
+                no_of_pc_sent <= no_of_pc_sent + 1;
+            end
+        end
+    end
     
-    reg [2 : 0] pc_state;
-    always @(posedge CLK) begin
-        case (pc_state) 
-            HITTING : begin
-                case ({STREAM_HIT, CACHE_HIT})
-                    2'b00 : pc_state <= WAIT;
-                    2'b01 : pc_state <= HITTING;
-                    2'b10 : pc_state <= PC0;
-                    2'b11 : pc_state <= HITTING;
-                endcase
-            end
-            
-            WAIT : begin
-                if (critical_ready | critical_no != 0) 
-                    pc_state <= PC1;
-            end
-            
-            PC0 : pc_state <= PC1;
-            PC1 : pc_state <= PC2;
-            
-            PC2 : begin
-                if (no_of_elements == 0) 
-                    pc_state <= HITTING;
-                else 
-                    pc_state <= TRANSIT;    
-            end
-            
-            TRANSIT : begin
-                if (no_of_elements == 0) begin
-                    case ({STREAM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= WAIT;
-                        2'b01 : pc_state <= HITTING;
-                        2'b10 : pc_state <= PC0;
-                        2'b11 : pc_state <= HITTING;
-                    endcase
-                end else begin 
-                    case ({STREAM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
-                        2'b01 : pc_state <= TRANSIT;
-                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
-                        2'b11 : pc_state <= TRANSIT;
-                    endcase
-                end
-            end
-        endcase
-    end 
-        
-    // Enabling the PC pipeline 
-    assign PC_PIPE_ENB = (pc_state != WAIT);
-    assign PC_SEL = {(pc_state == PC0 | pc_state == PC1 | pc_state == PC2 | (pc_state == HITTING & !CACHE_HIT) 
-                         | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT)) , BRANCH};
+    assign PC_SEL = {(no_of_pc_sent < 3) , BRANCH};
     
-    assign CACHE_READY = pc_pipe_enb_del_2 & CACHE_HIT;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial conditions - for simulation                                                          //
@@ -602,12 +538,16 @@ module Refill_Control #(
         
     initial begin
         no_of_elements = 0;
-        refill_state = 0; 
-        pc_state = HITTING;  
+        refill_state = 0;   
+        pc_pipe_enb_reg = 1; 
         pc_pipe_enb_del_1 = 1;
+<<<<<<< HEAD
         pc_pipe_enb_del_2 = 1;   
         critical_no = 0;  
         test_pass = 1;   
+=======
+        pc_pipe_enb_del_2 = 1;
+>>>>>>> parent of 66dbc3f... About to do some timing optimizations
     end
     
     

@@ -512,8 +512,6 @@ module Ins_Cache #(
         .T(T)
     ) refill_control (
         .CLK(CLK),
-        // Outputs to the main processor pipeline
-        .CACHE_READY(CACHE_READY),                          // Signal from cache to processor that its pipeline is currently ready to work                
         // Hit miss status 
         .CACHE_HIT(cache_hit),
         .STREAM_HIT(stream_hit),
@@ -567,6 +565,7 @@ module Ins_Cache #(
         .RSTN(RSTN),
         // Status signals
         .CACHE_HIT(cache_hit),
+        .CACHE_READY(CACHE_READY),                          // Signal from cache to processor that its pipeline is currently ready to work
         .PROC_READY(PROC_READY),                            // Signal from processor to cache that its pipeline is currently ready to work
         .PC_DEL_1_EQUALS_2(pc_del_1_equals_2),              // Whether PC[t-2] == PC[t-1]
         .PC_DEL_0_EQUALS_2(pc_del_0_equals_2),              // Whether PC[t-2] == PC[t]
