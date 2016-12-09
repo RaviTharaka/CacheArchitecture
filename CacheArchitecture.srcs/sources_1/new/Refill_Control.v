@@ -41,6 +41,9 @@ module Refill_Control #(
     ) (
         input                           CLK,
         
+        // Outputs to the main processor pipeline		
+        output CACHE_READY,                                             // Signal from cache to processor that its pipeline is currently ready to work     
+        
         // Current request at IF3
         input                           CACHE_HIT,                      // Whether the L1 cache hits or misses 
         input                           STREAM_HIT,                     // Whether any of the stream buffers hit
@@ -279,6 +282,111 @@ module Refill_Control #(
     // Tests to decide whether to include the IF3 request in to the queue                           //
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
+    ////////////// This is the wanted behavior of the unit, but won't pass timing ////////////////////
+    //    // Tests
+    //    wire clash_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0];		
+    //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_DST == fir_set) & no_of_elements[1];   
+    //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_DST == sec_set) & no_of_elements[2];
+    //    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
+    //    wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
+    //    wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];
+    
+    
+    ////////////// Take some tests to the previous clock cycle, timing even worse ///////////////////
+    //    // Tests - Clash with nth request
+    //    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
+    //    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
+    //    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
+        
+    //    // Tests - Equal with nth request
+    //    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
+    //    wire equal_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_TAG_PREV == fir_tag_wire) & no_of_elements_wire[1];
+    //    wire equal_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_TAG_PREV == sec_tag_wire) & no_of_elements_wire[2];
+        
+    //    reg clash_n0, clash_n1, clash_n2, equal_n0, equal_n1, equal_n2;
+    //    always @(posedge CLK) begin
+    //        clash_n0 <= clash_n0_wire;
+    //        clash_n1 <= clash_n1_wire;
+    //        clash_n2 <= clash_n2_wire;
+    //        equal_n0 <= equal_n0_wire;
+    //        equal_n1 <= equal_n1_wire;
+    //        equal_n2 <= equal_n2_wire;
+    //    end   
+    
+    /////////////////// Change the way the tests are begin done, good timing ////////////////////////
+    //    reg clash_p0, clash_p1, clash_p2, clash_p3, clash_p4;
+    //    reg equal_p0, equal_p1, equal_p2, equal_p3, equal_p4;
+    //    reg admit_p, remove_p;
+    //    reg element0_p, element1_p, element2_p, element3_p, element4_p; 
+          
+    //    always @(posedge CLK) begin
+    //        clash_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
+    //        clash_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
+    //        clash_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
+    //        clash_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
+    //        clash_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
+          
+    //        equal_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
+    //        equal_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
+    //        equal_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_TAG_PREV == sec_tag);
+    //        equal_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_TAG_PREV == thr_tag);
+    //        equal_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
+          
+    //        admit_p <= admit;
+    //        remove_p <= remove;
+          
+    //        element0_p <= no_of_elements == 4'b0000;
+    //        element1_p <= no_of_elements == 4'b0001;
+    //        element2_p <= no_of_elements == 4'b0011;
+    //        element3_p <= no_of_elements == 4'b0111;
+    //        element4_p <= no_of_elements == 4'b1111;
+    //    end
+      
+    //    reg clash_n0, clash_n1, clash_n2;
+    //    reg equal_n0, equal_n1, equal_n2;
+    //    always @(*) begin
+    //        case ({admit_p, remove_p})
+    //            2'b10 : begin
+    //                clash_n0 = no_of_elements[0] & ((element0_p)? clash_p4 : clash_p0);
+    //                clash_n1 = no_of_elements[1] & ((element1_p)? clash_p4 : clash_p1);
+    //                clash_n2 = no_of_elements[2] & ((element2_p)? clash_p4 : clash_p2);
+                  
+    //                equal_n0 = no_of_elements[0] & ((element0_p)? equal_p4 : equal_p0);
+    //                equal_n1 = no_of_elements[1] & ((element1_p)? equal_p4 : equal_p1);
+    //                equal_n2 = no_of_elements[2] & ((element2_p)? equal_p4 : equal_p2);                
+    //            end
+    //            2'b01 : begin
+    //                clash_n0 = no_of_elements[0] & clash_p1;
+    //                clash_n1 = no_of_elements[1] & clash_p2;
+    //                clash_n2 = no_of_elements[2] & clash_p3;
+                  
+    //                equal_n0 = no_of_elements[0] & equal_p1;
+    //                equal_n1 = no_of_elements[1] & equal_p2;
+    //                equal_n2 = no_of_elements[2] & equal_p3;
+    //            end
+    //            2'b11 : begin
+    //                clash_n0 = no_of_elements[0] & ((element1_p)? clash_p4 : clash_p1);
+    //                clash_n1 = no_of_elements[1] & ((element2_p)? clash_p4 : clash_p2);
+    //                clash_n2 = no_of_elements[2] & ((element3_p)? clash_p4 : clash_p3);
+                  
+    //                equal_n0 = no_of_elements[0] & ((element1_p)? equal_p4 : equal_p1);
+    //                equal_n1 = no_of_elements[1] & ((element2_p)? equal_p4 : equal_p2);
+    //                equal_n2 = no_of_elements[2] & ((element3_p)? equal_p4 : equal_p3);
+    //            end
+    //            2'b00 : begin 
+    //                clash_n0 = no_of_elements[0] & clash_p0;
+    //                clash_n1 = no_of_elements[1] & clash_p1;
+    //                clash_n2 = no_of_elements[2] & clash_p2;
+                  
+    //                equal_n0 = no_of_elements[0] & equal_p0;
+    //                equal_n1 = no_of_elements[1] & equal_p1;
+    //                equal_n2 = no_of_elements[2] & equal_p2;
+    //            end
+    //        endcase    
+    //    end   
+           
+
+    //////////// Take some more logic to the previous clock cycle, even better timing ///////////////
     reg clash_cur, clash_fir, clash_sec, clash_thr, clash_pcs;
     reg equal_cur, equal_fir, equal_sec, equal_thr, equal_pcs;
     
@@ -339,98 +447,7 @@ module Refill_Control #(
             end
         endcase    
     end   
-    
-//    reg clash_p0, clash_p1, clash_p2, clash_p3, clash_p4;
-//    reg equal_p0, equal_p1, equal_p2, equal_p3, equal_p4;
-//    reg admit_p, remove_p;
-//    reg element0_p, element1_p, element2_p, element3_p, element4_p; 
-        
-//    always @(posedge CLK) begin
-//        clash_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
-//        clash_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
-//        clash_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
-//        clash_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
-//        clash_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
-        
-//        equal_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
-//        equal_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
-//        equal_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_TAG_PREV == sec_tag);
-//        equal_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_TAG_PREV == thr_tag);
-//        equal_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
-        
-//        admit_p <= admit;
-//        remove_p <= remove;
-        
-//        element0_p <= no_of_elements == 4'b0000;
-//        element1_p <= no_of_elements == 4'b0001;
-//        element2_p <= no_of_elements == 4'b0011;
-//        element3_p <= no_of_elements == 4'b0111;
-//        element4_p <= no_of_elements == 4'b1111;
-//    end
-    
-//    reg clash_n0, clash_n1, clash_n2;
-//    reg equal_n0, equal_n1, equal_n2;
-//    always @(*) begin
-//        case ({admit_p, remove_p})
-//            2'b10 : begin
-//                clash_n0 = no_of_elements[0] & ((element0_p)? clash_p4 : clash_p0);
-//                clash_n1 = no_of_elements[1] & ((element1_p)? clash_p4 : clash_p1);
-//                clash_n2 = no_of_elements[2] & ((element2_p)? clash_p4 : clash_p2);
-                
-//                equal_n0 = no_of_elements[0] & ((element0_p)? equal_p4 : equal_p0);
-//                equal_n1 = no_of_elements[1] & ((element1_p)? equal_p4 : equal_p1);
-//                equal_n2 = no_of_elements[2] & ((element2_p)? equal_p4 : equal_p2);                
-//            end
-//            2'b01 : begin
-//                clash_n0 = no_of_elements[0] & clash_p1;
-//                clash_n1 = no_of_elements[1] & clash_p2;
-//                clash_n2 = no_of_elements[2] & clash_p3;
-                
-//                equal_n0 = no_of_elements[0] & equal_p1;
-//                equal_n1 = no_of_elements[1] & equal_p2;
-//                equal_n2 = no_of_elements[2] & equal_p3;
-//            end
-//            2'b11 : begin
-//                clash_n0 = no_of_elements[0] & ((element1_p)? clash_p4 : clash_p1);
-//                clash_n1 = no_of_elements[1] & ((element2_p)? clash_p4 : clash_p2);
-//                clash_n2 = no_of_elements[2] & ((element3_p)? clash_p4 : clash_p3);
-                
-//                equal_n0 = no_of_elements[0] & ((element1_p)? equal_p4 : equal_p1);
-//                equal_n1 = no_of_elements[1] & ((element2_p)? equal_p4 : equal_p2);
-//                equal_n2 = no_of_elements[2] & ((element3_p)? equal_p4 : equal_p3);
-//            end
-//            2'b00 : begin 
-//                clash_n0 = no_of_elements[0] & clash_p0;
-//                clash_n1 = no_of_elements[1] & clash_p1;
-//                clash_n2 = no_of_elements[2] & clash_p2;
-                
-//                equal_n0 = no_of_elements[0] & equal_p0;
-//                equal_n1 = no_of_elements[1] & equal_p1;
-//                equal_n2 = no_of_elements[2] & equal_p2;
-//            end
-//        endcase    
-//    end   
-    
-    // Tests - Clash with nth request
-//    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
-//    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
-//    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
-    
-//    // Tests - Equal with nth request
-//    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
-//    wire equal_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_TAG_PREV == fir_tag_wire) & no_of_elements_wire[1];
-//    wire equal_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_TAG_PREV == sec_tag_wire) & no_of_elements_wire[2];
-    
-//    reg clash_n0, clash_n1, clash_n2, equal_n0, equal_n1, equal_n2;
-//    always @(posedge CLK) begin
-//        clash_n0 <= clash_n0_wire;
-//        clash_n1 <= clash_n1_wire;
-//        clash_n2 <= clash_n2_wire;
-//        equal_n0 <= equal_n0_wire;
-//        equal_n1 <= equal_n1_wire;
-//        equal_n2 <= equal_n2_wire;
-//    end    
-    
+  
     // Whether to pass or fail the tests
     always @(*) begin
         if (equal_n2) begin
@@ -616,8 +633,8 @@ module Refill_Control #(
     assign SECTION_COMMIT = (refill_state == WRITING_SB) | (refill_state == IDLE & !CACHE_HIT & STREAM_HIT) | (refill_state == TRANSITION & (cur_src != 0));
     
     assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2) | (refill_state == TRANSITION & cur_src == 0);
-    assign ONGOING_QUEUE_RD_ENB = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
-                                        & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}));   
+    assign ONGOING_QUEUE_RD_ENB = (refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
+                                        & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}});   
             
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -632,37 +649,98 @@ module Refill_Control #(
     // Instructions for main pipeline and PC select                                                 //
     //////////////////////////////////////////////////////////////////////////////////////////////////
         
-    // Enabling the PC pipeline 
-    reg pc_pipe_enb_reg;
-    reg [1 : 0] no_of_pc_sent;
-    assign PC_PIPE_ENB = pc_pipe_enb_reg;
+    localparam HITTING = 0;
+    localparam WAIT = 1;
+    localparam PC0 = 2;
+    localparam PC1 = 3;
+    localparam PC2 = 4;
+    localparam TRANSIT = 5;
     
-    always @(posedge CLK) begin
+    // FSM for enabling the PC pipeline
+    reg critical_ready, critical_used;
+    reg [1 : 0] critical_no;
+        
+    always @(*) begin
         case (refill_state)
-            IDLE       : pc_pipe_enb_reg <= CACHE_HIT | STREAM_HIT;
-            WRITING_SB : pc_pipe_enb_reg <= CACHE_HIT; 
+            IDLE        :   critical_ready = !CACHE_HIT & STREAM_HIT;
+            TRANSITION  :   critical_ready = (cur_src != 0);
+            WRITING_SB  :   critical_ready = 0;
+            WRITING_L2  :   critical_ready = (no_completed_wire == 1) & DATA_FROM_L2_BUFFER_VALID 
+                                              & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
         endcase
-    
-    
-        if (!CACHE_HIT & !STREAM_HIT) begin
-            pc_pipe_enb_reg <= 1'b0;    
-        end else if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
-            pc_pipe_enb_reg <= 1'b1;
-        end
+        
+        case (pc_state) 
+            HITTING : critical_used = 0;
+            WAIT    : critical_used = critical_ready | critical_no != 0;
+            PC0     : critical_used = 0;
+            PC1     : critical_used = 0;
+            PC2     : critical_used = 0;
+            TRANSIT : critical_used = critical_ready | (no_of_elements != 0) & !CACHE_HIT;
+        endcase
     end
-    
+            
     always @(posedge CLK) begin
-        if (!CACHE_HIT & !STREAM_HIT) begin
-            no_of_pc_sent <= 0;
-        end else begin
-            if (pc_pipe_enb_reg) begin
-                no_of_pc_sent <= no_of_pc_sent + 1;
+        case ({critical_ready, critical_used}) 
+            2'b00 : critical_no <= critical_no;
+            2'b01 : critical_no <= critical_no - 1;
+            2'b10 : critical_no <= critical_no + 1;
+            2'b11 : critical_no <= critical_no;
+        endcase
+    end 
+    
+    reg [2 : 0] pc_state;
+    always @(posedge CLK) begin
+        case (pc_state) 
+            HITTING : begin
+                case ({STREAM_HIT, CACHE_HIT})
+                    2'b00 : pc_state <= WAIT;
+                    2'b01 : pc_state <= HITTING;
+                    2'b10 : pc_state <= PC0;
+                    2'b11 : pc_state <= HITTING;
+                endcase
             end
-        end
-    end
+            
+            WAIT : begin
+                if (critical_ready | critical_no != 0) 
+                    pc_state <= PC1;
+            end
+            
+            PC0 : pc_state <= PC1;
+            PC1 : pc_state <= PC2;
+            
+            PC2 : begin
+                if (no_of_elements == 0) 
+                    pc_state <= HITTING;
+                else 
+                    pc_state <= TRANSIT;    
+            end
+            
+            TRANSIT : begin
+                if (no_of_elements == 0) begin
+                    case ({STREAM_HIT, CACHE_HIT})
+                        2'b00 : pc_state <= WAIT;
+                        2'b01 : pc_state <= HITTING;
+                        2'b10 : pc_state <= PC0;
+                        2'b11 : pc_state <= HITTING;
+                    endcase
+                end else begin 
+                    case ({STREAM_HIT, CACHE_HIT})
+                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
+                        2'b01 : pc_state <= TRANSIT;
+                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
+                        2'b11 : pc_state <= TRANSIT;
+                    endcase
+                end
+            end
+        endcase
+    end 
+        
+    // Enabling the PC pipeline 
+    assign PC_PIPE_ENB = (pc_state != WAIT);
+    assign PC_SEL = {(pc_state == PC0 | pc_state == PC1 | pc_state == PC2 | (pc_state == HITTING & !CACHE_HIT) 
+                         | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT)) , BRANCH};
     
-    assign PC_SEL = {(no_of_pc_sent < 3) , BRANCH};
-    
+    assign CACHE_READY = pc_pipe_enb_del_2 & CACHE_HIT;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial conditions - for simulation                                                          //
@@ -671,11 +749,16 @@ module Refill_Control #(
     initial begin
         no_of_elements = 0;
         refill_state = 0;   
-        pc_pipe_enb_reg = 1; 
+        pc_state = HITTING; 
         pc_pipe_enb_del_1 = 1;
-        pc_pipe_enb_del_2 = 1; 
-        test_pass = 1;   
         pc_pipe_enb_del_2 = 1;
+        critical_no = 0; 
+        clash_n0 = 0;
+        clash_n1 = 0;
+        clash_n2 = 0;
+        equal_n0 = 0;
+        equal_n1 = 0;
+        equal_n2 = 0;        
     end
     
     
