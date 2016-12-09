@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="400453450fs"></ZoomEndTime>
-      <Cursor1Time time="121627000fs"></Cursor1Time>
+      <ZoomStartTime time="75740000fs"></ZoomStartTime>
+      <ZoomEndTime time="312880232fs"></ZoomEndTime>
+      <Cursor1Time time="179689000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="14" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
@@ -57,6 +57,7 @@
    <wvobject fp_name="group7" type="group">
       <obj_property name="label">From Proc</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/PROC_READY" type="logic">
          <obj_property name="ElementShortName">PROC_READY</obj_property>
          <obj_property name="ObjectShortName">PROC_READY</obj_property>
@@ -68,7 +69,7 @@
       <wvobject fp_name="/Test_Ins_Cache/BRANCH_ADDR_IN" type="array">
          <obj_property name="ElementShortName">BRANCH_ADDR_IN[31:0]</obj_property>
          <obj_property name="ObjectShortName">BRANCH_ADDR_IN[31:0]</obj_property>
-         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group55" type="group">
@@ -132,12 +133,14 @@
             <obj_property name="ElementShortName">[0][1:0]</obj_property>
             <obj_property name="ObjectShortName">[0][1:0]</obj_property>
             <obj_property name="label">block_valid[1:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/tag_from_ram[0]" type="array">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">[0][18:0]</obj_property>
             <obj_property name="ObjectShortName">[0][18:0]</obj_property>
             <obj_property name="label">tag[18:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
       </wvobject>
       <wvobject fp_name="group93" type="group">
@@ -155,19 +158,20 @@
             <obj_property name="ElementShortName">[1][1:0]</obj_property>
             <obj_property name="ObjectShortName">[1][1:0]</obj_property>
             <obj_property name="label">block_valid[1:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/tag_from_ram[1]" type="array">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">[1][18:0]</obj_property>
             <obj_property name="ObjectShortName">[1][18:0]</obj_property>
             <obj_property name="label">tag[18:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group63" type="group">
       <obj_property name="label">Line memories</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].line_memory /ADDR_R" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">ADDR_R[7:0]</obj_property>
@@ -1323,15 +1327,36 @@
          <obj_property name="label">PC_del_2</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc_sel" type="array">
+      <wvobject fp_name="group1025" type="group">
+         <obj_property name="label">Status</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">pc_sel[1:0]</obj_property>
-         <obj_property name="ObjectShortName">pc_sel[1:0]</obj_property>
-         <obj_property name="label">PC_mux_select</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc_pipe_enb" type="logic">
-         <obj_property name="ElementShortName">pc_pipe_enb</obj_property>
-         <obj_property name="ObjectShortName">pc_pipe_enb</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/pc_state" type="array">
+            <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
+            <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/pc_pipe_enb" type="logic">
+            <obj_property name="ElementShortName">pc_pipe_enb</obj_property>
+            <obj_property name="ObjectShortName">pc_pipe_enb</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/pc_sel" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">pc_sel[1:0]</obj_property>
+            <obj_property name="ObjectShortName">pc_sel[1:0]</obj_property>
+            <obj_property name="label">PC_mux_select</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_ready" type="logic">
+            <obj_property name="ElementShortName">critical_ready</obj_property>
+            <obj_property name="ObjectShortName">critical_ready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_used" type="logic">
+            <obj_property name="ElementShortName">critical_used</obj_property>
+            <obj_property name="ObjectShortName">critical_used</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_no" type="array">
+            <obj_property name="ElementShortName">critical_no[1:0]</obj_property>
+            <obj_property name="ObjectShortName">critical_no[1:0]</obj_property>
+         </wvobject>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group736" type="group">
@@ -1432,7 +1457,6 @@
    <wvobject fp_name="group48" type="group">
       <obj_property name="label">Address To L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/send_addr_to_L2" type="logic">
          <obj_property name="ElementShortName">send_addr_to_L2</obj_property>
          <obj_property name="ObjectShortName">send_addr_to_L2</obj_property>
@@ -1647,7 +1671,6 @@
       <wvobject fp_name="group763" type="group">
          <obj_property name="label">data_from_l2_buffer</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus760" type="vbus">
             <obj_property name="label">Data7</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -3718,14 +3741,6 @@
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/no_completed" type="array">
             <obj_property name="ElementShortName">no_completed[0:0]</obj_property>
             <obj_property name="ObjectShortName">no_completed[0:0]</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/no_of_pc_sent" type="array">
-            <obj_property name="ElementShortName">no_of_pc_sent[1:0]</obj_property>
-            <obj_property name="ObjectShortName">no_of_pc_sent[1:0]</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/pc_pipe_enb_reg" type="logic">
-            <obj_property name="ElementShortName">pc_pipe_enb_reg</obj_property>
-            <obj_property name="ObjectShortName">pc_pipe_enb_reg</obj_property>
          </wvobject>
       </wvobject>
    </wvobject>
