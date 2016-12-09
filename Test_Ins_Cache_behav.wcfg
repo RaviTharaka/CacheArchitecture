@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="75740000fs"></ZoomStartTime>
-      <ZoomEndTime time="312880232fs"></ZoomEndTime>
-      <Cursor1Time time="179689000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="229600001fs"></ZoomEndTime>
+      <Cursor1Time time="140000000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="14" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
@@ -1671,6 +1671,7 @@
       <wvobject fp_name="group763" type="group">
          <obj_property name="label">data_from_l2_buffer</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus760" type="vbus">
             <obj_property name="label">Data7</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -3540,47 +3541,47 @@
          <obj_property name="ElementShortName">remove</obj_property>
          <obj_property name="ObjectShortName">remove</obj_property>
       </wvobject>
+      <wvobject fp_name="vbus695" type="vbus">
+         <obj_property name="label">Addr_In</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_TAG" type="array">
+            <obj_property name="ElementShortName">REFILL_REQ_TAG[18:0]</obj_property>
+            <obj_property name="ObjectShortName">REFILL_REQ_TAG[18:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_LINE" type="array">
+            <obj_property name="ElementShortName">REFILL_REQ_LINE[6:0]</obj_property>
+            <obj_property name="ObjectShortName">REFILL_REQ_LINE[6:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_SECT" type="array">
+            <obj_property name="ElementShortName">REFILL_REQ_SECT[0:0]</obj_property>
+            <obj_property name="ObjectShortName">REFILL_REQ_SECT[0:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+      </wvobject>
       <wvobject fp_name="group701" type="group">
          <obj_property name="label">Request</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="isExpanded"></obj_property>
-         <wvobject fp_name="vbus695" type="vbus">
-            <obj_property name="label">Addr_In</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_TAG" type="array">
-               <obj_property name="ElementShortName">REFILL_REQ_TAG[18:0]</obj_property>
-               <obj_property name="ObjectShortName">REFILL_REQ_TAG[18:0]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_LINE" type="array">
-               <obj_property name="ElementShortName">REFILL_REQ_LINE[6:0]</obj_property>
-               <obj_property name="ObjectShortName">REFILL_REQ_LINE[6:0]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_SECT" type="array">
-               <obj_property name="ElementShortName">REFILL_REQ_SECT[0:0]</obj_property>
-               <obj_property name="ObjectShortName">REFILL_REQ_SECT[0:0]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Ins_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-         </wvobject>
          <wvobject fp_name="vbus763" type="vbus">
             <obj_property name="label">Current</obj_property>
             <obj_property name="DisplayName">label</obj_property>

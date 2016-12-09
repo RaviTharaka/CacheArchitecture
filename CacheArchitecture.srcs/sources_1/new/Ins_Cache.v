@@ -495,12 +495,13 @@ module Ins_Cache #(
         .OUT(lin_mem_data_in)
     );
     
-    reg [ASSOCIATIVITY - 1 : 0] refill_req_dst = 1;
+    reg [ASSOCIATIVITY - 1 : 0] refill_req_dst = 2, refill_req_dst_del_1 = 1;
     always @(posedge CLK) begin                                                                             // Temporary - bogus random replacement policy
         if (refill_req_dst [ASSOCIATIVITY - 1])
             refill_req_dst <= 1;
         else
             refill_req_dst <= refill_req_dst << 1;    
+        refill_req_dst_del_1 <= refill_req_dst;
     end                                   
           
     Refill_Control #(
@@ -517,10 +518,14 @@ module Ins_Cache #(
         .CACHE_HIT(cache_hit),
         .STREAM_HIT(stream_hit),
         // Data needed for the refill operation
-        .REFILL_REQ_DST(refill_req_dst),                   
+        .REFILL_REQ_DST(refill_req_dst_del_1),                   
         .REFILL_REQ_TAG(tag_del_2),
         .REFILL_REQ_LINE(tag_address_del_2),
         .REFILL_REQ_SECT(section_address_del_2),
+        .REFILL_REQ_DST_PREV(refill_req_dst),                   
+        .REFILL_REQ_TAG_PREV(tag_del_1),
+        .REFILL_REQ_LINE_PREV(tag_address_del_1),
+        .REFILL_REQ_SECT_PREV(section_address_del_1),
         // Related to PC select and PC pipeline enable
         .BRANCH(BRANCH),
         .PC_PIPE_ENB(pc_pipe_enb),                         // Enable for main pipeline registers

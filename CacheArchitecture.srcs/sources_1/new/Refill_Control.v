@@ -53,6 +53,11 @@ module Refill_Control #(
         input [T               - 1 : 0] REFILL_REQ_SECT,                // Section portion of the PC at IF3
         input [ASSOCIATIVITY   - 1 : 0] REFILL_REQ_DST,                 // Destination set for the request at IF3, if cache misses
         
+        input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG_PREV,                 // Tag portion of the PC at IF3
+        input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE_PREV,                // Line portion of the PC at IF3
+        input [T               - 1 : 0] REFILL_REQ_SECT_PREV,                // Section portion of the PC at IF3
+        input [ASSOCIATIVITY   - 1 : 0] REFILL_REQ_DST_PREV,                 // Destination set for the request at IF3, if cache misses
+        
         // Signals coming from outside the cache
         input                           BRANCH,                         // Branch command from EXE stage
                 
@@ -96,9 +101,16 @@ module Refill_Control #(
     reg [TAG_ADDR_WIDTH - 1 : 0] cur_line, fir_line, sec_line, thr_line;
     reg [T              - 1 : 0] cur_sect, fir_sect, sec_sect, thr_sect;
     
+    reg [TAG_WIDTH      - 1 : 0] cur_tag_wire,  fir_tag_wire,  sec_tag_wire,  thr_tag_wire;
+    reg [TAG_ADDR_WIDTH - 1 : 0] cur_line_wire, fir_line_wire, sec_line_wire, thr_line_wire;
+    reg [T              - 1 : 0] cur_sect_wire, fir_sect_wire, sec_sect_wire, thr_sect_wire;
+    
     // Set = destination set of the request, Source = which stream buffer (or L2) the request is coming from
     reg [N              - 1 : 0] cur_src,  fir_src,  sec_src,  thr_src;
     reg [ASSOCIATIVITY  - 1 : 0] cur_set,  fir_set,  sec_set,  thr_set;
+    
+    reg [N              - 1 : 0] cur_src_wire,  fir_src_wire,  sec_src_wire,  thr_src_wire;
+    reg [ASSOCIATIVITY  - 1 : 0] cur_set_wire,  fir_set_wire,  sec_set_wire,  thr_set_wire;
     
     // To get admitted to the refill queue, several tests must be passed, and also it mustn't readmit a completed refill
     // (L2 misses, PC pipe disables, IF pipe saturated with PC value, L2 completes and removes from queue, but still IF pipe
@@ -106,140 +118,163 @@ module Refill_Control #(
     
     // Solution - Admission only if the IF3 request came from a valid PC on the PC pipeline
     reg pc_pipe_enb_del_1, pc_pipe_enb_del_2;
+    
     always @(posedge CLK) begin
         pc_pipe_enb_del_1 <= PC_PIPE_ENB;
         pc_pipe_enb_del_2 <= pc_pipe_enb_del_1;
     end    
     
+    // Whether to admit to or remove from the refill queue
     wire admit, remove;
     reg test_pass;
     assign admit = test_pass & !CACHE_HIT & pc_pipe_enb_del_2;
     
     // Number of elements in the queue
-    reg [3 : 0] no_of_elements;
+    reg [3 : 0] no_of_elements, no_of_elements_wire;
+    
     always @(posedge CLK) begin
+        no_of_elements <= no_of_elements_wire;
+    end
+    
+    always @(*) begin
         case ({admit, remove})
-            2'b00 : no_of_elements <= no_of_elements;
-            2'b01 : no_of_elements <= no_of_elements >> 1;
-            2'b10 : no_of_elements <= (no_of_elements << 1) | 4'b0001;
-            2'b11 : no_of_elements <= no_of_elements;
+            2'b00 : no_of_elements_wire = no_of_elements;
+            2'b01 : no_of_elements_wire = no_of_elements >> 1;
+            2'b10 : no_of_elements_wire = (no_of_elements << 1) | 4'b0001;
+            2'b11 : no_of_elements_wire = no_of_elements;
         endcase
     end
     
     // Basically a queue, but each element is accessible to the outside, to run the tests
-    always @(posedge CLK) begin
-        if (admit & !remove) begin
-            case (no_of_elements)
-                4'b0000 : begin
-                         cur_tag  <= REFILL_REQ_TAG;
-                         cur_line <= REFILL_REQ_LINE;
-                         cur_sect <= REFILL_REQ_SECT;
-                         cur_src  <= refill_req_src;
-                         cur_set  <= REFILL_REQ_DST;       
-                       end
-                4'b0001 : begin
-                         fir_tag  <= REFILL_REQ_TAG;
-                         fir_line <= REFILL_REQ_LINE;
-                         fir_sect <= REFILL_REQ_SECT;
-                         fir_src  <= refill_req_src;
-                         fir_set  <= REFILL_REQ_DST;       
-                       end
-                4'b0011 : begin
-                         sec_tag  <= REFILL_REQ_TAG;
-                         sec_line <= REFILL_REQ_LINE;
-                         sec_sect <= REFILL_REQ_SECT;
-                         sec_src  <= refill_req_src;
-                         sec_set  <= REFILL_REQ_DST;       
-                       end
-                4'b0111 : begin
-                         thr_tag  <= REFILL_REQ_TAG;
-                         thr_line <= REFILL_REQ_LINE;
-                         thr_sect <= REFILL_REQ_SECT;
-                         thr_src  <= refill_req_src;
-                         thr_set  <= REFILL_REQ_DST;       
-                       end
-            endcase
-        end else if (!admit & remove) begin
-            cur_tag  <= fir_tag;
-            cur_line <= fir_line;
-            cur_sect <= fir_sect;
-            cur_src  <= fir_src;
-            cur_set  <= fir_set;  
-              
-            fir_tag  <= sec_tag;
-            fir_line <= sec_line;
-            fir_sect <= sec_sect;
-            fir_src  <= sec_src;
-            fir_set  <= sec_set;
+    always @(*) begin
+        case ({admit, remove})
+            2'b10 : begin
+                cur_tag_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_TAG  : cur_tag;
+                cur_line_wire = (no_of_elements == 4'b0000)? REFILL_REQ_LINE : cur_line;
+                cur_sect_wire = (no_of_elements == 4'b0000)? REFILL_REQ_SECT : cur_sect;
+                cur_src_wire  = (no_of_elements == 4'b0000)? refill_req_src  : cur_src;
+                cur_set_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_DST  : cur_set;
                 
-            sec_tag  <= thr_tag;
-            sec_line <= thr_line;
-            sec_sect <= thr_sect;
-            sec_src  <= thr_src;
-            sec_set  <= thr_set; 
-               
-            thr_tag  <= 0;
-            thr_line <= 0;
-            thr_sect <= 0;
-            thr_src  <= 0;
-            thr_set  <= 0;    
-        end else if (admit & remove) begin
-            if (no_of_elements == 4'b0001) begin
-                cur_tag  <= REFILL_REQ_TAG;
-                cur_line <= REFILL_REQ_LINE;
-                cur_sect <= REFILL_REQ_SECT;
-                cur_src  <= refill_req_src;
-                cur_set  <= REFILL_REQ_DST;       
-            end else begin
-                cur_tag  <= fir_tag;
-                cur_line <= fir_line;
-                cur_sect <= fir_sect;
-                cur_src  <= fir_src;
-                cur_set  <= fir_set;  
+                fir_tag_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_TAG  : fir_tag;
+                fir_line_wire = (no_of_elements == 4'b0001)? REFILL_REQ_LINE : fir_line;
+                fir_sect_wire = (no_of_elements == 4'b0001)? REFILL_REQ_SECT : fir_sect;
+                fir_src_wire  = (no_of_elements == 4'b0001)? refill_req_src  : fir_src;
+                fir_set_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DST  : fir_set;
+                
+                sec_tag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_TAG  : sec_tag;
+                sec_line_wire = (no_of_elements == 4'b0011)? REFILL_REQ_LINE : sec_line;
+                sec_sect_wire = (no_of_elements == 4'b0011)? REFILL_REQ_SECT : sec_sect;
+                sec_src_wire  = (no_of_elements == 4'b0011)? refill_req_src  : sec_src;
+                sec_set_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DST  : sec_set;
+                
+                thr_tag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_TAG  : thr_tag;
+                thr_line_wire = (no_of_elements == 4'b0111)? REFILL_REQ_LINE : thr_line;
+                thr_sect_wire = (no_of_elements == 4'b0111)? REFILL_REQ_SECT : thr_sect;
+                thr_src_wire  = (no_of_elements == 4'b0111)? refill_req_src  : thr_src;
+                thr_set_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DST  : thr_set;
             end
-            
-            if (no_of_elements == 4'b0011) begin
-                fir_tag  <= REFILL_REQ_TAG;
-                fir_line <= REFILL_REQ_LINE;
-                fir_sect <= REFILL_REQ_SECT;
-                fir_src  <= refill_req_src;
-                fir_set  <= REFILL_REQ_DST;        
-            end else begin
-                fir_tag  <= sec_tag;
-                fir_line <= sec_line;
-                fir_sect <= sec_sect;
-                fir_src  <= sec_src;
-                fir_set  <= sec_set;
+            2'b01 : begin
+                cur_tag_wire  = fir_tag;
+                cur_line_wire = fir_line;
+                cur_sect_wire = fir_sect;
+                cur_src_wire  = fir_src;
+                cur_set_wire  = fir_set;
+                
+                fir_tag_wire  = sec_tag;
+                fir_line_wire = sec_line;
+                fir_sect_wire = sec_sect;
+                fir_src_wire  = sec_src;
+                fir_set_wire  = sec_set;
+                
+                sec_tag_wire  = thr_tag;
+                sec_line_wire = thr_line;
+                sec_sect_wire = thr_sect;
+                sec_src_wire  = thr_src;
+                sec_set_wire  = thr_set;
+                
+                thr_tag_wire  = 0;
+                thr_line_wire = 0;
+                thr_sect_wire = 0;
+                thr_src_wire  = 0;
+                thr_set_wire  = 0;
             end
-            
-            if (no_of_elements == 4'b0111) begin
-                sec_tag  <= REFILL_REQ_TAG;
-                sec_line <= REFILL_REQ_LINE;
-                sec_sect <= REFILL_REQ_SECT;
-                sec_src  <= refill_req_src;
-                sec_set  <= REFILL_REQ_DST;        
-            end else begin
-                sec_tag  <= thr_tag;
-                sec_line <= thr_line;
-                sec_sect <= thr_sect;
-                sec_src  <= thr_src;
-                sec_set  <= thr_set; 
+            2'b11 : begin
+                cur_tag_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_TAG  : fir_tag;
+                cur_line_wire = (no_of_elements == 4'b0001)? REFILL_REQ_LINE : fir_line;
+                cur_sect_wire = (no_of_elements == 4'b0001)? REFILL_REQ_SECT : fir_sect;
+                cur_src_wire  = (no_of_elements == 4'b0001)? refill_req_src  : fir_src;
+                cur_set_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DST  : fir_set;
+                
+                fir_tag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_TAG  : sec_tag;
+                fir_line_wire = (no_of_elements == 4'b0011)? REFILL_REQ_LINE : sec_line;
+                fir_sect_wire = (no_of_elements == 4'b0011)? REFILL_REQ_SECT : sec_sect;
+                fir_src_wire  = (no_of_elements == 4'b0011)? refill_req_src  : sec_src;
+                fir_set_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DST  : sec_set;
+                
+                sec_tag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_TAG  : thr_tag;
+                sec_line_wire = (no_of_elements == 4'b0111)? REFILL_REQ_LINE : thr_line;
+                sec_sect_wire = (no_of_elements == 4'b0111)? REFILL_REQ_SECT : thr_sect;
+                sec_src_wire  = (no_of_elements == 4'b0111)? refill_req_src  : thr_src;
+                sec_set_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DST  : thr_set;
+                
+                thr_tag_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_TAG  : 0;
+                thr_line_wire = (no_of_elements == 4'b1111)? REFILL_REQ_LINE : 0;
+                thr_sect_wire = (no_of_elements == 4'b1111)? REFILL_REQ_SECT : 0;
+                thr_src_wire  = (no_of_elements == 4'b1111)? refill_req_src  : 0;
+                thr_set_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_DST  : 0;
             end
-            
-            if (no_of_elements == 4'b1111) begin
-                thr_tag  <= REFILL_REQ_TAG;
-                thr_line <= REFILL_REQ_LINE;
-                thr_sect <= REFILL_REQ_SECT;
-                thr_src  <= refill_req_src;
-                thr_set  <= REFILL_REQ_DST;   
-            end else begin
-                thr_tag  <= 0;
-                thr_line <= 0;
-                thr_sect <= 0;
-                thr_src  <= 0;
-                thr_set  <= 0;    
+            2'b00 : begin
+                cur_tag_wire  = cur_tag;
+                cur_line_wire = cur_line;
+                cur_sect_wire = cur_sect;
+                cur_src_wire  = cur_src;
+                cur_set_wire  = cur_set;
+                
+                fir_tag_wire  = fir_tag;
+                fir_line_wire = fir_line;
+                fir_sect_wire = fir_sect;
+                fir_src_wire  = fir_src;
+                fir_set_wire  = fir_set;
+                
+                sec_tag_wire  = sec_tag;
+                sec_line_wire = sec_line;
+                sec_sect_wire = sec_sect;
+                sec_src_wire  = sec_src;
+                sec_set_wire  = sec_set;
+                
+                thr_tag_wire  = thr_tag;
+                thr_line_wire = thr_line;
+                thr_sect_wire = thr_sect;
+                thr_src_wire  = thr_src;
+                thr_set_wire  = thr_set;
             end
-        end
+        endcase
+    end
+    
+    always @(posedge CLK) begin
+        cur_tag  <= cur_tag_wire;
+        cur_line <= cur_line_wire;
+        cur_sect <= cur_sect_wire;
+        cur_src  <= cur_src_wire;
+        cur_set  <= cur_set_wire;
+        
+        fir_tag  <= fir_tag_wire;
+        fir_line <= fir_line_wire;
+        fir_sect <= fir_sect_wire;
+        fir_src  <= fir_src_wire;
+        fir_set  <= fir_set_wire;
+        
+        sec_tag  <= sec_tag_wire;
+        sec_line <= sec_line_wire;
+        sec_sect <= sec_sect_wire;
+        sec_src  <= sec_src_wire;
+        sec_set  <= sec_set_wire;
+        
+        thr_tag  <= thr_tag_wire;
+        thr_line <= thr_line_wire;
+        thr_sect <= thr_sect_wire;
+        thr_src  <= thr_src_wire;
+        thr_set  <= thr_set_wire;
     end
     
     
@@ -248,14 +283,24 @@ module Refill_Control #(
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
     // Tests - Clash with nth request
-    wire clash_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0];
-    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_DST == fir_set) & no_of_elements[1];
-    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_DST == sec_set) & no_of_elements[2];
+    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
+    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
+    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
     
     // Tests - Equal with nth request
-    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];
-    wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];
-    wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];
+    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
+    wire equal_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_TAG_PREV == fir_tag_wire) & no_of_elements_wire[1];
+    wire equal_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_TAG_PREV == sec_tag_wire) & no_of_elements_wire[2];
+    
+    reg clash_n0, clash_n1, clash_n2, equal_n0, equal_n1, equal_n2;
+    always @(posedge CLK) begin
+        clash_n0 <= clash_n0_wire;
+        clash_n1 <= clash_n1_wire;
+        clash_n2 <= clash_n2_wire;
+        equal_n0 <= equal_n0_wire;
+        equal_n1 <= equal_n1_wire;
+        equal_n2 <= equal_n2_wire;
+    end    
     
     // Whether to pass or fail the tests
     always @(*) begin
@@ -561,7 +606,8 @@ module Refill_Control #(
         pc_state = HITTING;  
         pc_pipe_enb_del_1 = 1;
         pc_pipe_enb_del_2 = 1;   
-        critical_no = 0;     
+        critical_no = 0;  
+        test_pass = 1;   
     end
     
     
