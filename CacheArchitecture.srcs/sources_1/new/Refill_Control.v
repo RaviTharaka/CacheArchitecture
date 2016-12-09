@@ -279,25 +279,157 @@ module Refill_Control #(
     // Tests to decide whether to include the IF3 request in to the queue                           //
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
-    // Tests - Clash with nth request
-    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
-    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
-    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
+    reg clash_cur, clash_fir, clash_sec, clash_thr, clash_pcs;
+    reg equal_cur, equal_fir, equal_sec, equal_thr, equal_pcs;
     
-    // Tests - Equal with nth request
-    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
-    wire equal_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_TAG_PREV == fir_tag_wire) & no_of_elements_wire[1];
-    wire equal_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_TAG_PREV == sec_tag_wire) & no_of_elements_wire[2];
+    always @(*) begin
+        clash_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
+        clash_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
+        clash_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
+        clash_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
+        clash_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
+        
+        equal_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
+        equal_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
+        equal_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_TAG_PREV == sec_tag);
+        equal_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_TAG_PREV == thr_tag);
+        equal_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
+        
+    end
     
-    reg clash_n0, clash_n1, clash_n2, equal_n0, equal_n1, equal_n2;
+    reg clash_n0, clash_n1, clash_n2;
+    reg equal_n0, equal_n1, equal_n2;
     always @(posedge CLK) begin
-        clash_n0 <= clash_n0_wire;
-        clash_n1 <= clash_n1_wire;
-        clash_n2 <= clash_n2_wire;
-        equal_n0 <= equal_n0_wire;
-        equal_n1 <= equal_n1_wire;
-        equal_n2 <= equal_n2_wire;
-    end    
+        case ({admit, remove})
+            2'b10 : begin
+                clash_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? clash_pcs : clash_cur);
+                clash_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? clash_pcs : clash_fir);
+                clash_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? clash_pcs : clash_sec);
+                
+                equal_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? equal_pcs : equal_cur);
+                equal_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? equal_pcs : equal_fir);
+                equal_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? equal_pcs : equal_sec);                
+            end
+            2'b01 : begin
+                clash_n0 <= no_of_elements_wire[0] & clash_fir;
+                clash_n1 <= no_of_elements_wire[1] & clash_sec;
+                clash_n2 <= no_of_elements_wire[2] & clash_thr;
+                
+                equal_n0 <= no_of_elements_wire[0] & equal_fir;
+                equal_n1 <= no_of_elements_wire[1] & equal_sec;
+                equal_n2 <= no_of_elements_wire[2] & equal_thr;
+            end
+            2'b11 : begin
+                clash_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? clash_pcs : clash_fir);
+                clash_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? clash_pcs : clash_sec);
+                clash_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? clash_pcs : clash_thr);
+                
+                equal_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? equal_pcs : equal_fir);
+                equal_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? equal_pcs : equal_sec);
+                equal_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? equal_pcs : equal_thr);
+            end
+            2'b00 : begin 
+                clash_n0 <= no_of_elements_wire[0] & clash_cur;
+                clash_n1 <= no_of_elements_wire[1] & clash_fir;
+                clash_n2 <= no_of_elements_wire[2] & clash_sec;
+                
+                equal_n0 <= no_of_elements_wire[0] & equal_cur;
+                equal_n1 <= no_of_elements_wire[1] & equal_fir;
+                equal_n2 <= no_of_elements_wire[2] & equal_sec;
+            end
+        endcase    
+    end   
+    
+//    reg clash_p0, clash_p1, clash_p2, clash_p3, clash_p4;
+//    reg equal_p0, equal_p1, equal_p2, equal_p3, equal_p4;
+//    reg admit_p, remove_p;
+//    reg element0_p, element1_p, element2_p, element3_p, element4_p; 
+        
+//    always @(posedge CLK) begin
+//        clash_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
+//        clash_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
+//        clash_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
+//        clash_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
+//        clash_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
+        
+//        equal_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
+//        equal_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
+//        equal_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_TAG_PREV == sec_tag);
+//        equal_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_TAG_PREV == thr_tag);
+//        equal_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
+        
+//        admit_p <= admit;
+//        remove_p <= remove;
+        
+//        element0_p <= no_of_elements == 4'b0000;
+//        element1_p <= no_of_elements == 4'b0001;
+//        element2_p <= no_of_elements == 4'b0011;
+//        element3_p <= no_of_elements == 4'b0111;
+//        element4_p <= no_of_elements == 4'b1111;
+//    end
+    
+//    reg clash_n0, clash_n1, clash_n2;
+//    reg equal_n0, equal_n1, equal_n2;
+//    always @(*) begin
+//        case ({admit_p, remove_p})
+//            2'b10 : begin
+//                clash_n0 = no_of_elements[0] & ((element0_p)? clash_p4 : clash_p0);
+//                clash_n1 = no_of_elements[1] & ((element1_p)? clash_p4 : clash_p1);
+//                clash_n2 = no_of_elements[2] & ((element2_p)? clash_p4 : clash_p2);
+                
+//                equal_n0 = no_of_elements[0] & ((element0_p)? equal_p4 : equal_p0);
+//                equal_n1 = no_of_elements[1] & ((element1_p)? equal_p4 : equal_p1);
+//                equal_n2 = no_of_elements[2] & ((element2_p)? equal_p4 : equal_p2);                
+//            end
+//            2'b01 : begin
+//                clash_n0 = no_of_elements[0] & clash_p1;
+//                clash_n1 = no_of_elements[1] & clash_p2;
+//                clash_n2 = no_of_elements[2] & clash_p3;
+                
+//                equal_n0 = no_of_elements[0] & equal_p1;
+//                equal_n1 = no_of_elements[1] & equal_p2;
+//                equal_n2 = no_of_elements[2] & equal_p3;
+//            end
+//            2'b11 : begin
+//                clash_n0 = no_of_elements[0] & ((element1_p)? clash_p4 : clash_p1);
+//                clash_n1 = no_of_elements[1] & ((element2_p)? clash_p4 : clash_p2);
+//                clash_n2 = no_of_elements[2] & ((element3_p)? clash_p4 : clash_p3);
+                
+//                equal_n0 = no_of_elements[0] & ((element1_p)? equal_p4 : equal_p1);
+//                equal_n1 = no_of_elements[1] & ((element2_p)? equal_p4 : equal_p2);
+//                equal_n2 = no_of_elements[2] & ((element3_p)? equal_p4 : equal_p3);
+//            end
+//            2'b00 : begin 
+//                clash_n0 = no_of_elements[0] & clash_p0;
+//                clash_n1 = no_of_elements[1] & clash_p1;
+//                clash_n2 = no_of_elements[2] & clash_p2;
+                
+//                equal_n0 = no_of_elements[0] & equal_p0;
+//                equal_n1 = no_of_elements[1] & equal_p1;
+//                equal_n2 = no_of_elements[2] & equal_p2;
+//            end
+//        endcase    
+//    end   
+    
+    // Tests - Clash with nth request
+//    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
+//    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
+//    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
+    
+//    // Tests - Equal with nth request
+//    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
+//    wire equal_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_TAG_PREV == fir_tag_wire) & no_of_elements_wire[1];
+//    wire equal_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_TAG_PREV == sec_tag_wire) & no_of_elements_wire[2];
+    
+//    reg clash_n0, clash_n1, clash_n2, equal_n0, equal_n1, equal_n2;
+//    always @(posedge CLK) begin
+//        clash_n0 <= clash_n0_wire;
+//        clash_n1 <= clash_n1_wire;
+//        clash_n2 <= clash_n2_wire;
+//        equal_n0 <= equal_n0_wire;
+//        equal_n1 <= equal_n1_wire;
+//        equal_n2 <= equal_n2_wire;
+//    end    
     
     // Whether to pass or fail the tests
     always @(*) begin
@@ -541,13 +673,9 @@ module Refill_Control #(
         refill_state = 0;   
         pc_pipe_enb_reg = 1; 
         pc_pipe_enb_del_1 = 1;
-<<<<<<< HEAD
-        pc_pipe_enb_del_2 = 1;   
-        critical_no = 0;  
+        pc_pipe_enb_del_2 = 1; 
         test_pass = 1;   
-=======
         pc_pipe_enb_del_2 = 1;
->>>>>>> parent of 66dbc3f... About to do some timing optimizations
     end
     
     

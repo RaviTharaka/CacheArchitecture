@@ -12,13 +12,10 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-<<<<<<< HEAD
       <ZoomEndTime time="229600001fs"></ZoomEndTime>
       <Cursor1Time time="140000000fs"></Cursor1Time>
-=======
       <ZoomEndTime time="400453450fs"></ZoomEndTime>
       <Cursor1Time time="121627000fs"></Cursor1Time>
->>>>>>> parent of 66dbc3f... About to do some timing optimizations
    </zoom_setting>
    <WVObjectSize size="14" />
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
