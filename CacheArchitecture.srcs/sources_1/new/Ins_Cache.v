@@ -310,7 +310,7 @@ module Ins_Cache #(
         .CLK(CLK),
         .RSTN(RSTN),
         .WR_ENB(prefetch_queue_wr_enb),
-        .RD_ENB(!prefetch_queue_empty & addr_to_L2_ready),
+        .RD_ENB(!prefetch_queue_empty & addr_to_L2_ready & fetch_queue_empty & !send_addr_to_L2),
         .FULL(prefetch_queue_full),
         .EMPTY(prefetch_queue_empty),
         .DATA_IN({prefetch_queue_src_in, prefetch_queue_addr_in}),
@@ -517,6 +517,7 @@ module Ins_Cache #(
         // Hit miss status 
         .CACHE_HIT(cache_hit),
         .STREAM_HIT(stream_hit),
+        .STREAM_SRC(hit_buf_no),
         // Data needed for the refill operation
         .REFILL_REQ_DST(refill_req_dst_del_1),                   
         .REFILL_REQ_TAG(tag_del_2),
@@ -567,10 +568,7 @@ module Ins_Cache #(
         .RSTN(RSTN),
         // Status signals
         .CACHE_HIT(cache_hit),
-        .CACHE_READY(CACHE_READY),                          // Signal from cache to processor that its pipeline is currently ready to work
         .PROC_READY(PROC_READY),                            // Signal from processor to cache that its pipeline is currently ready to work
-        .PC_DEL_1_EQUALS_2(pc_del_1_equals_2),              // Whether PC[t-2] == PC[t-1]
-        .PC_DEL_0_EQUALS_2(pc_del_0_equals_2),              // Whether PC[t-2] == PC[t]
         // Register enables
         .CACHE_PIPE_ENB(cache_pipe_enb),                    // Enable for cache's pipeline registers
         .DATA_TO_PROC_ENB(data_to_proc_enb),                // Enable for the IR register

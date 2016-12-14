@@ -84,30 +84,40 @@ module Test_Ins_Cache ();
     );
     
     integer fileTrace, readTrace;
+    integer fileResult, writeResult;
     integer i, j, k, l;
     
-    
+    reg read_address;
     initial begin
         CLK = 0;
         RSTN = 1;
+        read_address = 0;
         PROC_READY = 0;
         BRANCH = 0;
         l2_ready = 1;
         fileTrace = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/trace.txt", "r");
-        
+        fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/result.txt", "w");
+                
         #106;
         RSTN = 1;
         PROC_READY = 1;
         BRANCH = 1;
         readTrace = $fscanf(fileTrace, "%x ", BRANCH_ADDR_IN);
         #10;
-        for (i = 0; i < 1000; i = i + 1) begin
-            if (CACHE_READY & PROC_READY) begin
+        for (i = 0; i > -1; i = i + 1) begin
+            if (read_address) begin
                 readTrace = $fscanf(fileTrace, "%x ", BRANCH_ADDR_IN);
+                fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/result.txt", "a");                        
+                $fwrite(fileResult,"%x\n",DATA_TO_PROC);
+                $fclose(fileResult);
             end
             #10;
         end 
         
+    end
+    
+    always @(posedge CLK) begin
+        read_address <= CACHE_READY & PROC_READY;
     end
     
     wire [ADDR_WIDTH - 1 : 0] output_addr;

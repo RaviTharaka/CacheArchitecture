@@ -11,11 +11,14 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="22830000fs"></ZoomStartTime>
-      <ZoomEndTime time="252230001fs"></ZoomEndTime>
-      <Cursor1Time time="209310000fs"></Cursor1Time>
+      <ZoomStartTime time="202856181750fs"></ZoomStartTime>
+      <ZoomEndTime time="203432181751fs"></ZoomEndTime>
+      <Cursor1Time time="863475000000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="14" />
+   <wave_markers>
+      <marker time="11860145000" label="" />
+   </wave_markers>
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
       <obj_property name="ObjectShortName">CLK</obj_property>
@@ -69,7 +72,7 @@
       <wvobject fp_name="/Test_Ins_Cache/BRANCH_ADDR_IN" type="array">
          <obj_property name="ElementShortName">BRANCH_ADDR_IN[31:0]</obj_property>
          <obj_property name="ObjectShortName">BRANCH_ADDR_IN[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group55" type="group">
@@ -83,13 +86,12 @@
       <wvobject fp_name="/Test_Ins_Cache/DATA_TO_PROC" type="array">
          <obj_property name="ElementShortName">DATA_TO_PROC[31:0]</obj_property>
          <obj_property name="ObjectShortName">DATA_TO_PROC[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group62" type="group">
       <obj_property name="label">Tag memories</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /ADDR_R" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">ADDR_R[6:0]</obj_property>
@@ -1304,26 +1306,9 @@
       <obj_property name="label">PC and its mux</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc" type="array">
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">pc[31:0]</obj_property>
-         <obj_property name="ObjectShortName">pc[31:0]</obj_property>
-         <obj_property name="label">PC_del_0</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc_del_1" type="array">
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">pc_del_1[31:0]</obj_property>
-         <obj_property name="ObjectShortName">pc_del_1[31:0]</obj_property>
-         <obj_property name="label">PC_del_1</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc_del_2" type="array">
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="ElementShortName">pc_del_2[31:0]</obj_property>
-         <obj_property name="ObjectShortName">pc_del_2[31:0]</obj_property>
-         <obj_property name="label">PC_del_2</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/pc_pipe_enb" type="logic">
+         <obj_property name="ElementShortName">pc_pipe_enb</obj_property>
+         <obj_property name="ObjectShortName">pc_pipe_enb</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/pc_sel" type="array">
          <obj_property name="DisplayName">label</obj_property>
@@ -1331,26 +1316,63 @@
          <obj_property name="ObjectShortName">pc_sel[1:0]</obj_property>
          <obj_property name="label">PC_mux_select</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/pc_pipe_enb" type="logic">
-         <obj_property name="ElementShortName">pc_pipe_enb</obj_property>
-         <obj_property name="ObjectShortName">pc_pipe_enb</obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/pc" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">pc[31:0]</obj_property>
+         <obj_property name="ObjectShortName">pc[31:0]</obj_property>
+         <obj_property name="label">PC_del_0</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/pc_del_1" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">pc_del_1[31:0]</obj_property>
+         <obj_property name="ObjectShortName">pc_del_1[31:0]</obj_property>
+         <obj_property name="label">PC_del_1</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/pc_del_2" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">pc_del_2[31:0]</obj_property>
+         <obj_property name="ObjectShortName">pc_del_2[31:0]</obj_property>
+         <obj_property name="label">PC_del_2</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="group1020" type="group">
+         <obj_property name="label">PC State</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/pc_state" type="array">
+            <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
+            <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_no" type="array">
+            <obj_property name="ElementShortName">critical_no[1:0]</obj_property>
+            <obj_property name="ObjectShortName">critical_no[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_ready" type="logic">
+            <obj_property name="ElementShortName">critical_ready</obj_property>
+            <obj_property name="ObjectShortName">critical_ready</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/critical_used" type="logic">
+            <obj_property name="ElementShortName">critical_used</obj_property>
+            <obj_property name="ObjectShortName">critical_used</obj_property>
+         </wvobject>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group736" type="group">
       <obj_property name="label">PCs of IF stages</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/pc" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">pc[31:0]</obj_property>
          <obj_property name="ObjectShortName">pc[31:0]</obj_property>
          <obj_property name="label">PC_IF1</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="vbus744" type="vbus">
          <obj_property name="label">PC_IF2</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/tag_del_1" type="array">
             <obj_property name="ElementShortName">tag_del_1[18:0]</obj_property>
             <obj_property name="ObjectShortName">tag_del_1[18:0]</obj_property>
@@ -1383,7 +1405,7 @@
       <wvobject fp_name="vbus751" type="vbus">
          <obj_property name="label">PC_IF3</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/tag_del_2" type="array">
             <obj_property name="ElementShortName">tag_del_2[18:0]</obj_property>
             <obj_property name="ObjectShortName">tag_del_2[18:0]</obj_property>
@@ -1430,11 +1452,18 @@
          <obj_property name="ElementShortName">cache_hit</obj_property>
          <obj_property name="ObjectShortName">cache_hit</obj_property>
       </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/STREAM_HIT" type="logic">
+         <obj_property name="ElementShortName">STREAM_HIT</obj_property>
+         <obj_property name="ObjectShortName">STREAM_HIT</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/STREAM_SRC" type="array">
+         <obj_property name="ElementShortName">STREAM_SRC[1:0]</obj_property>
+         <obj_property name="ObjectShortName">STREAM_SRC[1:0]</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject fp_name="group48" type="group">
       <obj_property name="label">Address To L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/send_addr_to_L2" type="logic">
          <obj_property name="ElementShortName">send_addr_to_L2</obj_property>
          <obj_property name="ObjectShortName">send_addr_to_L2</obj_property>
@@ -1476,7 +1505,7 @@
       <wvobject fp_name="vbus257" type="vbus">
          <obj_property name="label">ADDR_TO_L2</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/ADDR_TO_L2[29]" type="logic">
             <obj_property name="ElementShortName">[29]</obj_property>
             <obj_property name="ObjectShortName">[29]</obj_property>
@@ -1653,7 +1682,7 @@
          <wvobject fp_name="vbus760" type="vbus">
             <obj_property name="label">Data7</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[255]" type="logic">
                <obj_property name="ElementShortName">[255]</obj_property>
                <obj_property name="ObjectShortName">[255]</obj_property>
@@ -1786,7 +1815,7 @@
          <wvobject fp_name="vbus759" type="vbus">
             <obj_property name="label">Data6</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[223]" type="logic">
                <obj_property name="ElementShortName">[223]</obj_property>
                <obj_property name="ObjectShortName">[223]</obj_property>
@@ -1919,7 +1948,7 @@
          <wvobject fp_name="vbus758" type="vbus">
             <obj_property name="label">Data5</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[191]" type="logic">
                <obj_property name="ElementShortName">[191]</obj_property>
                <obj_property name="ObjectShortName">[191]</obj_property>
@@ -2052,7 +2081,7 @@
          <wvobject fp_name="vbus757" type="vbus">
             <obj_property name="label">Data4</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[159]" type="logic">
                <obj_property name="ElementShortName">[159]</obj_property>
                <obj_property name="ObjectShortName">[159]</obj_property>
@@ -2185,7 +2214,7 @@
          <wvobject fp_name="vbus596" type="vbus">
             <obj_property name="label">Data3</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[127]" type="logic">
                <obj_property name="ElementShortName">[127]</obj_property>
                <obj_property name="ObjectShortName">[127]</obj_property>
@@ -2318,7 +2347,7 @@
          <wvobject fp_name="vbus563" type="vbus">
             <obj_property name="label">Data2</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[95]" type="logic">
                <obj_property name="ElementShortName">[95]</obj_property>
                <obj_property name="ObjectShortName">[95]</obj_property>
@@ -2451,7 +2480,7 @@
          <wvobject fp_name="vbus530" type="vbus">
             <obj_property name="label">Data1</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[63]" type="logic">
                <obj_property name="ElementShortName">[63]</obj_property>
                <obj_property name="ObjectShortName">[63]</obj_property>
@@ -2584,7 +2613,7 @@
          <wvobject fp_name="vbus497" type="vbus">
             <obj_property name="label">Data0</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/data_from_L2_buffer[31]" type="logic">
                <obj_property name="ElementShortName">[31]</obj_property>
                <obj_property name="ObjectShortName">[31]</obj_property>
@@ -2878,6 +2907,12 @@
             <obj_property name="ElementShortName">prefetch_queue_wr_enb</obj_property>
             <obj_property name="ObjectShortName">prefetch_queue_wr_enb</obj_property>
          </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/prefetch_queue/RD_ENB" type="logic">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">RD_ENB</obj_property>
+            <obj_property name="ObjectShortName">RD_ENB</obj_property>
+            <obj_property name="label">prefetch_queue_rd_enb</obj_property>
+         </wvobject>
       </wvobject>
       <wvobject fp_name="group837" type="group">
          <obj_property name="label">Buffer status</obj_property>
@@ -2930,6 +2965,7 @@
          <obj_property name="label">Buffer resets</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /BUFFER_RESET" type="logic">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">BUFFER_RESET</obj_property>
@@ -3522,7 +3558,7 @@
       <wvobject fp_name="vbus695" type="vbus">
          <obj_property name="label">Addr_In</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_TAG" type="array">
             <obj_property name="ElementShortName">REFILL_REQ_TAG[18:0]</obj_property>
             <obj_property name="ObjectShortName">REFILL_REQ_TAG[18:0]</obj_property>
@@ -3563,7 +3599,7 @@
          <wvobject fp_name="vbus763" type="vbus">
             <obj_property name="label">Current</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_tag" type="array">
                <obj_property name="ElementShortName">cur_tag[18:0]</obj_property>
                <obj_property name="ObjectShortName">cur_tag[18:0]</obj_property>
@@ -3600,7 +3636,7 @@
          <wvobject fp_name="vbus765" type="vbus">
             <obj_property name="label">First</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/fir_tag" type="array">
                <obj_property name="ElementShortName">fir_tag[18:0]</obj_property>
                <obj_property name="ObjectShortName">fir_tag[18:0]</obj_property>
@@ -3637,7 +3673,7 @@
          <wvobject fp_name="vbus762" type="vbus">
             <obj_property name="label">Second</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/sec_tag" type="array">
                <obj_property name="ElementShortName">sec_tag[18:0]</obj_property>
                <obj_property name="ObjectShortName">sec_tag[18:0]</obj_property>
@@ -3674,7 +3710,7 @@
          <wvobject fp_name="vbus740" type="vbus">
             <obj_property name="label">Third</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/thr_tag" type="array">
                <obj_property name="ElementShortName">thr_tag[18:0]</obj_property>
                <obj_property name="ObjectShortName">thr_tag[18:0]</obj_property>
@@ -3712,7 +3748,6 @@
       <wvobject fp_name="group755" type="group">
          <obj_property name="label">Refill States</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/refill_state" type="array">
             <obj_property name="ElementShortName">refill_state[1:0]</obj_property>
             <obj_property name="ObjectShortName">refill_state[1:0]</obj_property>

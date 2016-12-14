@@ -127,7 +127,7 @@ module Refill_Control #(
     // Whether to admit to or remove from the refill queue
     wire admit, remove;
     reg test_pass;
-    assign admit = test_pass & !CACHE_HIT & pc_pipe_enb_del_2;
+    assign admit = test_pass & pc_pipe_enb_del_2;
     
     // Number of elements in the queue
     reg [3 : 0] no_of_elements, no_of_elements_wire;
@@ -402,7 +402,6 @@ module Refill_Control #(
         equal_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_TAG_PREV == sec_tag);
         equal_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_TAG_PREV == thr_tag);
         equal_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
-        
     end
     
     reg clash_n0, clash_n1, clash_n2;
@@ -463,7 +462,7 @@ module Refill_Control #(
         end else if (clash_n0) begin
             test_pass = 1;    
         end else begin
-            test_pass = 1;
+            test_pass = !CACHE_HIT;
         end    
     end
     
@@ -659,7 +658,8 @@ module Refill_Control #(
     // FSM for enabling the PC pipeline
     reg critical_ready, critical_used;
     reg [1 : 0] critical_no;
-        
+    reg [2 : 0] pc_state;
+            
     always @(*) begin
         case (refill_state)
             IDLE        :   critical_ready = !CACHE_HIT & STREAM_HIT;
@@ -675,7 +675,7 @@ module Refill_Control #(
             PC0     : critical_used = 0;
             PC1     : critical_used = 0;
             PC2     : critical_used = 0;
-            TRANSIT : critical_used = critical_ready | (no_of_elements != 0) & !CACHE_HIT;
+            TRANSIT : critical_used = (critical_ready & !CACHE_HIT) | (no_of_elements != 0 & critical_no != 0 & !CACHE_HIT);
         endcase
     end
             
@@ -688,7 +688,6 @@ module Refill_Control #(
         endcase
     end 
     
-    reg [2 : 0] pc_state;
     always @(posedge CLK) begin
         case (pc_state) 
             HITTING : begin
@@ -702,7 +701,7 @@ module Refill_Control #(
             
             WAIT : begin
                 if (critical_ready | critical_no != 0) 
-                    pc_state <= PC1;
+                    pc_state <= PC0;
             end
             
             PC0 : pc_state <= PC1;
@@ -725,9 +724,9 @@ module Refill_Control #(
                     endcase
                 end else begin 
                     case ({STREAM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
+                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
                         2'b01 : pc_state <= TRANSIT;
-                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC1 : WAIT;
+                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
                         2'b11 : pc_state <= TRANSIT;
                     endcase
                 end
@@ -737,10 +736,10 @@ module Refill_Control #(
         
     // Enabling the PC pipeline 
     assign PC_PIPE_ENB = (pc_state != WAIT);
-    assign PC_SEL = {(pc_state == PC0 | pc_state == PC1 | pc_state == PC2 | (pc_state == HITTING & !CACHE_HIT) 
+    assign PC_SEL = {(pc_state == PC0 | pc_state == PC1 | (pc_state == HITTING & !CACHE_HIT) 
                          | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT)) , BRANCH};
     
-    assign CACHE_READY = pc_pipe_enb_del_2 & CACHE_HIT;
+    assign CACHE_READY = (pc_state == HITTING | pc_state == TRANSIT | pc_state == PC2) & CACHE_HIT;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial conditions - for simulation                                                          //
