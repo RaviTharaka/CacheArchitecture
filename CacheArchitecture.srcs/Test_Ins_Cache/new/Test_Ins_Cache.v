@@ -86,6 +86,7 @@ module Test_Ins_Cache ();
     integer fileTrace, readTrace;
     integer fileResult, writeResult;
     integer i, j, k, l;
+    integer PC_no;
     
     reg read_address;
     initial begin
@@ -94,6 +95,7 @@ module Test_Ins_Cache ();
         read_address = 0;
         PROC_READY = 0;
         BRANCH = 0;
+        PC_no = 0;
         l2_ready = 1;
         fileTrace = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/trace.txt", "r");
         fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/result.txt", "w");
@@ -110,6 +112,7 @@ module Test_Ins_Cache ();
                 fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Instruction_Cache/result.txt", "a");                        
                 $fwrite(fileResult,"%x\n",DATA_TO_PROC);
                 $fclose(fileResult);
+                PC_no = PC_no + 1;
             end
             #10;
         end 

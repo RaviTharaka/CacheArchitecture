@@ -517,6 +517,7 @@ module Ins_Cache #(
         // Hit miss status 
         .CACHE_HIT(cache_hit),
         .STREAM_HIT(stream_hit),
+        .CACHE_SRC(tag_match),
         .STREAM_SRC(hit_buf_no),
         // Data needed for the refill operation
         .REFILL_REQ_DST(refill_req_dst_del_1),                   
