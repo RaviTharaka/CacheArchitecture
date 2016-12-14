@@ -47,6 +47,7 @@ module Refill_Control #(
         // Current request at IF3
         input                           CACHE_HIT,                      // Whether the L1 cache hits or misses 
         input                           STREAM_HIT,                     // Whether any of the stream buffers hit
+        input [ASSOCIATIVITY   - 1 : 0] CACHE_SRC,                      // Which set is hitting, garbage if it doesn't
         input [STREAM_SEL_BITS - 1 : 0] STREAM_SRC,                     // Which stream buffer is hitting, garbage if it doesn't
         input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG,                 // Tag portion of the PC at IF3
         input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE,                // Line portion of the PC at IF3
@@ -284,7 +285,11 @@ module Refill_Control #(
     
     ////////////// This is the wanted behavior of the unit, but won't pass timing ////////////////////
     //    // Tests
-    //    wire clash_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0];		
+    //    wire clash_n0 = (CACHE_HIT)?      (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0] & (CACHE_SRC == cur_set)    
+    //                                      : (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0];		
+    // Simplifies to
+    //    wire clash_n0 = ((REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0]) & (!CACHE_HIT | (CACHE_SRC == cur_set) );  
+    // 
     //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_DST == fir_set) & no_of_elements[1];   
     //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_DST == sec_set) & no_of_elements[2];
     //    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
@@ -451,15 +456,15 @@ module Refill_Control #(
     always @(*) begin
         if (equal_n2) begin
             test_pass = 0;
-        end else if (clash_n2) begin
+        end else if (clash_n2 & (!CACHE_HIT | (CACHE_SRC == sec_set))) begin
             test_pass = 1;
         end else if (equal_n1) begin
             test_pass = 0;    
-        end else if (clash_n1) begin
+        end else if (clash_n1 & (!CACHE_HIT | (CACHE_SRC == fir_set))) begin
             test_pass = 1;    
         end else if (equal_n0) begin
             test_pass = 0;    
-        end else if (clash_n0) begin
+        end else if (clash_n0 & (!CACHE_HIT | (CACHE_SRC == cur_set))) begin
             test_pass = 1;    
         end else begin
             test_pass = !CACHE_HIT;
