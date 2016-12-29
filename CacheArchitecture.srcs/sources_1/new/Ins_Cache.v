@@ -42,9 +42,11 @@ module Ins_Cache #(
         localparam CACHE_SIZE       = 1 << S,
         localparam BLOCK_SIZE       = 1 << B,
         localparam ASSOCIATIVITY    = 1 << a,
+        
         localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
         localparam LINE_ADDR_WIDTH  = S - a - B + T,
         localparam TAG_ADDR_WIDTH   = S - a - B,
+        
         localparam L2_BUS_WIDTH     = 1 << W,
         localparam BLOCK_SECTIONS   = 1 << T,
         
@@ -65,8 +67,8 @@ module Ins_Cache #(
         input RSTN,
         
         // Input address bus from the processor
-        input [ADDR_WIDTH - 1 : 0] BRANCH_ADDR_IN,
         input BRANCH,
+        input [ADDR_WIDTH - 1 : 0]  BRANCH_ADDR_IN,
         
         // Status signals between processor and cache
         input PROC_READY,
@@ -76,14 +78,15 @@ module Ins_Cache #(
         output reg [DATA_WIDTH - 1 : 0] DATA_TO_PROC,
         
         // Input data bus from L2 cache        
-        input [L2_BUS_WIDTH - 1 : 0] DATA_FROM_L2,
         input DATA_FROM_L2_VALID,
         output DATA_FROM_L2_READY,
+        input [L2_BUS_WIDTH - 1 : 0] DATA_FROM_L2,
         
         // Output address bus to L2 cache
-        output reg [ADDR_WIDTH - 2 - 1 : 0] ADDR_TO_L2,
         input ADDR_TO_L2_READY,
-        output ADDR_TO_L2_VALID        
+        output ADDR_TO_L2_VALID,      
+        output reg [ADDR_WIDTH - 2 - 1 : 0] ADDR_TO_L2
+          
     );
         
     // Tag memory wires
@@ -100,7 +103,7 @@ module Ins_Cache #(
     wire [ASSOCIATIVITY - 1 : 0] lin_mem_wr_enb;
     wire [LINE_RAM_WIDTH - 1 : 0] lin_data_out  [0 : ASSOCIATIVITY - 1];
     
-    wire lin_mem_rd_enb, lin_mem_out_enb;
+    wire lin_mem_rd_enb;
     wire [LINE_ADDR_WIDTH - 1 : 0] lin_mem_wr_addr;   
     wire [LINE_RAM_WIDTH - 1 : 0] lin_mem_data_in; 
     
@@ -117,7 +120,6 @@ module Ins_Cache #(
     
     // Set-multiplexer output values and final register stage
     wire [DATA_WIDTH - 1 : 0] data_to_proc;
-    wire data_to_proc_enb;
     
     // Cache pipeline registers and their control signals
     wire cache_pipe_enb;
@@ -157,7 +159,7 @@ module Ins_Cache #(
          
     always @(posedge CLK) begin
         // Output regsiter for the cache architecture
-        if (data_to_proc_enb) begin
+        if (CACHE_READY) begin
             DATA_TO_PROC <= data_to_proc;
         end         
         
@@ -198,15 +200,15 @@ module Ins_Cache #(
                 .RAM_PERFORMANCE("LOW_LATENCY"),        // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
                 .INIT_FILE("")                          // Specify name/location of RAM initialization file if using one (leave blank if not)
             ) tag_memory (
-                .ADDR_W(tag_mem_wr_addr),                                   // Write address bus, width determined from RAM_DEPTH
-                .ADDR_R(tag_address),                                       // Read address bus, width determined from RAM_DEPTH
-                .DATA_IN({tag_valid_to_ram, tag_to_ram}),                   // RAM input data, width determined from RAM_WIDTH
                 .CLK(CLK),                                                  // Clock
                 .WR_ENB(tag_mem_wr_enb[i]),                                 // Write enable
+                .ADDR_W(tag_mem_wr_addr),                                   // Write address bus, width determined from RAM_DEPTH
+                .DATA_IN({tag_valid_to_ram, tag_to_ram}),                   // RAM input data, width determined from RAM_WIDTH
                 .RD_ENB(tag_mem_rd_enb),                                    // Read Enable, for additional power savings, disable when not in use
+                .ADDR_R(tag_address),                                       // Read address bus, width determined from RAM_DEPTH
+                .DATA_OUT({tag_valid_from_ram[i], tag_from_ram[i]}),        // RAM output data, width determined from RAM_WIDTH
                 .OUT_RST(1'b0),                                             // Output reset (does not affect memory contents)
-                .OUT_ENB(1'b1),                                             // Output register enable
-                .DATA_OUT({tag_valid_from_ram[i], tag_from_ram[i]})         // RAM output data, width determined from RAM_WIDTH
+                .OUT_ENB(1'b1)                                             // Output register enable
             );
             
             // Tag comparison and validness checking
@@ -232,15 +234,15 @@ module Ins_Cache #(
                 .RAM_PERFORMANCE("HIGH_PERFORMANCE"),   // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
                 .INIT_FILE("")                          // Specify name/location of RAM initialization file if using one (leave blank if not)
             ) line_memory (
-                .ADDR_W(lin_mem_wr_addr),          // Write address bus, width determined from RAM_DEPTH
-                .ADDR_R(line_address),             // Read address bus, width determined from RAM_DEPTH
-                .DATA_IN(lin_mem_data_in),         // RAM input data, width determined from RAM_WIDTH
                 .CLK(CLK),                         // Clock
                 .WR_ENB(lin_mem_wr_enb[i]),        // Write enable
+                .ADDR_W(lin_mem_wr_addr),          // Write address bus, width determined from RAM_DEPTH
+                .DATA_IN(lin_mem_data_in),         // RAM input data, width determined from RAM_WIDTH
                 .RD_ENB(lin_mem_rd_enb),           // Read Enable, for additional power savings, disable when not in use
+                .ADDR_R(line_address),             // Read address bus, width determined from RAM_DEPTH
+                .DATA_OUT(lin_data_out[i]),        // RAM output data, width determined from RAM_WIDTH
                 .OUT_RST(1'b0),                    // Output reset (does not affect memory contents)
-                .OUT_ENB(lin_mem_out_enb),         // Output register enable
-                .DATA_OUT(lin_data_out[i])         // RAM output data, width determined from RAM_WIDTH
+                .OUT_ENB(1'b1)                     // Output register enable
             );
             
             Multiplexer #(
@@ -494,16 +496,7 @@ module Ins_Cache #(
         .IN({stream_buf_out, data_from_L2_buffer}),
         .OUT(lin_mem_data_in)
     );
-    
-    reg [ASSOCIATIVITY - 1 : 0] refill_req_dst = 2, refill_req_dst_del_1 = 1;
-    always @(posedge CLK) begin                                                                             // Temporary - bogus random replacement policy
-        if (refill_req_dst [ASSOCIATIVITY - 1])
-            refill_req_dst <= 1;
-        else
-            refill_req_dst <= refill_req_dst << 1;    
-        refill_req_dst_del_1 <= refill_req_dst;
-    end                                   
-          
+        
     Refill_Control #(
         .S(S),
         .B(B),
@@ -520,11 +513,9 @@ module Ins_Cache #(
         .CACHE_SRC(tag_match),
         .STREAM_SRC(hit_buf_no),
         // Data needed for the refill operation
-        .REFILL_REQ_DST(refill_req_dst_del_1),                   
         .REFILL_REQ_TAG(tag_del_2),
         .REFILL_REQ_LINE(tag_address_del_2),
         .REFILL_REQ_SECT(section_address_del_2),
-        .REFILL_REQ_DST_PREV(refill_req_dst),                   
         .REFILL_REQ_TAG_PREV(tag_del_1),
         .REFILL_REQ_LINE_PREV(tag_address_del_1),
         .REFILL_REQ_SECT_PREV(section_address_del_1),
@@ -572,12 +563,9 @@ module Ins_Cache #(
         .PROC_READY(PROC_READY),                            // Signal from processor to cache that its pipeline is currently ready to work
         // Register enables
         .CACHE_PIPE_ENB(cache_pipe_enb),                    // Enable for cache's pipeline registers
-        .DATA_TO_PROC_ENB(data_to_proc_enb),                // Enable for the IR register
         // Memories
         .TAG_MEM_RD_ENB(tag_mem_rd_enb),                    // Common read enable for the tag memories
-        .LIN_MEM_RD_ENB(lin_mem_rd_enb),                    // Common read enables for the line memories
-        .LIN_MEM_OUT_ENB(lin_mem_out_enb)                   // Common output register enable for the line memories
-        
+        .LIN_MEM_RD_ENB(lin_mem_rd_enb)
     );
     
     initial begin

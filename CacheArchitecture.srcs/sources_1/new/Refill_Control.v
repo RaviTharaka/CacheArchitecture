@@ -52,12 +52,10 @@ module Refill_Control #(
         input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG,                 // Tag portion of the PC at IF3
         input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE,                // Line portion of the PC at IF3
         input [T               - 1 : 0] REFILL_REQ_SECT,                // Section portion of the PC at IF3
-        input [ASSOCIATIVITY   - 1 : 0] REFILL_REQ_DST,                 // Destination set for the request at IF3, if cache misses
         
         input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG_PREV,                 // Tag portion of the PC at IF3
         input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE_PREV,                // Line portion of the PC at IF3
         input [T               - 1 : 0] REFILL_REQ_SECT_PREV,                // Section portion of the PC at IF3
-        input [ASSOCIATIVITY   - 1 : 0] REFILL_REQ_DST_PREV,                 // Destination set for the request at IF3, if cache misses
         
         // Signals coming from outside the cache
         input                           BRANCH,                         // Branch command from EXE stage
@@ -90,6 +88,21 @@ module Refill_Control #(
     
     // If the stream buffers doesn't hit, it means a priority address request to L2 (src == 00)
     wire [STREAM_SEL_BITS - 1 : 0] refill_req_src = (STREAM_HIT)? STREAM_SRC : 0;
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Calculating the destination of the refill request                                            //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Temporary - cycle destinations among the available sets
+    reg [ASSOCIATIVITY - 1 : 0] refill_req_dst = 2, refill_req_dst_del_1 = 1;
+    always @(posedge CLK) begin                                                                             
+        if (admit) begin
+            if (refill_req_dst [ASSOCIATIVITY - 1])
+                refill_req_dst <= 1;
+            else
+                refill_req_dst <= refill_req_dst << 1;    
+            refill_req_dst_del_1 <= refill_req_dst;
+        end
+    end         
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,25 +167,25 @@ module Refill_Control #(
                 cur_line_wire = (no_of_elements == 4'b0000)? REFILL_REQ_LINE : cur_line;
                 cur_sect_wire = (no_of_elements == 4'b0000)? REFILL_REQ_SECT : cur_sect;
                 cur_src_wire  = (no_of_elements == 4'b0000)? refill_req_src  : cur_src;
-                cur_set_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_DST  : cur_set;
+                cur_set_wire  = (no_of_elements == 4'b0000)? refill_req_dst_del_1  : cur_set;
                 
                 fir_tag_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_TAG  : fir_tag;
                 fir_line_wire = (no_of_elements == 4'b0001)? REFILL_REQ_LINE : fir_line;
                 fir_sect_wire = (no_of_elements == 4'b0001)? REFILL_REQ_SECT : fir_sect;
                 fir_src_wire  = (no_of_elements == 4'b0001)? refill_req_src  : fir_src;
-                fir_set_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DST  : fir_set;
+                fir_set_wire  = (no_of_elements == 4'b0001)? refill_req_dst_del_1  : fir_set;
                 
                 sec_tag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_TAG  : sec_tag;
                 sec_line_wire = (no_of_elements == 4'b0011)? REFILL_REQ_LINE : sec_line;
                 sec_sect_wire = (no_of_elements == 4'b0011)? REFILL_REQ_SECT : sec_sect;
                 sec_src_wire  = (no_of_elements == 4'b0011)? refill_req_src  : sec_src;
-                sec_set_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DST  : sec_set;
+                sec_set_wire  = (no_of_elements == 4'b0011)? refill_req_dst_del_1  : sec_set;
                 
                 thr_tag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_TAG  : thr_tag;
                 thr_line_wire = (no_of_elements == 4'b0111)? REFILL_REQ_LINE : thr_line;
                 thr_sect_wire = (no_of_elements == 4'b0111)? REFILL_REQ_SECT : thr_sect;
                 thr_src_wire  = (no_of_elements == 4'b0111)? refill_req_src  : thr_src;
-                thr_set_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DST  : thr_set;
+                thr_set_wire  = (no_of_elements == 4'b0111)? refill_req_dst_del_1  : thr_set;
             end
             2'b01 : begin
                 cur_tag_wire  = fir_tag;
@@ -204,25 +217,25 @@ module Refill_Control #(
                 cur_line_wire = (no_of_elements == 4'b0001)? REFILL_REQ_LINE : fir_line;
                 cur_sect_wire = (no_of_elements == 4'b0001)? REFILL_REQ_SECT : fir_sect;
                 cur_src_wire  = (no_of_elements == 4'b0001)? refill_req_src  : fir_src;
-                cur_set_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DST  : fir_set;
+                cur_set_wire  = (no_of_elements == 4'b0001)? refill_req_dst_del_1  : fir_set;
                 
                 fir_tag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_TAG  : sec_tag;
                 fir_line_wire = (no_of_elements == 4'b0011)? REFILL_REQ_LINE : sec_line;
                 fir_sect_wire = (no_of_elements == 4'b0011)? REFILL_REQ_SECT : sec_sect;
                 fir_src_wire  = (no_of_elements == 4'b0011)? refill_req_src  : sec_src;
-                fir_set_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DST  : sec_set;
+                fir_set_wire  = (no_of_elements == 4'b0011)? refill_req_dst_del_1  : sec_set;
                 
                 sec_tag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_TAG  : thr_tag;
                 sec_line_wire = (no_of_elements == 4'b0111)? REFILL_REQ_LINE : thr_line;
                 sec_sect_wire = (no_of_elements == 4'b0111)? REFILL_REQ_SECT : thr_sect;
                 sec_src_wire  = (no_of_elements == 4'b0111)? refill_req_src  : thr_src;
-                sec_set_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DST  : thr_set;
+                sec_set_wire  = (no_of_elements == 4'b0111)? refill_req_dst_del_1  : thr_set;
                 
                 thr_tag_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_TAG  : 0;
                 thr_line_wire = (no_of_elements == 4'b1111)? REFILL_REQ_LINE : 0;
                 thr_sect_wire = (no_of_elements == 4'b1111)? REFILL_REQ_SECT : 0;
                 thr_src_wire  = (no_of_elements == 4'b1111)? refill_req_src  : 0;
-                thr_set_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_DST  : 0;
+                thr_set_wire  = (no_of_elements == 4'b1111)? refill_req_dst_del_1  : 0;
             end
             2'b00 : begin
                 cur_tag_wire  = cur_tag;
@@ -285,13 +298,13 @@ module Refill_Control #(
     
     ////////////// This is the wanted behavior of the unit, but won't pass timing ////////////////////
     //    // Tests
-    //    wire clash_n0 = (CACHE_HIT)?      (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0] & (CACHE_SRC == cur_set)    
-    //                                      : (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0];		
+    //    wire clash_n0 = (CACHE_HIT)?      (REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0] & (CACHE_SRC == cur_set)    
+    //                                      : (REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0];		
     // Simplifies to
-    //    wire clash_n0 = ((REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST == cur_set) & no_of_elements[0]) & (!CACHE_HIT | (CACHE_SRC == cur_set) );  
+    //    wire clash_n0 = ((REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0]) & (!CACHE_HIT | (CACHE_SRC == cur_set) );  
     // 
-    //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_DST == fir_set) & no_of_elements[1];   
-    //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_DST == sec_set) & no_of_elements[2];
+    //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (refill_req_dst_del_1 == fir_set) & no_of_elements[1];   
+    //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (refill_req_dst_del_1 == sec_set) & no_of_elements[2];
     //    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
     //    wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
     //    wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];
@@ -299,9 +312,9 @@ module Refill_Control #(
     
     ////////////// Take some tests to the previous clock cycle, timing even worse ///////////////////
     //    // Tests - Clash with nth request
-    //    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_DST_PREV == cur_set_wire) & no_of_elements_wire[0];
-    //    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (REFILL_REQ_DST_PREV == fir_set_wire) & no_of_elements_wire[1];
-    //    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (REFILL_REQ_DST_PREV == sec_set_wire) & no_of_elements_wire[2];
+    //    wire clash_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (refill_req_dst == cur_set_wire) & no_of_elements_wire[0];
+    //    wire clash_n1_wire = (REFILL_REQ_LINE_PREV == fir_line_wire) & (refill_req_dst == fir_set_wire) & no_of_elements_wire[1];
+    //    wire clash_n2_wire = (REFILL_REQ_LINE_PREV == sec_line_wire) & (refill_req_dst == sec_set_wire) & no_of_elements_wire[2];
         
     //    // Tests - Equal with nth request
     //    wire equal_n0_wire = (REFILL_REQ_LINE_PREV == cur_line_wire) & (REFILL_REQ_TAG_PREV == cur_tag_wire) & no_of_elements_wire[0];
@@ -325,11 +338,11 @@ module Refill_Control #(
     //    reg element0_p, element1_p, element2_p, element3_p, element4_p; 
           
     //    always @(posedge CLK) begin
-    //        clash_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
-    //        clash_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
-    //        clash_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
-    //        clash_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
-    //        clash_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
+    //        clash_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (refill_req_dst == cur_set);
+    //        clash_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (refill_req_dst == fir_set);
+    //        clash_p2 <= (REFILL_REQ_LINE_PREV == sec_line)        & (refill_req_dst == sec_set);
+    //        clash_p3 <= (REFILL_REQ_LINE_PREV == thr_line)        & (refill_req_dst == thr_set);
+    //        clash_p4 <= (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (refill_req_dst == refill_req_dst_del_1);
           
     //        equal_p0 <= (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
     //        equal_p1 <= (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
@@ -396,11 +409,11 @@ module Refill_Control #(
     reg equal_cur, equal_fir, equal_sec, equal_thr, equal_pcs;
     
     always @(*) begin
-        clash_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_DST_PREV == cur_set);
-        clash_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_DST_PREV == fir_set);
-        clash_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (REFILL_REQ_DST_PREV == sec_set);
-        clash_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (REFILL_REQ_DST_PREV == thr_set);
-        clash_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_DST_PREV == REFILL_REQ_DST);
+        clash_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (refill_req_dst == cur_set);
+        clash_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (refill_req_dst == fir_set);
+        clash_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (refill_req_dst == sec_set);
+        clash_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (refill_req_dst == thr_set);
+        clash_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (refill_req_dst == refill_req_dst_del_1);
         
         equal_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
         equal_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
@@ -626,8 +639,8 @@ module Refill_Control #(
         endcase
     end
     
-    assign TAG_MEM_WR_ENB       = ((no_of_elements == 0)? REFILL_REQ_DST : cur_set) & {ASSOCIATIVITY{write_test}};
-    assign LIN_MEM_WR_ENB       = ((no_of_elements == 0)? REFILL_REQ_DST : cur_set) & {ASSOCIATIVITY{write_test}};
+    assign TAG_MEM_WR_ENB       = ((no_of_elements == 0)? refill_req_dst_del_1 : cur_set) & {ASSOCIATIVITY{write_test}};
+    assign LIN_MEM_WR_ENB       = ((no_of_elements == 0)? refill_req_dst_del_1 : cur_set) & {ASSOCIATIVITY{write_test}};
        
        
     //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -11,14 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="16655866667fs"></ZoomStartTime>
-      <ZoomEndTime time="16770666668fs"></ZoomEndTime>
-      <Cursor1Time time="16677667000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="263600001fs"></ZoomEndTime>
+      <Cursor1Time time="138800000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="15" />
    <wave_markers>
       <marker time="11860145000" label="" />
-      <marker time="16825000000" label="" />
       <marker time="16675000000" label="" />
    </wave_markers>
    <wvobject fp_name="/Test_Ins_Cache/CLK" type="logic">
@@ -68,18 +67,22 @@
       <obj_property name="label">From Proc</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/Test_Ins_Cache/PROC_READY" type="logic">
-         <obj_property name="ElementShortName">PROC_READY</obj_property>
-         <obj_property name="ObjectShortName">PROC_READY</obj_property>
-      </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/BRANCH" type="logic">
          <obj_property name="ElementShortName">BRANCH</obj_property>
          <obj_property name="ObjectShortName">BRANCH</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/PROC_READY" type="logic">
+         <obj_property name="ElementShortName">PROC_READY</obj_property>
+         <obj_property name="ObjectShortName">PROC_READY</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/BRANCH_ADDR_IN" type="array">
          <obj_property name="ElementShortName">BRANCH_ADDR_IN[31:0]</obj_property>
          <obj_property name="ObjectShortName">BRANCH_ADDR_IN[31:0]</obj_property>
          <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group55" type="group">
@@ -89,17 +92,20 @@
       <wvobject fp_name="/Test_Ins_Cache/CACHE_READY" type="logic">
          <obj_property name="ElementShortName">CACHE_READY</obj_property>
          <obj_property name="ObjectShortName">CACHE_READY</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/DATA_TO_PROC" type="array">
          <obj_property name="ElementShortName">DATA_TO_PROC[31:0]</obj_property>
          <obj_property name="ObjectShortName">DATA_TO_PROC[31:0]</obj_property>
          <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group62" type="group">
       <obj_property name="label">Tag memories</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/\ASSOC_LOOP[0].tag_memory /ADDR_R" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">ADDR_R[6:0]</obj_property>
@@ -1366,7 +1372,6 @@
    <wvobject fp_name="group736" type="group">
       <obj_property name="label">PCs of IF stages</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/pc" type="array">
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="ElementShortName">pc[31:0]</obj_property>
@@ -1470,6 +1475,7 @@
    <wvobject fp_name="group48" type="group">
       <obj_property name="label">Address To L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/send_addr_to_L2" type="logic">
          <obj_property name="ElementShortName">send_addr_to_L2</obj_property>
          <obj_property name="ObjectShortName">send_addr_to_L2</obj_property>
@@ -2766,6 +2772,7 @@
    <wvobject fp_name="group1026" type="group">
       <obj_property name="label">Stream buffers</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group559" type="group">
          <obj_property name="label">Prefetch Queue</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2931,20 +2938,6 @@
             <obj_property name="label">request_counter1</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /request_counter" type="array">
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
-            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
-            <obj_property name="label">request_counter2</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /request_counter" type="array">
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
-            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
-            <obj_property name="label">request_counter3</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">commit_counter[5:0]</obj_property>
@@ -2952,12 +2945,26 @@
             <obj_property name="label">commit_counter1</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /request_counter" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
+            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
+            <obj_property name="label">request_counter2</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">commit_counter[5:0]</obj_property>
             <obj_property name="ObjectShortName">commit_counter[5:0]</obj_property>
             <obj_property name="label">commit_counter2</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /request_counter" type="array">
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
+            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
+            <obj_property name="label">request_counter3</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
@@ -3518,7 +3525,6 @@
    <wvobject fp_name="group687" type="group">
       <obj_property name="label">Refill Control</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="vbus709" type="vbus">
          <obj_property name="label">Tests</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -3754,6 +3760,7 @@
       <wvobject fp_name="group755" type="group">
          <obj_property name="label">Refill States</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/refill_state" type="array">
             <obj_property name="ElementShortName">refill_state[1:0]</obj_property>
             <obj_property name="ObjectShortName">refill_state[1:0]</obj_property>
