@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="Test_Data_Cache_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="Test_Data_Cache" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="148200002fs"></ZoomEndTime>
+      <Cursor1Time time="132329000fs"></Cursor1Time>
+   </zoom_setting>
+   <WVObjectSize size="6" />
+   <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
+      <obj_property name="ElementShortName">CLK</obj_property>
+      <obj_property name="ObjectShortName">CLK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/Test_Data_Cache/instruction_no" type="array">
+      <obj_property name="ElementShortName">instruction_no[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instruction_no[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="group81" type="group">
+      <obj_property name="label">Control from/to proc</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/PROC_READY" type="logic">
+         <obj_property name="ElementShortName">PROC_READY</obj_property>
+         <obj_property name="ObjectShortName">PROC_READY</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/CACHE_READY" type="logic">
+         <obj_property name="ElementShortName">CACHE_READY</obj_property>
+         <obj_property name="ObjectShortName">CACHE_READY</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group82" type="group">
+      <obj_property name="label">Datapath from proc</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/ADDR_FROM_PROC" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">ADDR_FROM_PROC[31:0]</obj_property>
+         <obj_property name="ObjectShortName">ADDR_FROM_PROC[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="label">ADDR_FROM_PROC</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_FROM_PROC" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">DATA_FROM_PROC[31:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_PROC[31:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="label">DATA_FROM_PROC</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/CONTROL_FROM_PROC" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">CONTROL_FROM_PROC[1:0]</obj_property>
+         <obj_property name="ObjectShortName">CONTROL_FROM_PROC[1:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
+         <obj_property name="label">CONTROL_FROM_PROC</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_TO_PROC" type="array">
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="ElementShortName">DATA_TO_PROC[31:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_TO_PROC[31:0]</obj_property>
+         <obj_property name="label">DATA_TO_PROC</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group106" type="group">
+      <obj_property name="label">Read Port to L2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/Test_Data_Cache/RD_ADDR_TO_L2" type="array">
+         <obj_property name="ElementShortName">RD_ADDR_TO_L2[29:0]</obj_property>
+         <obj_property name="ObjectShortName">RD_ADDR_TO_L2[29:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/RD_ADDR_TO_L2_READY" type="logic">
+         <obj_property name="ElementShortName">RD_ADDR_TO_L2_READY</obj_property>
+         <obj_property name="ObjectShortName">RD_ADDR_TO_L2_READY</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/RD_ADDR_TO_L2_VALID" type="logic">
+         <obj_property name="ElementShortName">RD_ADDR_TO_L2_VALID</obj_property>
+         <obj_property name="ObjectShortName">RD_ADDR_TO_L2_VALID</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_FROM_L2" type="array">
+         <obj_property name="ElementShortName">DATA_FROM_L2[127:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_L2[127:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_FROM_L2_VALID" type="logic">
+         <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_FROM_L2_READY" type="logic">
+         <obj_property name="ElementShortName">DATA_FROM_L2_READY</obj_property>
+         <obj_property name="ObjectShortName">DATA_FROM_L2_READY</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group105" type="group">
+      <obj_property name="label">Write Port to L2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/WR_TO_L2_READY" type="logic">
+         <obj_property name="ElementShortName">WR_TO_L2_READY</obj_property>
+         <obj_property name="ObjectShortName">WR_TO_L2_READY</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/WR_TO_L2_VALID" type="logic">
+         <obj_property name="ElementShortName">WR_TO_L2_VALID</obj_property>
+         <obj_property name="ObjectShortName">WR_TO_L2_VALID</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/WR_ADDR_TO_L2" type="array">
+         <obj_property name="ElementShortName">WR_ADDR_TO_L2[29:0]</obj_property>
+         <obj_property name="ObjectShortName">WR_ADDR_TO_L2[29:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/DATA_TO_L2" type="array">
+         <obj_property name="ElementShortName">DATA_TO_L2[127:0]</obj_property>
+         <obj_property name="ObjectShortName">DATA_TO_L2[127:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/WR_CONTROL_TO_L2" type="logic">
+         <obj_property name="ElementShortName">WR_CONTROL_TO_L2</obj_property>
+         <obj_property name="ObjectShortName">WR_CONTROL_TO_L2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/WR_COMPLETE" type="logic">
+         <obj_property name="ElementShortName">WR_COMPLETE</obj_property>
+         <obj_property name="ObjectShortName">WR_COMPLETE</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

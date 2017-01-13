@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Refill_Control #(
+module Refill_Control_I #(
         // Fixed parameters
         localparam ADDR_WIDTH       = 32,
         

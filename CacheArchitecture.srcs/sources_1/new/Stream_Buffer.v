@@ -21,6 +21,7 @@
 //                      and section_address at T-1
 //////////////////////////////////////////////////////////////////////////////////
 
+(* ram_style = "distributed" *)
 
 module Stream_Buffer #(
         // Primary parameters

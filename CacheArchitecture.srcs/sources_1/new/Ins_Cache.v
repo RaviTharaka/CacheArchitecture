@@ -154,8 +154,6 @@ module Ins_Cache #(
     wire stream_buffer_ready;
     wire l1_refill_ready;
     wire data_stored_stream_buf, data_stored_lineRAM;
-             
-    integer j;
          
     always @(posedge CLK) begin
         // Output regsiter for the cache architecture
@@ -349,8 +347,6 @@ module Ins_Cache #(
         end
     end
     
-    assign ongoing_queue_wr_enb = ADDR_TO_L2_VALID & ADDR_TO_L2_READY;
-    assign ongoing_queue_rd_enb = (data_from_L2_src == 0)? data_stored_lineRAM : data_stored_stream_buf;
     assign ADDR_TO_L2_VALID = addr_to_L2_full;
     assign addr_to_L2_ready = !addr_to_L2_full | ADDR_TO_L2_READY;
     
@@ -358,10 +354,14 @@ module Ins_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     // Refill path - L2 delay path                                              //
     //////////////////////////////////////////////////////////////////////////////
-            
+    
+    assign ongoing_queue_wr_enb = ADDR_TO_L2_VALID & ADDR_TO_L2_READY;
+    assign ongoing_queue_rd_enb = (data_from_L2_src == 0)? data_stored_lineRAM : data_stored_stream_buf;
+                
     // Queue for requests currently being serviced by the L2 cache
     FIFO_FWFT #(
-        .DEPTH(pwr_ceil($ceil((L2_DELAY + 0.0) / (L2_BURST + 0.0)) + 1)),                                                                                       
+        //.DEPTH(pwr_ceil($ceil((L2_DELAY + 0.0) / (L2_BURST + 0.0)) + 1)),             //XST doesnt seem to work with $ceil
+        .DEPTH(pwr_ceil(L2_DELAY / L2_BURST + 2)),                                                                                         
         .WIDTH(STREAM_SEL_BITS)
     ) ongoing_L2_queue (
         .CLK(CLK),
@@ -382,6 +382,7 @@ module Ins_Cache #(
     reg [LINE_RAM_WIDTH - 1 : 0] data_from_L2_buffer;
     
     // Buffer for storing data from L2, until they are read into the Stream Buffers or Line RAMs
+    integer j;        
     always @(posedge CLK) begin
         for (j = 0; j < LINE_RAM_WIDTH / L2_BUS_WIDTH; j = j + 1) begin
             if (data_from_L2_buffer_enb[j]) begin
@@ -496,8 +497,12 @@ module Ins_Cache #(
         .IN({stream_buf_out, data_from_L2_buffer}),
         .OUT(lin_mem_data_in)
     );
-        
-    Refill_Control #(
+     
+    //////////////////////////////////////////////////////////////////////////////
+    // Primary control system                                                    //
+    //////////////////////////////////////////////////////////////////////////////
+     
+    Refill_Control_I #(
         .S(S),
         .B(B),
         .a(a),
@@ -523,7 +528,7 @@ module Ins_Cache #(
         .BRANCH(BRANCH),
         .PC_PIPE_ENB(pc_pipe_enb),                         // Enable for main pipeline registers
         .PC_SEL(pc_sel),                                   // Mux select for PC [pc_sel = {0(PC + 4), 1(Branch path), 2 or 3(PC delay 2)}]         
-        // Related to PC pipeline
+        // Related to Address to L2 buffers
         .SEND_ADDR_TO_L2(send_addr_to_L2),                 // Valid signal for the input of Addr_to_L2 section   
         // Data from L2 buffer 
         .DATA_FROM_L2_SRC(data_from_L2_src),
@@ -543,9 +548,6 @@ module Ins_Cache #(
                
     );
     
-    //////////////////////////////////////////////////////////////////////////////
-    // Primary control system                                                    //
-    //////////////////////////////////////////////////////////////////////////////
         
     Ins_Cache_Control #(
         .S(S),
