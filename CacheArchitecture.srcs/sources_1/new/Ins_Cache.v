@@ -262,6 +262,7 @@ module Ins_Cache #(
         .ORDER(a)
     ) set_decoder (
         .ONE_HOT(tag_match),
+        .DEFAULT(0),
         .BIN(set_select)
     );
     

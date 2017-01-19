@@ -291,11 +291,22 @@ module Data_Cache #(
         end
     endgenerate
     
+    // Replacement policy unit
+    Replacement_Unit #(
+        .S(S),
+        .B(B),
+        .a(a)
+    ) replacement_unit (
+        .BLOCK(tag_address_del_1),
+        .REPLACE(replace)
+    );
+    
     // Convert the tag match values from one hot format (from equal blocks) to binary format  
     OneHot_to_Bin #(
         .ORDER(a)
     ) set_decoder (
         .ONE_HOT(tag_match),
+        .DEFAULT(replace),
         .BIN(set_select)
     );
     

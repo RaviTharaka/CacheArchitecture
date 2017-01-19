@@ -53,9 +53,10 @@ module Refill_Control_I #(
         input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE,                // Line portion of the PC at IF3
         input [T               - 1 : 0] REFILL_REQ_SECT,                // Section portion of the PC at IF3
         
-        input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG_PREV,                 // Tag portion of the PC at IF3
-        input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE_PREV,                // Line portion of the PC at IF3
-        input [T               - 1 : 0] REFILL_REQ_SECT_PREV,                // Section portion of the PC at IF3
+        // Current request at IF2
+        input [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG_PREV,            // Tag portion of the PC at IF2
+        input [TAG_ADDR_WIDTH  - 1 : 0] REFILL_REQ_LINE_PREV,           // Line portion of the PC at IF2
+        input [T               - 1 : 0] REFILL_REQ_SECT_PREV,           // Section portion of the PC at IF2
         
         // Signals coming from outside the cache
         input                           BRANCH,                         // Branch command from EXE stage

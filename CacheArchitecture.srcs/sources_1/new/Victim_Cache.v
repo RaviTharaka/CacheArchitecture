@@ -125,6 +125,7 @@ module Victim_Cache #(
         .ORDER(V)
     ) set_decoder (
         .ONE_HOT(equality),
+        .DEFAULT(0),
         .BIN(hit_address)
     );
     
