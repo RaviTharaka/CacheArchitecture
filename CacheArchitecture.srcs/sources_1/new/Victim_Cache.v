@@ -97,7 +97,7 @@ module Victim_Cache #(
     integer i;
     always @(posedge CLK) begin
         for (i = 0; i < VICTIM_CACHE_DEPTH; i = i + 1) begin
-            equality[i] <= (addr_memory[i] == SEARCH_ADDR[SEARCH_ADDR_WIDTH - 1 : T]);
+            equality[i] <= (addr_memory[i] == SEARCH_ADDR[SEARCH_ADDR_WIDTH - 1 : T]) & valid[i];
         end
     end
     
@@ -272,20 +272,27 @@ module Victim_Cache #(
     integer k;
     initial begin
         
-        victim_wr_state  = 0;
-        victim_wr_pos    = 0;
+        VICTIM_HIT        = 0;
+        victim_wr_state   = 0;
+        victim_wr_pos     = 0;
         victim_wr_pos_msb = 0;
         
-        victim_rd_state  = 0;
-        victim_rd_pos    = 0;
+        victim_rd_state   = 0;
+        victim_rd_pos     = 0;
         victim_rd_pos_msb = 0;
         
-        L2_wr_buf_full   = 0;
+        L2_wr_buf_full    = 0;
         
         for (i = 0; i < VICTIM_CACHE_DEPTH * T; i = i + 1) begin
-            data_memory[i] = i;
-            valid[i]       = 0;
-            dirty[i]       = 0;                
+            data_memory[i] = 0;
         end
+        
+       for (i = 0; i < VICTIM_CACHE_DEPTH; i = i + 1) begin 
+            addr_memory[i] = 0;
+            ctrl_memory[i] = 0;
+            valid[i]       = 0;
+            equality[i]    = 0;
+        end    
+        
     end   
 endmodule

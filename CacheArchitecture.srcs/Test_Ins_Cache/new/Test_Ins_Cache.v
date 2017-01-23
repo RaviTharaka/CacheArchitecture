@@ -123,9 +123,6 @@ module Test_Ins_Cache ();
         read_address <= CACHE_READY & PROC_READY;
     end
     
-    wire [ADDR_WIDTH - 1 : 0] output_addr;
-    
-    reg l2_read [0 : L2_DELAY - 1];
     reg [L2_BURST - 1 : 0] l2_input_state;
     
     wire fifo_empty;    

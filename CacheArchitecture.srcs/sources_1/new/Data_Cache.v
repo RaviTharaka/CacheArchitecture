@@ -31,7 +31,7 @@ module Data_Cache #(
         parameter a                 = 1,                     // Associativity of the cache would be 2^a
         parameter T                 = 1,                     // Width to depth translation amount
         parameter W                 = 7,                     // Width of the L2-L1 bus would be 2^W
-        parameter L2_DELAY          = 7,                     // Delay of the second level of cache
+        parameter L2_DELAY_RD       = 7,                     // Read delay of the second level of cache
         parameter V                 = 2,                     // Size of the victim cache will be 2^V cache lines
         
         // Calculated parameters
@@ -212,6 +212,8 @@ module Data_Cache #(
     wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                     // Whether the tag is valid for the given section of the cache block
     reg  [ASSOCIATIVITY   - 1 : 0] tag_match;                          // Tag matches in a one-hot encoding
     reg  [ASSOCIATIVITY   - 1 : 0] tag_valid;                          // Whether the tag is valid for the given section of the cache block
+    
+    assign cache_hit = |(tag_valid & tag_match);    
         
     // Set multiplexer wires    
     wire [a                              - 1 : 0] set_select;          // Tag matches in a binary encoding  
@@ -219,13 +221,15 @@ module Data_Cache #(
     wire [ASSOCIATIVITY * LINE_RAM_WIDTH - 1 : 0] lin_ram_out_dearray; 
     reg  [ASSOCIATIVITY * TAG_WIDTH      - 1 : 0] tag_ram_out_dearray; 
     reg  [ASSOCIATIVITY * 1              - 1 : 0] dirty_ram_out_dearray; 
+    reg  [ASSOCIATIVITY * 1              - 1 : 0] valid_ram_out_dearray; 
     
     wire [LINE_RAM_WIDTH                 - 1 : 0] data_set_mux_out;    // Data after selecting the proper set
     wire [TAG_WIDTH                      - 1 : 0] tag_set_mux_out;     // Tag after selecting the proper set
     wire                                          dirty_set_mux_out;   // Dirty after selecting the proper set
+    wire                                          valid_set_mux_out;   // Valid after selecting the proper set
     
     // Cache line multiplexer wires
-    wire [DATA_WIDTH      - 1 : 0] data_to_proc;                       // Data going back to the processor   
+    wire [DATA_WIDTH                     - 1 : 0] data_to_proc;        // Data going back to the processor   
                             
     genvar i;
         
@@ -265,6 +269,7 @@ module Data_Cache #(
                     
                     tag_ram_out_dearray[TAG_WIDTH * i +: TAG_WIDTH] <= tag_from_ram[i];
                     dirty_ram_out_dearray[i] <= dirty_from_ram[i];
+                    valid_ram_out_dearray[i] <= tag_valid_wire[i];
                 end
             end
             
@@ -300,8 +305,8 @@ module Data_Cache #(
         .BLOCK(tag_address_del_1),
         .REPLACE(replace)
     );
-    
-    // Convert the tag match values from one hot format (from equal blocks) to binary format  
+        
+    // Convert the tag match values from one hot format (from equal units) to binary format  
     OneHot_to_Bin #(
         .ORDER(a)
     ) set_decoder (
@@ -310,7 +315,7 @@ module Data_Cache #(
         .BIN(set_select)
     );
     
-    // L1 data set selection multiplexer 
+    // L1 data, set selection multiplexer 
     Multiplexer #(
         .ORDER(a),
         .WIDTH(LINE_RAM_WIDTH)
@@ -320,7 +325,7 @@ module Data_Cache #(
         .OUT(data_set_mux_out)
     );
     
-    // L1 tag set selection multiplexer 
+    // L1 tag, set selection multiplexer 
     Multiplexer #(
         .ORDER(a),
         .WIDTH(TAG_WIDTH)
@@ -330,7 +335,7 @@ module Data_Cache #(
         .OUT(tag_set_mux_out)
     );
     
-    // Dirty set selection multiplexer 
+    // Dirty, set selection multiplexer 
     Multiplexer #(
         .ORDER(a),
         .WIDTH(1)
@@ -338,6 +343,16 @@ module Data_Cache #(
         .SELECT(set_select),
         .IN(dirty_ram_out_dearray),
         .OUT(dirty_set_mux_out)
+    );
+    
+    // Valid, set selection multiplexer 
+    Multiplexer #(
+        .ORDER(a),
+        .WIDTH(1)
+    ) valid_set_mux (
+        .SELECT(set_select),
+        .IN(valid_ram_out_dearray),
+        .OUT(valid_set_mux_out)
     );
     
     // Word selection multiplexer
@@ -526,10 +541,23 @@ module Data_Cache #(
     Refill_Control_D #(
     
     ) refill_control (
+        .CLK(CLK),
+        // Inputs from DM3 pipeline stage
+        .CACHE_HIT(cache_hit),                              // Whether the L1 cache hits or misses 
+        .VICTIM_HIT(victim_hit),                            // Whether the victim cache has hit
+        .REFILL_REQ_TAG(tag_del_2),                         // Tag portion of the PC at DM3
+        .REFILL_REQ_LINE(tag_address_del_2),                // Line portion of the PC at DM3
+        .REFILL_REQ_SECT(section_address_del_2),            // Section portion of the PC at DM3
+        .REFILL_REQ_VTAG(tag_set_mux_out),                  // Tag coming out of tag memory delayed to DM3
+        .REFILL_REQ_DST_SET(set_select),                    // Destination set for the refill. In binary format. 
+        .REFILL_REQ_DIRTY(dirty_set_mux_out),               // Dirty bit coming out of tag memory delayed to DM3
+        .REFILL_REQ_CTRL(control_del_2),                    // Instruction at DM3
+        .REFILL_REQ_VALID(valid_set_mux_out),               // Valid bit coming out of tag memory delayed to DM3
         // Outputs to the main processor pipeline		
         .CACHE_READY(CACHE_READY),                         // Signal from cache to processor that its pipeline is currently ready to work  
         // Related to controlling the pipeline
         .PC_PIPE_ENB(pc_pipe_enb),                         // Enable for main pipeline registers
+        .CACHE_PIPE_ENB(cache_pipe_enb),                   // Enable for cache pipeline
         .ADDR_FROM_PROC_SEL(addr_from_proc_sel),           // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}    
         // Related to Address to L2 buffers
         .SEND_RD_ADDR_TO_L2(send_rd_addr_to_L2)            // Valid signal for the input of Addr_to_L2 section   
@@ -556,7 +584,11 @@ module Data_Cache #(
         
         control_del_1              = 0;
         control_del_2              = 0;
-          
+        
+        tag_valid                  = 0;
+        tag_match                  = 0;  
+        rd_addr_to_L2_full         = 0;
+        RD_ADDR_TO_L2              = 0;  
     end
         
     // Log value calculation
