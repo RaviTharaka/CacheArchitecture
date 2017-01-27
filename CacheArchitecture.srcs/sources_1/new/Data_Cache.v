@@ -98,7 +98,7 @@ module Data_Cache #(
     wire refill_from_L2_valid;      // States the DATA_FROM_L2 unit has valid data 
       
     wire cache_pipe_enb;            // Enables the cache processes
-    wire pc_pipe_enb;               // Enables the main processor pipeline
+    wire main_pipe_enb;               // Enables the main processor pipeline
     wire input_from_proc_sel;       // input_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}, same for control and data from processor also
     
     wire cache_hit;                 // L1 cache has hit
@@ -111,17 +111,24 @@ module Data_Cache #(
     // Cache data path - Decoding the read/write address                        //
     //////////////////////////////////////////////////////////////////////////////
     
+    // Selecting whether the processor or cache itself (to evict data to victim cache) has access to the read port of L1
+    wire                             rd_port_select;                     // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)} 
+    wire [TAG_WIDTH       - 1 : 0]   evict_tag;
+    wire [TAG_ADDR_WIDTH  - 1 : 0]   evict_tag_addr;
+    wire [T               - 1 : 0]   evict_sect; 
+    wire [LINE_ADDR_WIDTH - 1 : 0]   evict_line = {evict_tag_addr, evict_sect};  
+
     // Register for the previous stage
     reg  [ADDR_WIDTH      - 1 : 0]   addr_from_proc;
     reg  [DATA_WIDTH      - 1 : 0]   data_from_proc;
     reg  [2               - 1 : 0]   control_from_proc;
         
-    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = addr_from_proc[0                                  +: BYTES_PER_WORD   ];
-    wire [WORDS_PER_SECT  - 1 : 0]   word_address        = addr_from_proc[BYTES_PER_WORD                     +: WORDS_PER_SECT   ];
-    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: LINE_ADDR_WIDTH  ];
-    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = addr_from_proc[(BYTES_PER_WORD + WORDS_PER_BLOCK) +: TAG_ADDR_WIDTH   ];
-    wire [TAG_WIDTH       - 1 : 0]   tag                 = addr_from_proc[(ADDR_WIDTH - 1)                   -: TAG_WIDTH        ];
-    wire [T               - 1 : 0]   section_address     = addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: T                ];    
+    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = (rd_port_select)? 0              : addr_from_proc[0                                  +: BYTES_PER_WORD   ];
+    wire [WORDS_PER_SECT  - 1 : 0]   word_address        = (rd_port_select)? 0              : addr_from_proc[BYTES_PER_WORD                     +: WORDS_PER_SECT   ];
+    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = (rd_port_select)? evict_line     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: LINE_ADDR_WIDTH  ];
+    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = (rd_port_select)? evict_tag_addr : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_BLOCK) +: TAG_ADDR_WIDTH   ];
+    wire [TAG_WIDTH       - 1 : 0]   tag                 = (rd_port_select)? evict_tag      : addr_from_proc[(ADDR_WIDTH - 1)                   -: TAG_WIDTH        ];
+    wire [T               - 1 : 0]   section_address     = (rd_port_select)? evict_sect     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: T                ];    
     
     // Cache pipeline registers
     reg  [WORDS_PER_SECT  - 1 : 0]   word_address_del_1,    word_address_del_2;
@@ -141,40 +148,41 @@ module Data_Cache #(
     always @(posedge CLK) begin
         // Pipeline for internal address requests (cache level addresses)
         if (cache_pipe_enb) begin
-            tag_del_1 <= tag;
-            tag_del_2 <= tag_del_1;
+            tag_del_1             <= tag;
             section_address_del_1 <= section_address;
+            word_address_del_1    <= word_address;
+            tag_address_del_1     <= tag_address;
+            
+            control_del_1         <= control_from_proc;
+            data_del_1            <= data_from_proc;
+                                    
+            tag_del_2             <= tag_del_1;
             section_address_del_2 <= section_address_del_1;
-            word_address_del_1 <= word_address;
-            word_address_del_2 <= word_address_del_1;
-            tag_address_del_1 <= tag_address;
-            tag_address_del_2 <= tag_address_del_1;
+            word_address_del_2    <= word_address_del_1;
+            tag_address_del_2     <= tag_address_del_1;
             
-            control_del_1 <= control_from_proc;
-            control_del_2 <= control_del_1;
-            
-            data_del_1 <= data_from_proc;
-            data_del_2 <= data_del_1; 
+            control_del_2         <= control_del_1;
+            data_del_2            <= data_del_1; 
         end    
         
         // Pipeline for the main processor
-        if (pc_pipe_enb) begin
+        if (main_pipe_enb) begin
             if (addr_from_proc_sel) begin
-                addr_from_proc <= ADDR_FROM_PROC;
-                data_from_proc <= DATA_FROM_PROC;
+                addr_from_proc    <= ADDR_FROM_PROC;
+                data_from_proc    <= DATA_FROM_PROC;
                 control_from_proc <= CONTROL_FROM_PROC;
             end else begin
-                addr_from_proc <= addr_from_proc_del_2;
-                data_from_proc <= data_from_proc_del_2;
+                addr_from_proc    <= addr_from_proc_del_2;
+                data_from_proc    <= data_from_proc_del_2;
                 control_from_proc <= control_from_proc_del_2;
             end
         
-            addr_from_proc_del_1 <= addr_from_proc;
-            data_from_proc_del_1 <= data_from_proc;
+            addr_from_proc_del_1    <= addr_from_proc;
+            data_from_proc_del_1    <= data_from_proc;
             control_from_proc_del_1 <= control_from_proc;
             
-            addr_from_proc_del_2 <= addr_from_proc_del_1;
-            data_from_proc_del_2 <= data_from_proc_del_1;
+            addr_from_proc_del_2    <= addr_from_proc_del_1;
+            data_from_proc_del_2    <= data_from_proc_del_1;
             control_from_proc_del_2 <= control_from_proc_del_1;
         end            
     end
@@ -207,13 +215,15 @@ module Data_Cache #(
     wire                           lin_mem_rd_enb = cache_pipe_enb;
     
     wire [LINE_RAM_WIDTH  - 1 : 0] lin_data_out             [0 : ASSOCIATIVITY - 1];
-                    
+    
+                  
     // Tag comparison and validness checking
     wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                     // Whether the tag is valid for the given section of the cache block
     reg  [ASSOCIATIVITY   - 1 : 0] tag_match;                          // Tag matches in a one-hot encoding
     reg  [ASSOCIATIVITY   - 1 : 0] tag_valid;                          // Whether the tag is valid for the given section of the cache block
     
     assign cache_hit = |(tag_valid & tag_match);    
+       
         
     // Set multiplexer wires    
     wire [a                              - 1 : 0] set_select;          // Tag matches in a binary encoding  
@@ -227,6 +237,7 @@ module Data_Cache #(
     wire [TAG_WIDTH                      - 1 : 0] tag_set_mux_out;     // Tag after selecting the proper set
     wire                                          dirty_set_mux_out;   // Dirty after selecting the proper set
     wire                                          valid_set_mux_out;   // Valid after selecting the proper set
+    
     
     // Cache line multiplexer wires
     wire [DATA_WIDTH                     - 1 : 0] data_to_proc;        // Data going back to the processor   
@@ -291,7 +302,7 @@ module Data_Cache #(
             );
             
             // De-array the lin_data_out wire
-            assign lin_ram_out_dearray   [LINE_RAM_WIDTH * i +: LINE_RAM_WIDTH] = lin_data_out  [i];
+            assign lin_ram_out_dearray [LINE_RAM_WIDTH * i +: LINE_RAM_WIDTH] = lin_data_out  [i];
             
         end
     endgenerate
@@ -537,11 +548,13 @@ module Data_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     // Primary control systems                                                  //
     //////////////////////////////////////////////////////////////////////////////
-        
-    Refill_Control_D #(
+    
+     Refill_Control_D #(
     
     ) refill_control (
         .CLK(CLK),
+        // Inputs from DM2 pipeline stage
+        .CONTROL(control_del_1),
         // Inputs from DM3 pipeline stage
         .CACHE_HIT(cache_hit),                              // Whether the L1 cache hits or misses 
         .VICTIM_HIT(victim_hit),                            // Whether the victim cache has hit
@@ -553,10 +566,18 @@ module Data_Cache #(
         .REFILL_REQ_DIRTY(dirty_set_mux_out),               // Dirty bit coming out of tag memory delayed to DM3
         .REFILL_REQ_CTRL(control_del_2),                    // Instruction at DM3
         .REFILL_REQ_VALID(valid_set_mux_out),               // Valid bit coming out of tag memory delayed to DM3
+        // From the Victim cache
+        .VICTIM_CACHE_READY(victim_cache_ready),            // From victim cache that it is ready to receive
+        .VICTIM_CACHE_WRITE(victim_cache_valid),            // To victim cache that it has to write the data from DM3
+        // To the cache pipeline
+        .L1_RD_PORT_SELECT(rd_port_select),                // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
+        .EVICT_TAG(evict_tag),                             // Tag for read address at DM1 
+        .EVICT_TAG_ADDR(evict_tag_addr),                   // Cache line for read address at DM1 
+        .EVICT_SECT(evict_sect),                           // Section for read address at DM1  
         // Outputs to the main processor pipeline		
         .CACHE_READY(CACHE_READY),                         // Signal from cache to processor that its pipeline is currently ready to work  
         // Related to controlling the pipeline
-        .PC_PIPE_ENB(pc_pipe_enb),                         // Enable for main pipeline registers
+        .MAIN_PIPE_ENB(main_pipe_enb),                     // Enable for main pipeline registers
         .CACHE_PIPE_ENB(cache_pipe_enb),                   // Enable for cache pipeline
         .ADDR_FROM_PROC_SEL(addr_from_proc_sel),           // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}    
         // Related to Address to L2 buffers
@@ -582,6 +603,7 @@ module Data_Cache #(
         tag_del_2                 = addr_from_proc_del_2[(ADDR_WIDTH - 1)                   -: TAG_WIDTH     ];
         section_address_del_2     = addr_from_proc_del_2[(BYTES_PER_WORD + WORDS_PER_SECT)  +: T             ];
         
+        control_from_proc          = 0;
         control_del_1              = 0;
         control_del_2              = 0;
         

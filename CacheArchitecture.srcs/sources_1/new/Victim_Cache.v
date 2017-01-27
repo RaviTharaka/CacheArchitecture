@@ -202,7 +202,7 @@ module Victim_Cache #(
     wire [ADDR_WIDTH    - 2 - 1 : 0] wr_addr_to_L2;
     wire [L2_BUS_WIDTH      - 1 : 0] data_to_L2;
     
-    assign L2_wr_buf_valid = !empty & dirty[victim_rd_pos];
+    assign L2_wr_buf_valid = !victim_cache_empty & dirty[victim_rd_pos];
     assign L2_wr_buf_ready = !L2_wr_buf_full | WR_TO_L2_READY; 
     assign WR_TO_L2_VALID  = L2_wr_buf_full;
             
@@ -236,7 +236,7 @@ module Victim_Cache #(
     end
     
     always @(posedge CLK) begin
-       if ((!empty & !dirty[victim_rd_pos]) | WR_COMPLETE) begin
+       if ((!victim_cache_empty & !dirty[victim_rd_pos]) | WR_COMPLETE) begin
             // Read position shifts to the next value
             {victim_rd_pos_msb, victim_rd_pos} <= {victim_rd_pos_msb, victim_rd_pos} + 1;
         end
@@ -248,9 +248,9 @@ module Victim_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     // Full is when read counter and write counter differs by V
-    assign full = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb != victim_wr_pos_msb);
+    assign victim_cache_full = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb != victim_wr_pos_msb);
     // Empty is when read counter and write counter is equal
-    assign empty = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb == victim_wr_pos_msb);
+    assign victim_cache_empty = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb == victim_wr_pos_msb);
     
     always @(posedge CLK) begin
         // Dirty status is put up when starting being written 

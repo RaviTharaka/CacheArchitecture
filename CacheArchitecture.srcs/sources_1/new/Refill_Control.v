@@ -132,17 +132,20 @@ module Refill_Control_I #(
     // saturated, this causes a miss, and readmit)
     
     // Solution - Admission only if the IF3 request came from a valid PC on the PC pipeline
-    reg pc_pipe_enb_del_1, pc_pipe_enb_del_2;
+    reg         pc_pipe_enb_del_1;
+    reg [1 : 0] pc_sel_del_1;
+    reg         pc_admissible;
     
     always @(posedge CLK) begin
         pc_pipe_enb_del_1 <= PC_PIPE_ENB;
-        pc_pipe_enb_del_2 <= pc_pipe_enb_del_1;
+        pc_sel_del_1      <= PC_SEL;
+        pc_admissible     <= pc_pipe_enb_del_1 & (pc_sel_del_1 == 2'b00 | pc_sel_del_1 == 2'b01);
     end    
     
     // Whether to admit to or remove from the refill queue
     wire admit, remove;
     reg test_pass;
-    assign admit = test_pass & pc_pipe_enb_del_2;
+    assign admit = test_pass & pc_admissible;
     
     // Number of elements in the queue
     reg [3 : 0] no_of_elements, no_of_elements_wire;
@@ -302,12 +305,12 @@ module Refill_Control_I #(
     //    wire clash_n0 = (CACHE_HIT)?      (REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0] & (CACHE_SRC == cur_set)    
     //                                      : (REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0];		
     // Simplifies to
-    //    wire clash_n0 = ((REFILL_REQ_LINE == cur_line) & (refill_req_dst_del_1 == cur_set) & no_of_elements[0]) & (!CACHE_HIT | (CACHE_SRC == cur_set) );  
-    // 
-    //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & (refill_req_dst_del_1 == fir_set) & no_of_elements[1];   
-    //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & (refill_req_dst_del_1 == sec_set) & no_of_elements[2];
+    //    wire clash_n0 = (REFILL_REQ_LINE == cur_line) & no_of_elements[0] & ( ((refill_req_dst_del_1 == cur_set) & !CACHE_HIT) | (CACHE_SRC == cur_set) );  
+    //    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & no_of_elements[1] & ( ((refill_req_dst_del_1 == fir_set) & !CACHE_HIT) | (CACHE_SRC == fir_set) );  
+    //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & no_of_elements[2] & ( ((refill_req_dst_del_1 == sec_set) & !CACHE_HIT) | (CACHE_SRC == sec_set) );  
+    //    
     //    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
-    //    wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
+    //   wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
     //    wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];
     
     
@@ -677,7 +680,7 @@ module Refill_Control_I #(
     // FSM for enabling the PC pipeline
     reg critical_ready, critical_used;
     reg [1 : 0] critical_no;
-    reg [2 : 0] pc_state;
+    reg [2 : 0] pc_state, pc_state_del_1, pc_state_del_2;
             
     always @(*) begin
         case (refill_state)
@@ -719,7 +722,7 @@ module Refill_Control_I #(
             end
             
             WAIT : begin
-                if (critical_ready | critical_no != 0) 
+                if (critical_ready | critical_no != 0 | (CACHE_HIT & pc_state_del_2 == WAIT)) 
                     pc_state <= PC0;
             end
             
@@ -752,6 +755,11 @@ module Refill_Control_I #(
             end
         endcase
     end 
+    
+    always @(posedge CLK) begin
+        pc_state_del_1 <= pc_state;
+        pc_state_del_2 <= pc_state_del_1;
+    end
         
     // Enabling the PC pipeline 
     assign PC_PIPE_ENB = (pc_state != WAIT);
@@ -767,16 +775,22 @@ module Refill_Control_I #(
     initial begin
         no_of_elements = 0;
         refill_state = 0;   
+        
         pc_state = HITTING; 
+        pc_state_del_1 = HITTING; 
+        pc_state_del_2 = HITTING; 
+        
         pc_pipe_enb_del_1 = 1;
-        pc_pipe_enb_del_2 = 1;
+        pc_admissible     = 1;
+        pc_sel_del_1      = 0;
+        
         critical_no = 0; 
-        clash_n0 = 0;
-        clash_n1 = 0;
-        clash_n2 = 0;
-        equal_n0 = 0;
-        equal_n1 = 0;
-        equal_n2 = 0;        
+//        clash_n0 = 0;
+//        clash_n1 = 0;
+//        clash_n2 = 0;
+//        equal_n0 = 0;
+//        equal_n1 = 0;
+//        equal_n2 = 0;        
     end
     
     

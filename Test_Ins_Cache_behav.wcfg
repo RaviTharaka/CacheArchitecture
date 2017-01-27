@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="263600001fs"></ZoomEndTime>
-      <Cursor1Time time="138800000fs"></Cursor1Time>
+      <ZoomStartTime time="41796359000fs"></ZoomStartTime>
+      <ZoomEndTime time="41988159001fs"></ZoomEndTime>
+      <Cursor1Time time="41958359000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="15" />
    <wave_markers>
@@ -29,38 +29,29 @@
       <obj_property name="ObjectShortName">PC_no[31:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="group48" type="group">
+   <wvobject fp_name="vbus1066" type="vbus">
       <obj_property name="label">Current PC</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <wvobject fp_name="/Test_Ins_Cache/uut/byte_address" type="array">
-         <obj_property name="ElementShortName">byte_address[1:0]</obj_property>
-         <obj_property name="ObjectShortName">byte_address[1:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/word_address" type="array">
-         <obj_property name="ElementShortName">word_address[2:0]</obj_property>
-         <obj_property name="ObjectShortName">word_address[2:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/line_address" type="array">
-         <obj_property name="ElementShortName">line_address[7:0]</obj_property>
-         <obj_property name="ObjectShortName">line_address[7:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/tag" type="array">
+         <obj_property name="ElementShortName">tag[18:0]</obj_property>
+         <obj_property name="ObjectShortName">tag[18:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/tag_address" type="array">
          <obj_property name="ElementShortName">tag_address[6:0]</obj_property>
          <obj_property name="ObjectShortName">tag_address[6:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/tag" type="array">
-         <obj_property name="ElementShortName">tag[18:0]</obj_property>
-         <obj_property name="ObjectShortName">tag[18:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/section_address" type="array">
          <obj_property name="ElementShortName">section_address[0:0]</obj_property>
          <obj_property name="ObjectShortName">section_address[0:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/word_address" type="array">
+         <obj_property name="ElementShortName">word_address[2:0]</obj_property>
+         <obj_property name="ObjectShortName">word_address[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/byte_address" type="array">
+         <obj_property name="ElementShortName">byte_address[1:0]</obj_property>
+         <obj_property name="ObjectShortName">byte_address[1:0]</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group7" type="group">
@@ -2772,7 +2763,6 @@
    <wvobject fp_name="group1026" type="group">
       <obj_property name="label">Stream buffers</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group559" type="group">
          <obj_property name="label">Prefetch Queue</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2930,7 +2920,6 @@
       <wvobject fp_name="group837" type="group">
          <obj_property name="label">Buffer status</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /request_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
@@ -3525,10 +3514,31 @@
    <wvobject fp_name="group687" type="group">
       <obj_property name="label">Refill Control</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_LINE" type="array">
+         <obj_property name="ElementShortName">REFILL_REQ_LINE[6:0]</obj_property>
+         <obj_property name="ObjectShortName">REFILL_REQ_LINE[6:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_line" type="array">
+         <obj_property name="ElementShortName">cur_line[6:0]</obj_property>
+         <obj_property name="ObjectShortName">cur_line[6:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/CACHE_SRC" type="array">
+         <obj_property name="ElementShortName">CACHE_SRC[1:0]</obj_property>
+         <obj_property name="ObjectShortName">CACHE_SRC[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_set" type="array">
+         <obj_property name="ElementShortName">cur_set[1:0]</obj_property>
+         <obj_property name="ObjectShortName">cur_set[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/refill_req_dst_del_1" type="array">
+         <obj_property name="ElementShortName">refill_req_dst_del_1[1:0]</obj_property>
+         <obj_property name="ObjectShortName">refill_req_dst_del_1[1:0]</obj_property>
+      </wvobject>
       <wvobject fp_name="vbus709" type="vbus">
          <obj_property name="label">Tests</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/equal_n2" type="logic">
             <obj_property name="ElementShortName">equal_n2</obj_property>
             <obj_property name="ObjectShortName">equal_n2</obj_property>
@@ -3558,6 +3568,14 @@
          <obj_property name="ElementShortName">no_of_elements[3:0]</obj_property>
          <obj_property name="ObjectShortName">no_of_elements[3:0]</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/test_pass" type="logic">
+         <obj_property name="ElementShortName">test_pass</obj_property>
+         <obj_property name="ObjectShortName">test_pass</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/pc_admissible" type="logic">
+         <obj_property name="ElementShortName">pc_admissible</obj_property>
+         <obj_property name="ObjectShortName">pc_admissible</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/admit" type="logic">
          <obj_property name="ElementShortName">admit</obj_property>
@@ -3612,6 +3630,7 @@
             <obj_property name="label">Current</obj_property>
             <obj_property name="DisplayName">label</obj_property>
             <obj_property name="Radix">HEXRADIX</obj_property>
+            <obj_property name="isExpanded"></obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/cur_tag" type="array">
                <obj_property name="ElementShortName">cur_tag[18:0]</obj_property>
                <obj_property name="ObjectShortName">cur_tag[18:0]</obj_property>
