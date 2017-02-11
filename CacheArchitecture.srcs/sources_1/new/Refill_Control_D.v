@@ -28,13 +28,11 @@ module Refill_Control_D #(
         parameter S                 = 17, 
         parameter B                 = 9, 
         parameter a                 = 1,
-        parameter N                 = 3,
         parameter T                 = 1,
         
         // Derived parameters
         localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
         localparam TAG_ADDR_WIDTH   = S - a - B,
-        localparam STREAM_SEL_BITS  = logb2(N + 1),
         localparam BLOCK_SECTIONS   = 1 << T,
         localparam ASSOCIATIVITY    = 1 << a,
         localparam LINE_ADDR_WIDTH  = S - a - B + T    
@@ -55,18 +53,30 @@ module Refill_Control_D #(
         input                                REFILL_REQ_VALID,               // Valid bit coming out of tag memory delayed to DM3
         input      [2               - 1 : 0] REFILL_REQ_CTRL,                // Instruction at DM3 
          
-         // From the Victim cache
+        // From the Victim cache
         input                                VICTIM_CACHE_READY,            // From victim cache that it is ready to receive
-        output reg                           VICTIM_CACHE_WRITE,            // To victim cache that it has to write the data from DM3
+        output                               VICTIM_CACHE_WRITE,            // To victim cache that it has to write the data from DM3
         
-        // To the cache pipeline
-        output reg                           L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
+        // To the L1 read ports
+        output                               L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
         output reg [TAG_WIDTH       - 1 : 0] EVICT_TAG,                     // Tag for read address at DM1 
         output reg [TAG_ADDR_WIDTH  - 1 : 0] EVICT_TAG_ADDR,                // Cache line for read address at DM1 
         output reg [T               - 1 : 0] EVICT_SECT,                    // Section for read address at DM1  
-                                       
+        
+        // To the L1 write ports
+        output reg [2               - 1 : 0] L1_WR_PORT_SELECT,             // Selects the inputs to the Write ports of L1 {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
+        output     [ASSOCIATIVITY   - 1 : 0] REFILL_DST,                    // Individual write enables for the line memories
+        output     [TAG_WIDTH       - 1 : 0] REFILL_TAG,                    // Tag for the refill write
+        output     [BLOCK_SECTIONS  - 1 : 0] REFILL_TAG_VALID,              // Which sections are valid currently, will be written to tag memory
+        output     [TAG_ADDR_WIDTH  - 1 : 0] REFILL_TAG_ADDR,               // Tag address for the refill write
+        output     [T               - 1 : 0] REFILL_SECT,                   // Section address for the refill write
+                              
         // Outputs to the main processor pipeline		
         output CACHE_READY,                         // Signal from cache to processor that its pipeline is currently ready to work  
+        
+        // Related to Data from L2 buffer
+        input  DATA_FROM_L2_BUFFER_VALID,           // Ready signal for refill from L2
+        output DATA_FROM_L2_BUFFER_READY,           // Valid signal for refill from L2
                 
         // Related to Address to L2 buffers
         output SEND_RD_ADDR_TO_L2,                  // Valid signal for the input of Addr_to_L2 section   
@@ -80,44 +90,19 @@ module Refill_Control_D #(
     );
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    // Refill request queue management                                                              //
+    // Globally important figures                                                                  //
     //////////////////////////////////////////////////////////////////////////////////////////////////
-                    
-    // PCs of the currently being fetched requests are stored. Max number of requests is 4.
-    // Three is for DM1, DM2 and DM3 and last is for early restart
-    reg [TAG_WIDTH      - 1 : 0] cur_tag,  fir_tag,  sec_tag,  thr_tag;         // Tag for the L1 write
-    reg [TAG_WIDTH      - 1 : 0] cur_vtag, fir_vtag, sec_vtag, thr_vtag;        // Tag for the victim cache
-    reg [TAG_ADDR_WIDTH - 1 : 0] cur_line, fir_line, sec_line, thr_line;        // Cache block to write to (for L1 and victim)
-    reg [T              - 1 : 0] cur_sect, fir_sect, sec_sect, thr_sect;        // Section within block to write first (for L1 and victim)
+        
+    reg  test_pass;                                  // Current DM3 request passes the clash and equal tests
+    reg  main_pipe_enb_del_1, main_pipe_enb_del_2;   // Delayed processor pipeline enables
     
-    reg [1              - 1 : 0] cur_src,  fir_src,  sec_src,  thr_src;         // Source = whether to refill from L2 (0) or from victim cache (1) 
-    reg [a              - 1 : 0] cur_set,  fir_set,  sec_set,  thr_set;         // Set = destination set of the request (in binary format)
-    reg [1              - 1 : 0] cur_dirt, fir_dirt, sec_dirt, thr_dirt;        // Whether filling the victim cache is necessary
-    reg [2              - 1 : 0] cur_ctrl, fir_ctrl, sec_ctrl, thr_ctrl;        // Control signals of the request
+    reg  real_request;                               // Write request is valid and is not an IDLE
+    reg  missable_request;                           // Write request is valid and is a WRITE or READ
+    reg  flush_request;                              // Write request is valid and is a FLUSH
     
-    reg [1              - 1 : 0] cur_evic, fir_evic, sec_evic, thr_evic;        // Indicates that the eviction line has to be saved
-            
-        
-    reg [TAG_WIDTH      - 1 : 0] cur_tag_wire,  fir_tag_wire,  sec_tag_wire,  thr_tag_wire;
-    reg [TAG_WIDTH      - 1 : 0] cur_vtag_wire, fir_vtag_wire, sec_vtag_wire, thr_vtag_wire;
-    reg [TAG_ADDR_WIDTH - 1 : 0] cur_line_wire, fir_line_wire, sec_line_wire, thr_line_wire;
-    reg [T              - 1 : 0] cur_sect_wire, fir_sect_wire, sec_sect_wire, thr_sect_wire;
-    reg [1              - 1 : 0] cur_src_wire,  fir_src_wire,  sec_src_wire,  thr_src_wire;
-    reg [ASSOCIATIVITY  - 1 : 0] cur_set_wire,  fir_set_wire,  sec_set_wire,  thr_set_wire;
-    reg [1              - 1 : 0] cur_dirt_wire, fir_dirt_wire, sec_dirt_wire, thr_dirt_wire;        
-    reg [1              - 1 : 0] cur_ctrl_wire, fir_ctrl_wire, sec_ctrl_wire, thr_ctrl_wire;     
-    reg [1              - 1 : 0] cur_evic_wire, fir_evic_wire, sec_evic_wire, thr_evic_wire;
-                 
-    // To get admitted to the refill queue, several tests must be passed, and also it mustn't readmit a completed refill
-    // (L2 misses, PC pipe disables, DM pipe saturated with PC value, L2 completes and removes from queue, but still DM pipe
-    // saturated, this causes a miss, and readmit)
-        
-    // Solution - Admission only if the DM3 request came from a valid PC on the PC pipeline
-    reg main_pipe_enb_del_1, main_pipe_enb_del_2;
-    reg real_request;                               // Write request is valid and is not an idle
-    reg missable_request;                           // Write request is valid and is a write or read
-    reg flush_request;                              // Write request is valid and is a flush
-        
+    reg  crit_ready;                                 // The critical word is pushed into L1 and ready
+    reg  crit_used;                                  // Last critical word is used so next request can be started
+    
     always @(posedge CLK) begin
         main_pipe_enb_del_1 <= MAIN_PIPE_ENB;
         main_pipe_enb_del_2 <= main_pipe_enb_del_1;
@@ -126,19 +111,23 @@ module Refill_Control_D #(
         missable_request    <= main_pipe_enb_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
         flush_request       <= main_pipe_enb_del_1 &  (CONTROL == 2'b11);
     end    
+    
      
-    wire admit, remove;         // Whether to admit to or remove from the refill queue
-    wire evict;                 // Indicates that the first eviction in the queue is complete
-       
-    reg test_pass;
-    assign admit = test_pass & real_request;
-        
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Refill request queue management                                                              //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // PCs of the currently being fetched requests are stored. Max number of requests is 4.
+    // Three is for DM1, DM2 and DM3 and last is for early restart
+    
+    // Control signals for the queue    
+    wire admit = (test_pass & real_request) | flush_request;            // Admit only if clash/equal tests pass, and is a valid (pipeline is enabled), non-IDLE request
+    wire remove;                                                        // Whether to remove from the refill queue
+    wire evict;                                                         // Indicates that the first eviction in the queue is complete
+    
+    
     // Number of elements in the queue
     reg [3 : 0] no_of_elements, no_of_elements_wire;
-        
-    always @(posedge CLK) begin
-        no_of_elements <= no_of_elements_wire;
-    end
         
     always @(*) begin
         case ({admit, remove})
@@ -148,200 +137,84 @@ module Refill_Control_D #(
             2'b11 : no_of_elements_wire = no_of_elements;
         endcase
     end
+    
+    always @(posedge CLK) begin
+        no_of_elements <= no_of_elements_wire;
+    end
+            
         
+    // Contents of the queue                    
+    localparam REQ_LENGTH = TAG_WIDTH * 2 + TAG_ADDR_WIDTH + T + a + 5;
+        
+    wire [TAG_WIDTH      - 1 : 0] cur_tag,  fir_tag,  sec_tag,  thr_tag;         // Tag for the L1 write
+    wire [TAG_WIDTH      - 1 : 0] cur_vtag, fir_vtag, sec_vtag, thr_vtag;        // Tag for the victim cache
+    wire [TAG_ADDR_WIDTH - 1 : 0] cur_line, fir_line, sec_line, thr_line;        // Cache block to write to (for L1 and victim)
+    wire [T              - 1 : 0] cur_sect, fir_sect, sec_sect, thr_sect;        // Section within block to write first (for L1 and victim)
+    
+    wire [1              - 1 : 0] cur_src,  fir_src,  sec_src,  thr_src;         // Source = whether to refill from L2 (0) or from victim cache (1) 
+    wire [a              - 1 : 0] cur_set,  fir_set,  sec_set,  thr_set;         // Set = destination set of the request (in binary format)
+    wire [1              - 1 : 0] cur_dirt, fir_dirt, sec_dirt, thr_dirt;        // Whether filling the victim cache is necessary
+    wire [2              - 1 : 0] cur_ctrl, fir_ctrl, sec_ctrl, thr_ctrl;        // Control signals of the request (read, write, flush)
+    wire [1              - 1 : 0] cur_link, fir_link, sec_link, thr_link;        // Whether the request has originated from a clash with forward requests        
+    
+    reg                           cur_evic, fir_evic, sec_evic, thr_evic;        // Indicates that the eviction line has to be saved
+                
+    reg  [REQ_LENGTH - 1 : 0] cur,      fir,      sec,      thr;
+    reg  [REQ_LENGTH - 1 : 0] cur_wire, fir_wire, sec_wire, thr_wire;
+    
+    wire [REQ_LENGTH - 1 : 0] refill_req = {REFILL_REQ_TAG, REFILL_REQ_VTAG, REFILL_REQ_LINE, REFILL_REQ_SECT, 
+                                            VICTIM_HIT, REFILL_REQ_DST_SET, REFILL_REQ_DIRTY, REFILL_REQ_CTRL,
+                                            refill_req_link};
+    assign {cur_tag, cur_vtag, cur_line, cur_sect, cur_src, cur_set, cur_dirt, cur_ctrl, cur_link} = cur;
+    assign {fir_tag, fir_vtag, fir_line, fir_sect, fir_src, fir_set, fir_dirt, fir_ctrl, fir_link} = fir;
+    assign {sec_tag, sec_vtag, sec_line, sec_sect, sec_src, sec_set, sec_dirt, sec_ctrl, sec_link} = sec;
+    assign {thr_tag, thr_vtag, thr_line, thr_sect, thr_src, thr_set, thr_dirt, thr_ctrl, thr_link} = thr;
+       
+    wire cur_link_wire = cur_wire[REQ_LENGTH - 1];   
+    wire fir_link_wire = fir_wire[REQ_LENGTH - 1];   
+    wire sec_link_wire = sec_wire[REQ_LENGTH - 1];   
+    wire thr_link_wire = thr_wire[REQ_LENGTH - 1];   
+                                            
     // A queue storing missed requests (also each element is accessible to the outside, to run the tests)
     always @(*) begin
-        case ({admit, remove})
+        case ({admit, remove}) 
             2'b10 : begin
-                cur_tag_wire   = (no_of_elements == 4'b0000)? REFILL_REQ_TAG     : cur_tag;
-                cur_vtag_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_VTAG    : cur_vtag;
-                cur_line_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_LINE    : cur_line;
-                cur_sect_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_SECT    : cur_sect;
-                cur_src_wire   = (no_of_elements == 4'b0000)? VICTIM_HIT         : cur_src;
-                cur_set_wire   = (no_of_elements == 4'b0000)? REFILL_REQ_DST_SET : cur_set;
-                cur_dirt_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_DIRTY   : cur_dirt;
-                cur_ctrl_wire  = (no_of_elements == 4'b0000)? REFILL_REQ_CTRL    : cur_ctrl;
-                
-                fir_tag_wire   = (no_of_elements == 4'b0001)? REFILL_REQ_TAG     : fir_tag;
-                fir_vtag_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_VTAG    : fir_vtag;
-                fir_line_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_LINE    : fir_line;
-                fir_sect_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_SECT    : fir_sect;
-                fir_src_wire   = (no_of_elements == 4'b0001)? VICTIM_HIT         : fir_src;
-                fir_set_wire   = (no_of_elements == 4'b0001)? REFILL_REQ_DST_SET : fir_set;
-                fir_dirt_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DIRTY   : fir_dirt;
-                fir_ctrl_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_CTRL    : fir_ctrl;
-                
-                sec_tag_wire   = (no_of_elements == 4'b0011)? REFILL_REQ_TAG     : sec_tag;
-                sec_vtag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_VTAG    : sec_vtag;
-                sec_line_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_LINE    : sec_line;
-                sec_sect_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_SECT    : sec_sect;
-                sec_src_wire   = (no_of_elements == 4'b0011)? VICTIM_HIT         : sec_src;
-                sec_set_wire   = (no_of_elements == 4'b0011)? REFILL_REQ_DST_SET : sec_set;
-                sec_dirt_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DIRTY   : sec_dirt;
-                sec_ctrl_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_CTRL    : sec_ctrl;
-                
-                thr_tag_wire   = (no_of_elements == 4'b0111)? REFILL_REQ_TAG     : thr_tag;
-                thr_vtag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_VTAG    : thr_vtag;
-                thr_line_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_LINE    : thr_line;
-                thr_sect_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_SECT    : thr_sect;
-                thr_src_wire   = (no_of_elements == 4'b0111)? VICTIM_HIT         : thr_src;
-                thr_set_wire   = (no_of_elements == 4'b0111)? REFILL_REQ_DST_SET : thr_set;
-                thr_dirt_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DIRTY   : thr_dirt;
-                thr_ctrl_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_CTRL    : thr_ctrl;
+                cur_wire = (no_of_elements == 4'b0000)? refill_req : cur;
+                fir_wire = (no_of_elements == 4'b0001)? refill_req : fir;
+                sec_wire = (no_of_elements == 4'b0011)? refill_req : sec;
+                thr_wire = (no_of_elements == 4'b0111)? refill_req : thr;
             end
             2'b01 : begin
-                cur_tag_wire  = fir_tag;
-                cur_vtag_wire = fir_vtag;
-                cur_line_wire = fir_line;
-                cur_sect_wire = fir_sect;
-                cur_src_wire  = fir_src;
-                cur_set_wire  = fir_set;
-                cur_dirt_wire = fir_dirt;
-                cur_ctrl_wire = fir_ctrl;
-                
-                fir_tag_wire  = sec_tag;
-                fir_vtag_wire = sec_vtag;
-                fir_line_wire = sec_line;
-                fir_sect_wire = sec_sect;
-                fir_src_wire  = sec_src;
-                fir_set_wire  = sec_set;
-                fir_dirt_wire = sec_dirt;
-                fir_ctrl_wire = sec_ctrl;
-                                
-                sec_tag_wire  = thr_tag;
-                sec_vtag_wire = thr_vtag;
-                sec_line_wire = thr_line;
-                sec_sect_wire = thr_sect;
-                sec_src_wire  = thr_src;
-                sec_set_wire  = thr_set;
-                sec_dirt_wire = thr_dirt;
-                sec_ctrl_wire = thr_ctrl;
-                                
-                thr_tag_wire  = 0;
-                thr_vtag_wire = 0;
-                thr_line_wire = 0;
-                thr_sect_wire = 0;
-                thr_src_wire  = 0;
-                thr_set_wire  = 0;
-                thr_dirt_wire = 0;
-                thr_ctrl_wire = 0;                                
+                cur_wire = fir;
+                fir_wire = sec;
+                sec_wire = thr;
+                thr_wire = 0;
             end
             2'b11 : begin
-                cur_tag_wire   = (no_of_elements == 4'b0001)? REFILL_REQ_TAG     : fir_tag;
-                cur_vtag_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_VTAG    : fir_vtag;
-                cur_line_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_LINE    : fir_line;
-                cur_sect_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_SECT    : fir_sect;
-                cur_src_wire   = (no_of_elements == 4'b0001)? VICTIM_HIT         : fir_src;
-                cur_set_wire   = (no_of_elements == 4'b0001)? REFILL_REQ_DST_SET : fir_set;
-                cur_dirt_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_DIRTY   : fir_dirt;
-                cur_ctrl_wire  = (no_of_elements == 4'b0001)? REFILL_REQ_CTRL    : fir_ctrl;
-                
-                fir_tag_wire   = (no_of_elements == 4'b0011)? REFILL_REQ_TAG     : sec_tag;
-                fir_vtag_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_VTAG    : sec_vtag;
-                fir_line_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_LINE    : sec_line;
-                fir_sect_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_SECT    : sec_sect;
-                fir_src_wire   = (no_of_elements == 4'b0011)? VICTIM_HIT         : sec_src;
-                fir_set_wire   = (no_of_elements == 4'b0011)? REFILL_REQ_DST_SET : sec_set;
-                fir_dirt_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_DIRTY   : sec_dirt;
-                fir_ctrl_wire  = (no_of_elements == 4'b0011)? REFILL_REQ_CTRL    : sec_ctrl;
-                                
-                sec_tag_wire   = (no_of_elements == 4'b0111)? REFILL_REQ_TAG     : thr_tag;
-                sec_vtag_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_VTAG    : thr_vtag;
-                sec_line_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_LINE    : thr_line;
-                sec_sect_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_SECT    : thr_sect;
-                sec_src_wire   = (no_of_elements == 4'b0111)? VICTIM_HIT         : thr_src;
-                sec_set_wire   = (no_of_elements == 4'b0111)? REFILL_REQ_DST_SET : thr_set;
-                sec_dirt_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_DIRTY   : thr_dirt;
-                sec_ctrl_wire  = (no_of_elements == 4'b0111)? REFILL_REQ_CTRL    : thr_ctrl;
-                
-                thr_tag_wire   = (no_of_elements == 4'b1111)? REFILL_REQ_TAG     : 0;
-                thr_vtag_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_VTAG    : 0;
-                thr_line_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_LINE    : 0;
-                thr_sect_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_SECT    : 0;
-                thr_src_wire   = (no_of_elements == 4'b1111)? VICTIM_HIT         : 0;
-                thr_set_wire   = (no_of_elements == 4'b1111)? REFILL_REQ_DST_SET : 0;
-                thr_dirt_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_DIRTY   : 0;
-                thr_ctrl_wire  = (no_of_elements == 4'b1111)? REFILL_REQ_CTRL    : 0;
-                                
+                cur_wire = (no_of_elements == 4'b0001)? refill_req : fir;
+                fir_wire = (no_of_elements == 4'b0011)? refill_req : sec;
+                sec_wire = (no_of_elements == 4'b0111)? refill_req : thr;
+                thr_wire = (no_of_elements == 4'b1111)? refill_req : 0;
             end
             2'b00 : begin
-                cur_tag_wire  = cur_tag;
-                cur_vtag_wire = cur_vtag;
-                cur_line_wire = cur_line;
-                cur_sect_wire = cur_sect;
-                cur_src_wire  = cur_src;
-                cur_set_wire  = cur_set;
-                cur_dirt_wire = cur_dirt;
-                cur_ctrl_wire = cur_ctrl;
-                
-                fir_tag_wire  = fir_tag;
-                fir_vtag_wire = fir_vtag;
-                fir_line_wire = fir_line;
-                fir_sect_wire = fir_sect;
-                fir_src_wire  = fir_src;
-                fir_set_wire  = fir_set;
-                fir_dirt_wire = fir_dirt;
-                fir_ctrl_wire = fir_ctrl;
-                                
-                sec_tag_wire  = sec_tag;
-                sec_vtag_wire = sec_vtag;
-                sec_line_wire = sec_line;
-                sec_sect_wire = sec_sect;
-                sec_src_wire  = sec_src;
-                sec_set_wire  = sec_set;
-                sec_dirt_wire = sec_dirt;
-                sec_ctrl_wire = sec_ctrl;
-                
-                thr_tag_wire  = thr_tag;
-                thr_vtag_wire = thr_vtag;
-                thr_line_wire = thr_line;
-                thr_sect_wire = thr_sect;
-                thr_src_wire  = thr_src;
-                thr_set_wire  = thr_set;
-                thr_dirt_wire = thr_dirt;
-                thr_ctrl_wire = thr_ctrl;
+                cur_wire = cur;
+                fir_wire = fir;
+                sec_wire = sec;
+                thr_wire = thr;
             end
         endcase
     end
     
-    // Registering the queue values at the clock
     always @(posedge CLK) begin
-        cur_tag  <= cur_tag_wire;
-        cur_vtag <= cur_vtag_wire;
-        cur_line <= cur_line_wire;
-        cur_sect <= cur_sect_wire;
-        cur_src  <= cur_src_wire;
-        cur_set  <= cur_set_wire;
-        cur_dirt <= cur_dirt_wire;
-        cur_ctrl <= cur_ctrl_wire;
-        
-        fir_tag  <= fir_tag_wire;
-        fir_vtag <= fir_vtag_wire;
-        fir_line <= fir_line_wire;
-        fir_sect <= fir_sect_wire;
-        fir_src  <= fir_src_wire;
-        fir_set  <= fir_set_wire;
-        fir_dirt <= fir_dirt_wire;
-        fir_ctrl <= fir_ctrl_wire;
-        
-        sec_tag  <= sec_tag_wire;
-        sec_vtag <= sec_vtag_wire;
-        sec_line <= sec_line_wire;
-        sec_sect <= sec_sect_wire;
-        sec_src  <= sec_src_wire;
-        sec_set  <= sec_set_wire;
-        sec_dirt <= sec_dirt_wire;
-        sec_ctrl <= sec_ctrl_wire;
-        
-        thr_tag  <= thr_tag_wire;
-        thr_vtag <= thr_vtag_wire;
-        thr_line <= thr_line_wire;
-        thr_sect <= thr_sect_wire;
-        thr_src  <= thr_src_wire;
-        thr_set  <= thr_set_wire;
-        thr_dirt <= thr_dirt_wire;
-        thr_ctrl <= thr_ctrl_wire;        
-    end
+        cur <= cur_wire;
+        fir <= fir_wire;
+        sec <= sec_wire;
+        thr <= thr_wire;
+    end    
+    
+    
+    // Eviction information has to be handled specially since it is possible to zero them while inside the queue
+    reg cur_evic_wire, fir_evic_wire, sec_evic_wire, thr_evic_wire;
     
     // Stores which 'still unevicted request' is at the head of the queue
     reg [3 : 0] compl_evic;    
@@ -373,10 +246,10 @@ module Refill_Control_D #(
     always @(*) begin
         case ({admit, remove, evict}) 
             3'b100 : begin
-                cur_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : cur_evic;
-                fir_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : fir_evic;
-                sec_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : sec_evic;
-                thr_evic_wire = (no_of_elements == 4'b1111)? REFILL_REQ_VALID : thr_evic;
+                cur_evic_wire = (no_of_elements == 4'b0000)? 0                : cur_evic;
+                fir_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : fir_evic;
+                sec_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : sec_evic;
+                thr_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : thr_evic;
             end
             3'b010 : begin
                 cur_evic_wire = fir_evic;
@@ -397,10 +270,10 @@ module Refill_Control_D #(
                 thr_evic_wire = thr_evic;
             end
             3'b101 : begin
-                cur_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : cur_evic & !compl_evic[0];
-                fir_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : fir_evic & !compl_evic[1];
-                sec_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : sec_evic & !compl_evic[2];
-                thr_evic_wire = (no_of_elements == 4'b1111)? REFILL_REQ_VALID : thr_evic & !compl_evic[3];
+                cur_evic_wire = (no_of_elements == 4'b0000)? 0                : cur_evic & !compl_evic[0];
+                fir_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : fir_evic & !compl_evic[1];
+                sec_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : sec_evic & !compl_evic[2];
+                thr_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : thr_evic & !compl_evic[3];
             end
             3'b011 : begin
                 cur_evic_wire = fir_evic & !compl_evic[1];
@@ -436,15 +309,16 @@ module Refill_Control_D #(
     // Tests to decide whether to include the IF3 request in to the queue                           //
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
-    wire clash_n0 = ((REFILL_REQ_LINE == cur_line) & (REFILL_REQ_DST_SET == cur_set) & no_of_elements[0]) & (!CACHE_HIT | (REFILL_REQ_DST_SET == cur_set)); 
-    wire clash_n1 = ((REFILL_REQ_LINE == fir_line) & (REFILL_REQ_DST_SET == fir_set) & no_of_elements[1]) & (!CACHE_HIT | (REFILL_REQ_DST_SET == fir_set)); 
-    wire clash_n2 = ((REFILL_REQ_LINE == sec_line) & (REFILL_REQ_DST_SET == sec_set) & no_of_elements[2]) & (!CACHE_HIT | (REFILL_REQ_DST_SET == sec_set)); 
+    wire clash_n0 = (REFILL_REQ_LINE == cur_line) & no_of_elements[0] & ( ((REFILL_REQ_DST_SET == cur_set) & !CACHE_HIT) | (REFILL_REQ_DST_SET == cur_set) );  
+    wire clash_n1 = (REFILL_REQ_LINE == fir_line) & no_of_elements[1] & ( ((REFILL_REQ_DST_SET == fir_set) & !CACHE_HIT) | (REFILL_REQ_DST_SET == fir_set) );  
+    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & no_of_elements[2] & ( ((REFILL_REQ_DST_SET == sec_set) & !CACHE_HIT) | (REFILL_REQ_DST_SET == sec_set) );  
     
     wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
     wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];	
     wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];	
     
     // Whether to pass or fail the tests
+        
     always @(*) begin
         if (equal_n2) begin
             test_pass = 0;
@@ -463,6 +337,8 @@ module Refill_Control_D #(
         end    
     end    
     
+    assign refill_req_link = clash_n2 | clash_n1 | clash_n0;
+    
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // FSM for saving eviction victims                                                              //
@@ -470,47 +346,49 @@ module Refill_Control_D #(
     
     wire evic_empty_wire = !(|{cur_evic_wire, fir_evic_wire, sec_evic_wire, thr_evic_wire});
     
-    localparam E_HITTING = 1;
-    localparam E_IDLE1   = 2;
-    localparam E_IDLE2   = 4;
+    wire next_evic_ready = cur_evic_wire | (fir_evic_wire & !fir_link_wire) | (sec_evic_wire & !sec_link_wire) | (thr_evic_wire & !thr_link_wire);
     
-    reg [3 + BLOCK_SECTIONS - 1 : 0] evic_state;
+    localparam E_HITTING  = 1;                                      // When there are no requests in the refill queue (no_of_elements == 0)
+    localparam E_WAITING  = 2;                                      // Waiting for refill to finish since there is a link in the current request
+    localparam E_EVIC_STA = 4;                                      // Starting an eviction from start
+    localparam E_EVIC_FIN = {1'b1, {(1 + BLOCK_SECTIONS){1'b0}}};   // Finished an eviction
     
+    reg [2 + BLOCK_SECTIONS - 1 : 0] evic_state, evic_state_del_1, evic_state_del_2;
+    
+    assign evict              = (evic_state == E_EVIC_FIN);
+    
+    assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID) | |(evic_state_del_2[2 + BLOCK_SECTIONS - 1  : 2]);
+    assign L1_RD_PORT_SELECT  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
+            
     always @(posedge CLK) begin
         if (VICTIM_CACHE_READY) begin
             case (evic_state)
-                E_HITTING : 
-                    evic_state <= (evic_empty_wire)? evic_state : E_IDLE1;
-                E_IDLE1   : 
-                    evic_state <= E_IDLE2;
-                E_IDLE2   : 
-                    evic_state <= evic_state << 2;
-                {1'b1, {(2 + BLOCK_SECTIONS){1'b0}}} : 
-                    evic_state <= (evic_empty_wire)?  E_HITTING : E_IDLE2 << 1;
-                default   : 
+                E_HITTING  : begin
+                    if (admit & REFILL_REQ_VALID) 
+                        evic_state <= E_WAITING << 2;
+                end 
+                E_WAITING  : begin
+                    evic_state <= (cur_evic_wire)? E_WAITING << 1 : E_WAITING;    
+                end
+                E_EVIC_FIN : begin
+                    case ({evic_empty_wire, next_evic_ready})
+                        2'b00   : evic_state <= E_WAITING;
+                        2'b01   : evic_state <= E_EVIC_STA;
+                        default : evic_state <= E_HITTING;
+                    endcase
+                end    
+                default   : begin
                     evic_state <= evic_state << 1;
+                end
             endcase
         end
     end
     
-    always @(*) begin
-        case (evic_state) 
-            E_HITTING : VICTIM_CACHE_WRITE = !evic_empty_wire;
-            E_IDLE1   : VICTIM_CACHE_WRITE = 0;  
-            E_IDLE2   : VICTIM_CACHE_WRITE = 0;  
-            default   : VICTIM_CACHE_WRITE = !evic_empty_wire;   
-        endcase
-    end
-    
-    always @(*) begin
-        case (evic_state)
-            E_HITTING : L1_RD_PORT_SELECT = 0;
-            E_IDLE1   : L1_RD_PORT_SELECT = 0;  
-            E_IDLE2   : L1_RD_PORT_SELECT = 0;  
-            default   : L1_RD_PORT_SELECT = 1;   
-        endcase
-    end
-           
+    always @(posedge CLK) begin
+        evic_state_del_1 <= evic_state;
+        evic_state_del_2 <= evic_state_del_1;
+    end    
+      
     always @(*) begin
         case (compl_evic)
             4'b0001  : begin
@@ -534,9 +412,9 @@ module Refill_Control_D #(
                 EVICT_SECT     = thr_sect;
             end
             default  : begin
-                EVICT_TAG      = cur_vtag;
-                EVICT_TAG_ADDR = cur_line;
-                EVICT_SECT     = cur_sect;
+                EVICT_TAG      = REFILL_REQ_VTAG;
+                EVICT_TAG_ADDR = REFILL_REQ_LINE;
+                EVICT_SECT     = REFILL_REQ_SECT;
             end
         endcase
     end       
@@ -547,151 +425,261 @@ module Refill_Control_D #(
     //////////////////////////////////////////////////////////////////////////////////////////////////
         
     // Address sent to L2 only if its admitted to queue and its not a stream hit
-    assign SEND_RD_ADDR_TO_L2 = admit & !VICTIM_HIT;
+    assign SEND_RD_ADDR_TO_L2 = admit & !VICTIM_HIT & missable_request;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // FSM for refill control                                                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
                 
-    localparam IDLE        = 0;
-    localparam TRANSITION  = 1;
-    localparam WRITING_VIC = 2;
-    localparam WRITING_L2  = 3;
-    localparam FLUSHING    = 4;
+    localparam IDLE        = 1;
+    localparam TRANSITION  = 2;
+    localparam WRITING_VIC = 4;
+    localparam WRITING_L2  = 8;
+    localparam FLUSHING    = 16;
     
-    reg [3              - 1 : 0] refill_state,      refill_state_wire;
+    reg [5              - 1 : 0] refill_state,      refill_state_wire;
     reg [T              - 1 : 0] no_completed,      no_completed_wire;
     reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     
     integer i;
         
-//    always @(*) begin
-//        case (refill_state)
-//            IDLE : begin
-//                case ({CACHE_HIT, VICTIM_HIT})
-//                    2'b00 :  begin
-//                        refill_state_wire = (missable_request)? WRITING_L2 : IDLE;
-//                        no_completed_wire = 0;
-//                        commited_sections_wire = 0;
-//                    end
-//                    2'b01 :  begin
-//                        refill_state_wire = (missable_request)? WRITING_VIC : IDLE;
-//                        no_completed_wire = 1;
-//                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                            commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-//                        end
-//                    end
-//                    default :  begin
-//                        if (flush_request) begin
-//                            refill_state_wire = FLUSHING;
-//                            no_completed_wire = 1;
-//                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-//                            end
-//                        end else begin
-//                            refill_state_wire = IDLE;
-//                            no_completed_wire = 0;
-//                            commited_sections_wire = 0;
-//                        end
-//                    end 
-//                endcase              
-//            end
-                
-//            TRANSITION : begin
-//                if (cur_src != 0) begin
-//                    refill_state_wire = WRITING_VIC;
-//                    no_completed_wire = 1;
-//                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                        commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-//                    end
-//                end else begin
-// //                   if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
-//                        refill_state_wire = WRITING_L2;
-//                        no_completed_wire = 1;
-//                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                            commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-//                        end
-//                    end else begin
-//                        refill_state_wire = WRITING_L2;
-//                        no_completed_wire = 0;
-//                        commited_sections_wire = 0;
-//                    end
-//                end
-//            end
+    always @(*) begin
+        case (refill_state)
+            IDLE : begin
+                case ({CACHE_HIT, VICTIM_HIT})
+                    2'b00 :  begin
+                        if (missable_request) begin
+                            refill_state_wire = WRITING_L2;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end else begin
+                            refill_state_wire = IDLE;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end
+                    end
+                    2'b01 :  begin
+                        if (missable_request) begin
+                            refill_state_wire = WRITING_VIC;
+                            no_completed_wire = 1;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
+                        end else begin
+                            refill_state_wire = IDLE;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end
+                    end
+                    default :  begin
+                        if (flush_request) begin
+                            refill_state_wire = FLUSHING;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end else begin
+                            refill_state_wire = IDLE;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end
+                    end 
+                endcase              
+            end
             
-//            WRITING_VIC : begin
-//                // Wait for the eviction to be complete before starting to write
-                
+            WRITING_VIC : begin
+                // Wait for the eviction to be complete before starting to write
+                if (cur_evic == 0) begin
+                    // When whole block is finished, go to idle state or transition state
+                    if (no_completed == {T{1'b1}}) begin
+                        if (crit_used) begin
+                            if (no_of_elements == 4'b0001 & !admit) begin
+                                refill_state_wire = IDLE;
+                                no_completed_wire = no_completed + 1;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            end else begin
+                                refill_state_wire = TRANSITION;
+                                no_completed_wire = no_completed + 1;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            end 
+                        end else begin
+                            refill_state_wire = refill_state;
+                            no_completed_wire = no_completed;
+                            commited_sections_wire = commited_sections;
+                        end
+                    end else begin
+                        refill_state_wire = refill_state;    
+                        no_completed_wire = no_completed + 1;    
+                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                            commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                    end
+                end else begin
+                    no_completed_wire = no_completed;
+                    refill_state_wire = refill_state;
+                    commited_sections_wire = commited_sections;
+                end 
+            end
             
-//                // When whole block is finished, go to idle state or transition state
-//                if (no_completed == {T{1'b1}}) begin
-//                    if (no_of_elements == 4'b0001 & !admit) begin
-//                        refill_state_wire = IDLE;
-//                    end else begin
-//                        refill_state_wire = TRANSITION;
-//                    end 
-//                end else begin
-//                    refill_state_wire = refill_state;                    
-//                end
-                
-//                for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                    if (i[T - 1 : 0] == cur_sect + no_completed) begin
-//                        commited_sections_wire[i] = 1; 
-//                    end else begin
-//                        commited_sections_wire[i] = commited_sections[i];
-//                    end                       
-//                end
-                
-//                no_completed_wire = no_completed + 1;
-//            end
-            
-//            WRITING_L2 : begin
-// //               if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0)) begin
-//                    // When whole block is fetched, go to idle state or transition
-//                    if (no_completed == {T{1'b1}}) begin
-//                        if (no_of_elements == 4'b0001 & !admit) begin
-//                            refill_state_wire = IDLE;
-//                        end else begin
-//                            refill_state_wire = TRANSITION;
-//                        end  
-//                    end else begin
-//                        refill_state_wire = refill_state;
-//                    end
+            WRITING_L2 : begin
+                // Wait until the eviction is complete
+                if (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) begin
+                    // When whole block is fetched, go to idle state or transition
+                    if (no_completed == {T{1'b1}}) begin
+                        if (no_of_elements == 4'b0001 & !admit) begin
+                            refill_state_wire = IDLE;
+                        end else begin
+                            refill_state_wire = TRANSITION;
+                        end  
+                    end else begin
+                        refill_state_wire = refill_state;
+                    end
                     
-//                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-//                        if (i[T - 1 : 0] == cur_sect + no_completed) begin
-//                            commited_sections_wire[i] = 1; 
-//                        end else begin
-//                            commited_sections_wire[i] = commited_sections[i];
-//                        end                       
-//                    end
+                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                        if (i[T - 1 : 0] == cur_sect + no_completed) begin
+                            commited_sections_wire[i] = 1; 
+                        end else begin
+                            commited_sections_wire[i] = commited_sections[i];
+                        end                       
+                    end
                                             
-//                    no_completed_wire = no_completed + 1;                                        
-////                end else begin
-//                    no_completed_wire = no_completed;
-//                    refill_state_wire = refill_state;
-//                    commited_sections_wire = commited_sections;
-////                end        
-//            end
+                    no_completed_wire = no_completed + 1;                                        
+                end else begin
+                    no_completed_wire = no_completed;
+                    refill_state_wire = refill_state;
+                    commited_sections_wire = commited_sections;
+                end        
             
-//            // Case of flushing
-//            default : begin
             
-//            end
-//        endcase
-//    end
+                if (no_completed == {T{1'b1}}) begin
+                    
+                end else begin
+                
+                end
+            end 
+            TRANSITION : begin
+                // If current request is a flush command
+                if (cur_ctrl == 2'b11) begin
+                    refill_state_wire = FLUSHING;
+                    no_completed_wire = 0;
+                    commited_sections_wire = 0;
+                end else begin
+                    if (cur_src == 0) begin
+                        refill_state_wire = WRITING_L2;
+                        // Has to wait till eviction finishes and data gets ready
+                        if (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) begin
+                            no_completed_wire = 1;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
+                            end
+                        end else begin
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end
+                    end else begin
+                        refill_state_wire = WRITING_VIC;
+                        // Has to wait until eviction finishes
+                        if (cur_evic == 0) begin
+                            no_completed_wire = 1;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
+                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
+                            end
+                        end else begin
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
+                        end
+                    end
+                end                
+            end
+            
+            default : begin
+                // Case of flushing                        
+                if (cur_evic == 0) begin
+                    if (no_completed == {T{1'b1}}) begin
+                        if (no_of_elements == 4'b0001 & !admit) begin
+                            refill_state_wire = IDLE;
+                        end else begin
+                            refill_state_wire = TRANSITION;
+                        end  
+                    end else begin
+                        refill_state_wire = refill_state;
+                    end
+                    
+                    no_completed_wire = no_completed + 1;  
+                    commited_sections_wire = 0;
+                end else begin
+                    no_completed_wire = no_completed;
+                    commited_sections_wire = commited_sections;
+                end
+            end
+        endcase
+    end
     
     always @(posedge CLK) begin
         no_completed      <= no_completed_wire;
         refill_state      <= refill_state_wire;
         commited_sections <= commited_sections_wire;
     end
-    
-//    assign remove = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}))
-//                            | ((refill_state == WRITING_SB) & (no_completed == {T{1'b1}}));
-        
-        
 
+    assign remove = ((refill_state == WRITING_L2 ) & DATA_FROM_L2_BUFFER_VALID & no_completed == {T{1'b1}}) |
+                    ((refill_state == WRITING_VIC) & no_completed == {T{1'b1}}) |
+                    ((refill_state == FLUSHING   ) & no_completed == {T{1'b1}});
+            
+        
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Instructions for writing to tag memory and line memory                                       //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+//    output     [ASSOCIATIVITY   - 1 : 0] REFILL_DST,                    // Individual write enables for the line memories
+             
+    // Port select
+    always @(*) begin
+        case (refill_state)
+            IDLE        : L1_WR_PORT_SELECT = (!CACHE_HIT & missable_request & VICTIM_HIT) ? 2'b10 : 2'b00;
+            TRANSITION  :  
+                case ({cur_ctrl == 2'b11, cur_src == 0})
+                    2'b01   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) ? 2'b11 : 2'b00; 
+                    2'b00   : L1_WR_PORT_SELECT = (cur_evic == 0) ? 2'b10 : 2'b00; 
+                    default : L1_WR_PORT_SELECT = 2'b00;
+                endcase
+            WRITING_L2  : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) ? 2'b11 : 2'b00;   
+            WRITING_VIC : L1_WR_PORT_SELECT = (cur_evic == 0) ? 2'b10 : 2'b00;                
+            default     : L1_WR_PORT_SELECT = 2'b00;
+        endcase
+    end 
+    
+    // Addresses
+    assign REFILL_TAG_ADDR   = (no_of_elements == 0) ? REFILL_REQ_LINE : cur_line;
+    assign REFILL_SECT       = (no_of_elements == 0) ? REFILL_REQ_SECT : (cur_sect + no_completed);
+       
+    // Data
+    assign REFILL_TAG_VALID  = commited_sections_wire;  
+    assign REFILL_TAG        = (no_of_elements == 0) ? REFILL_REQ_TAG : cur_tag;
+    
+    // Write enables
+    reg write_test;
+    always @(*) begin
+        case (refill_state) 
+            IDLE        : write_test = (!CACHE_HIT & missable_request & VICTIM_HIT);
+            TRANSITION  :  
+                case ({cur_ctrl == 2'b11, cur_src == 0})
+                    2'b01   : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)); 
+                    2'b00   : write_test = (cur_evic == 0); 
+                    default : write_test = 0;
+                endcase
+            WRITING_L2  : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0));   
+            WRITING_VIC : write_test = (cur_evic == 0);                
+            default     : write_test = 0;
+        endcase
+    end
+    
+    
+    genvar j;
+    generate 
+        for (j = 0; j < ASSOCIATIVITY; j = j + 1) begin
+            wire [a - 1 : 0] temp = ((no_of_elements == 0)? REFILL_REQ_DST_SET : cur_set);
+            assign REFILL_DST[j] = (temp == j) & write_test;
+        end
+    endgenerate
+    
+        
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial values                                                                               //
     //////////////////////////////////////////////////////////////////////////////////////////////////

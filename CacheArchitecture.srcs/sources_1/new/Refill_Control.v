@@ -310,7 +310,7 @@ module Refill_Control_I #(
     //    wire clash_n2 = (REFILL_REQ_LINE == sec_line) & no_of_elements[2] & ( ((refill_req_dst_del_1 == sec_set) & !CACHE_HIT) | (CACHE_SRC == sec_set) );  
     //    
     //    wire equal_n0 = (REFILL_REQ_LINE == cur_line) & (REFILL_REQ_TAG == cur_tag) & no_of_elements[0];	
-    //   wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
+    //    wire equal_n1 = (REFILL_REQ_LINE == fir_line) & (REFILL_REQ_TAG == fir_tag) & no_of_elements[1];    
     //    wire equal_n2 = (REFILL_REQ_LINE == sec_line) & (REFILL_REQ_TAG == sec_tag) & no_of_elements[2];
     
     
@@ -409,15 +409,23 @@ module Refill_Control_I #(
            
 
     //////////// Take some more logic to the previous clock cycle, even better timing ///////////////
-    reg clash_cur, clash_fir, clash_sec, clash_thr, clash_pcs;
+    reg line_eq_cur, line_eq_fir, line_eq_sec, line_eq_thr, line_eq_pcs;
+    reg dst_eq_cur,  dst_eq_fir,  dst_eq_sec,  dst_eq_thr,  dst_eq_pcs;
+    
     reg equal_cur, equal_fir, equal_sec, equal_thr, equal_pcs;
     
     always @(*) begin
-        clash_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (refill_req_dst == cur_set);
-        clash_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (refill_req_dst == fir_set);
-        clash_sec = (REFILL_REQ_LINE_PREV == sec_line)        & (refill_req_dst == sec_set);
-        clash_thr = (REFILL_REQ_LINE_PREV == thr_line)        & (refill_req_dst == thr_set);
-        clash_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (refill_req_dst == refill_req_dst_del_1);
+        line_eq_cur = (REFILL_REQ_LINE_PREV == cur_line);
+        line_eq_fir = (REFILL_REQ_LINE_PREV == fir_line);
+        line_eq_sec = (REFILL_REQ_LINE_PREV == sec_line);
+        line_eq_thr = (REFILL_REQ_LINE_PREV == thr_line);
+        line_eq_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE);
+        
+        dst_eq_cur = (refill_req_dst == cur_set);
+        dst_eq_fir = (refill_req_dst == fir_set);
+        dst_eq_sec = (refill_req_dst == sec_set);
+        dst_eq_thr = (refill_req_dst == thr_set);
+        dst_eq_pcs = (refill_req_dst == refill_req_dst_del_1);
         
         equal_cur = (REFILL_REQ_LINE_PREV == cur_line)        & (REFILL_REQ_TAG_PREV == cur_tag);
         equal_fir = (REFILL_REQ_LINE_PREV == fir_line)        & (REFILL_REQ_TAG_PREV == fir_tag);
@@ -426,41 +434,60 @@ module Refill_Control_I #(
         equal_pcs = (REFILL_REQ_LINE_PREV == REFILL_REQ_LINE) & (REFILL_REQ_TAG_PREV == REFILL_REQ_TAG);
     end
     
-    reg clash_n0, clash_n1, clash_n2;
+    reg line_eq_n0, line_eq_n1, line_eq_n2;
+    reg dst_eq_n0,  dst_eq_n1,  dst_eq_n2;
+    
     reg equal_n0, equal_n1, equal_n2;
+    
     always @(posedge CLK) begin
         case ({admit, remove})
             2'b10 : begin
-                clash_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? clash_pcs : clash_cur);
-                clash_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? clash_pcs : clash_fir);
-                clash_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? clash_pcs : clash_sec);
+                line_eq_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? line_eq_pcs : line_eq_cur);
+                line_eq_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? line_eq_pcs : line_eq_fir);
+                line_eq_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? line_eq_pcs : line_eq_sec);
+                
+                dst_eq_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? dst_eq_pcs : dst_eq_cur);
+                dst_eq_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? dst_eq_pcs : dst_eq_fir);
+                dst_eq_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? dst_eq_pcs : dst_eq_sec);
                 
                 equal_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0000)? equal_pcs : equal_cur);
                 equal_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0001)? equal_pcs : equal_fir);
                 equal_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0011)? equal_pcs : equal_sec);                
             end
             2'b01 : begin
-                clash_n0 <= no_of_elements_wire[0] & clash_fir;
-                clash_n1 <= no_of_elements_wire[1] & clash_sec;
-                clash_n2 <= no_of_elements_wire[2] & clash_thr;
+                line_eq_n0 <= no_of_elements_wire[0] & line_eq_fir;
+                line_eq_n1 <= no_of_elements_wire[1] & line_eq_sec;
+                line_eq_n2 <= no_of_elements_wire[2] & line_eq_thr;
+                
+                dst_eq_n0 <= no_of_elements_wire[0] & dst_eq_fir;
+                dst_eq_n1 <= no_of_elements_wire[1] & dst_eq_sec;
+                dst_eq_n2 <= no_of_elements_wire[2] & dst_eq_thr;
                 
                 equal_n0 <= no_of_elements_wire[0] & equal_fir;
                 equal_n1 <= no_of_elements_wire[1] & equal_sec;
                 equal_n2 <= no_of_elements_wire[2] & equal_thr;
             end
             2'b11 : begin
-                clash_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? clash_pcs : clash_fir);
-                clash_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? clash_pcs : clash_sec);
-                clash_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? clash_pcs : clash_thr);
+                line_eq_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? line_eq_pcs : line_eq_fir);
+                line_eq_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? line_eq_pcs : line_eq_sec);
+                line_eq_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? line_eq_pcs : line_eq_thr);
+                
+                dst_eq_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? dst_eq_pcs : dst_eq_fir);
+                dst_eq_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? dst_eq_pcs : dst_eq_sec);
+                dst_eq_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? dst_eq_pcs : dst_eq_thr);
                 
                 equal_n0 <= no_of_elements_wire[0] & ((no_of_elements == 4'b0001)? equal_pcs : equal_fir);
                 equal_n1 <= no_of_elements_wire[1] & ((no_of_elements == 4'b0011)? equal_pcs : equal_sec);
                 equal_n2 <= no_of_elements_wire[2] & ((no_of_elements == 4'b0111)? equal_pcs : equal_thr);
             end
             2'b00 : begin 
-                clash_n0 <= no_of_elements_wire[0] & clash_cur;
-                clash_n1 <= no_of_elements_wire[1] & clash_fir;
-                clash_n2 <= no_of_elements_wire[2] & clash_sec;
+                line_eq_n0 <= no_of_elements_wire[0] & line_eq_cur;
+                line_eq_n1 <= no_of_elements_wire[1] & line_eq_fir;
+                line_eq_n2 <= no_of_elements_wire[2] & line_eq_sec;
+                
+                dst_eq_n0 <= no_of_elements_wire[0] & dst_eq_cur;
+                dst_eq_n1 <= no_of_elements_wire[1] & dst_eq_fir;
+                dst_eq_n2 <= no_of_elements_wire[2] & dst_eq_sec;
                 
                 equal_n0 <= no_of_elements_wire[0] & equal_cur;
                 equal_n1 <= no_of_elements_wire[1] & equal_fir;
@@ -468,20 +495,26 @@ module Refill_Control_I #(
             end
         endcase    
     end   
+    
+    wire clash_n0, clash_n1, clash_n2;
+  
+    assign clash_n0 = line_eq_n0 & ((!CACHE_HIT & dst_eq_n0) | (CACHE_SRC == cur_set));
+    assign clash_n1 = line_eq_n1 & ((!CACHE_HIT & dst_eq_n1) | (CACHE_SRC == fir_set));
+    assign clash_n2 = line_eq_n2 & ((!CACHE_HIT & dst_eq_n2) | (CACHE_SRC == sec_set));
   
     // Whether to pass or fail the tests
     always @(*) begin
         if (equal_n2) begin
             test_pass = 0;
-        end else if (clash_n2 & (!CACHE_HIT | (CACHE_SRC == sec_set))) begin
+        end else if (clash_n2) begin
             test_pass = 1;
         end else if (equal_n1) begin
             test_pass = 0;    
-        end else if (clash_n1 & (!CACHE_HIT | (CACHE_SRC == fir_set))) begin
+        end else if (clash_n1) begin
             test_pass = 1;    
         end else if (equal_n0) begin
             test_pass = 0;    
-        end else if (clash_n0 & (!CACHE_HIT | (CACHE_SRC == cur_set))) begin
+        end else if (clash_n0) begin
             test_pass = 1;    
         end else begin
             test_pass = !CACHE_HIT;
@@ -637,7 +670,7 @@ module Refill_Control_I #(
     always @(*) begin
         case (refill_state) 
             IDLE        :   write_test = !CACHE_HIT & STREAM_HIT;
-            TRANSITION  :   write_test = (cur_src != 0);
+            TRANSITION  :   write_test = (cur_src != 0) | (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0);
             WRITING_SB  :   write_test = 1'b1;
             WRITING_L2  :   write_test = DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
         endcase

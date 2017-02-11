@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="70000000fs"></ZoomStartTime>
-      <ZoomEndTime time="139100001fs"></ZoomEndTime>
-      <Cursor1Time time="109000000fs"></Cursor1Time>
+      <ZoomStartTime time="886668309fs"></ZoomStartTime>
+      <ZoomEndTime time="1022666339fs"></ZoomEndTime>
+      <Cursor1Time time="1000000000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="14" />
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
@@ -73,6 +73,11 @@
    <wvobject fp_name="group106" type="group">
       <obj_property name="label">Read Port to L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/send_rd_addr_to_L2" type="logic">
+         <obj_property name="ElementShortName">send_rd_addr_to_L2</obj_property>
+         <obj_property name="ObjectShortName">send_rd_addr_to_L2</obj_property>
+      </wvobject>
       <wvobject fp_name="vbus501" type="vbus">
          <obj_property name="label">RD_ADDR_TO_L2</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -767,17 +772,21 @@
             <obj_property name="ObjectShortName">FALSE</obj_property>
          </wvobject>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
-         <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_del_1" type="array">
-         <obj_property name="ElementShortName">control_del_1[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_del_1[1:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_del_2" type="array">
-         <obj_property name="ElementShortName">control_del_2[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_del_2[1:0]</obj_property>
+      <wvobject fp_name="group214" type="group">
+         <obj_property name="label">Control</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
+            <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_del_1" type="array">
+            <obj_property name="ElementShortName">control_del_1[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_del_1[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_del_2" type="array">
+            <obj_property name="ElementShortName">control_del_2[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_del_2[1:0]</obj_property>
+         </wvobject>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group107" type="group">

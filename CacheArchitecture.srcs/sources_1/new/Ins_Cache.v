@@ -206,7 +206,7 @@ module Ins_Cache #(
                 .ADDR_R(tag_address),                                       // Read address bus, width determined from RAM_DEPTH
                 .DATA_OUT({tag_valid_from_ram[i], tag_from_ram[i]}),        // RAM output data, width determined from RAM_WIDTH
                 .OUT_RST(1'b0),                                             // Output reset (does not affect memory contents)
-                .OUT_ENB(1'b1)                                             // Output register enable
+                .OUT_ENB(1'b1)                                              // Output register enable
             );
             
             // Tag comparison and validness checking

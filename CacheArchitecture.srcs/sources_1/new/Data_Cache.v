@@ -91,21 +91,21 @@ module Data_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     // Globally important wires and signals                                     //
     //////////////////////////////////////////////////////////////////////////////
-        
-    wire send_rd_addr_to_L2;        // Instructs the RD_ADDR_TO_L2 unit to send address to L2  
+            
+    wire             send_rd_addr_to_L2;        // Instructs the RD_ADDR_TO_L2 unit to send address to L2  
     
-    wire refill_from_L2_ready;      // Instructs the DATA_FROM_L2 unit that the data it has is ready to be sampled
-    wire refill_from_L2_valid;      // States the DATA_FROM_L2 unit has valid data 
+    wire             refill_from_L2_ready;      // Instructs the DATA_FROM_L2 unit that the data it has is ready to be sampled
+    wire             refill_from_L2_valid;      // States the DATA_FROM_L2 unit has valid data 
       
-    wire cache_pipe_enb;            // Enables the cache processes
-    wire main_pipe_enb;               // Enables the main processor pipeline
-    wire input_from_proc_sel;       // input_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}, same for control and data from processor also
+    wire             cache_pipe_enb;            // Enables the cache processes
+    wire             main_pipe_enb;               // Enables the main processor pipeline
+    wire             input_from_proc_sel;       // input_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}, same for control and data from processor also
     
-    wire cache_hit;                 // L1 cache has hit
-    wire victim_hit;                // Victim cache has hit
+    wire             cache_hit;                 // L1 cache has hit
+    wire             victim_hit;                // Victim cache has hit
     
-    wire victim_cache_ready;        // Victim cache is ready to write
-    wire victim_cache_valid;        // Victim cache write is valid
+    wire             victim_cache_ready;        // Victim cache is ready to write
+    wire             victim_cache_valid;        // Victim cache write is valid
     
     //////////////////////////////////////////////////////////////////////////////
     // Cache data path - Decoding the read/write address                        //
@@ -199,6 +199,7 @@ module Data_Cache #(
     wire                           dirty_to_ram;
      
     wire [ASSOCIATIVITY   - 1 : 0] tag_mem_wr_enb;     
+    wire [ASSOCIATIVITY   - 1 : 0] dirty_mem_wr_enb;     
     wire                           tag_mem_rd_enb = cache_pipe_enb;
     
     wire [TAG_WIDTH       - 1 : 0] tag_from_ram             [0 : ASSOCIATIVITY - 1];
@@ -217,12 +218,14 @@ module Data_Cache #(
     wire [LINE_RAM_WIDTH  - 1 : 0] lin_data_out             [0 : ASSOCIATIVITY - 1];
     
                   
-    // Tag comparison and validness checking
-    wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                     // Whether the tag is valid for the given section of the cache block
-    reg  [ASSOCIATIVITY   - 1 : 0] tag_match;                          // Tag matches in a one-hot encoding
-    reg  [ASSOCIATIVITY   - 1 : 0] tag_valid;                          // Whether the tag is valid for the given section of the cache block
+    // Tag comparison and validness checking 
+    wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                     // Whether the tag is valid for the given section of the cache block (DM2)
+    reg  [ASSOCIATIVITY   - 1 : 0] tag_match;                          // Tag matches in a one-hot encoding (DM3)
+    reg  [ASSOCIATIVITY   - 1 : 0] tag_valid;                          // Whether the tag is valid for the given section of the cache block (DM3)
+    wire [ASSOCIATIVITY   - 1 : 0] hit_set_wire;                       // Whether tag matches and is valid
     
-    assign cache_hit = |(tag_valid & tag_match);    
+    assign hit_set_wire  = (tag_valid & tag_match);
+    assign cache_hit = |hit_set_wire;    
        
         
     // Set multiplexer wires    
@@ -241,24 +244,42 @@ module Data_Cache #(
     
     // Cache line multiplexer wires
     wire [DATA_WIDTH                     - 1 : 0] data_to_proc;        // Data going back to the processor   
+    
                             
     genvar i;
         
     generate
         for (i = 0; i < ASSOCIATIVITY; i = i + 1) begin : ASSOC_LOOP
             Mem_Simple_Dual_Port #(
-                .RAM_WIDTH(TAG_RAM_WIDTH),              // Specify RAM data width
-                .RAM_DEPTH(TAG_RAM_DEPTH),              // Specify RAM depth (number of entries)
-                .RAM_PERFORMANCE("LOW_LATENCY"),        // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-                .INIT_FILE("")                          // Specify name/location of RAM initialization file if using one (leave blank if not)
+                .RAM_WIDTH(TAG_RAM_WIDTH - 1),              // Specify RAM data width
+                .RAM_DEPTH(TAG_RAM_DEPTH),                  // Specify RAM depth (number of entries)
+                .RAM_PERFORMANCE("LOW_LATENCY"),            // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+                .INIT_FILE("")                              // Specify name/location of RAM initialization file if using one (leave blank if not)
             ) tag_memory (
                 .CLK(CLK),                                                                  // Clock
                 .WR_ENB(tag_mem_wr_enb[i]),                                                 // Write enable
                 .ADDR_W(tag_mem_wr_addr),                                                   // Write address bus, width determined from RAM_DEPTH
-                .DATA_IN({tag_valid_to_ram, tag_to_ram, dirty_to_ram}),                     // RAM input data, width determined from RAM_WIDTH
+                .DATA_IN({tag_valid_to_ram, tag_to_ram}),                                   // RAM input data, width determined from RAM_WIDTH
                 .ADDR_R(tag_address),                                                       // Read address bus, width determined from RAM_DEPTH
                 .RD_ENB(tag_mem_rd_enb),                                                    // Read Enable, for additional power savings, disable when not in use
-                .DATA_OUT({tag_valid_from_ram[i], tag_from_ram[i], dirty_from_ram[i]}),     // RAM output data, width determined from RAM_WIDTH
+                .DATA_OUT({tag_valid_from_ram[i], tag_from_ram[i]}),     // RAM output data, width determined from RAM_WIDTH
+                .OUT_RST(1'b0),                                                             // Output reset (does not affect memory contents)
+                .OUT_ENB(tag_mem_rd_enb)                                                    // Output register enable                
+            );
+            
+            Mem_Simple_Dual_Port #(
+                .RAM_WIDTH(1),                              // Specify RAM data width
+                .RAM_DEPTH(TAG_RAM_DEPTH),                  // Specify RAM depth (number of entries)
+                .RAM_PERFORMANCE("LOW_LATENCY"),            // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+                .INIT_FILE("")                              // Specify name/location of RAM initialization file if using one (leave blank if not)
+            ) dirty_memory (
+                .CLK(CLK),                                                                  // Clock
+                .WR_ENB(dirty_mem_wr_enb[i]),                                               // Write enable
+                .ADDR_W(tag_mem_wr_addr),                                                   // Write address bus, width determined from RAM_DEPTH
+                .DATA_IN(dirty_to_ram),                                                     // RAM input data, width determined from RAM_WIDTH
+                .ADDR_R(tag_address),                                                       // Read address bus, width determined from RAM_DEPTH
+                .RD_ENB(tag_mem_rd_enb),                                                    // Read Enable, for additional power savings, disable when not in use
+                .DATA_OUT(dirty_from_ram[i]),                                               // RAM output data, width determined from RAM_WIDTH
                 .OUT_RST(1'b0),                                                             // Output reset (does not affect memory contents)
                 .OUT_ENB(tag_mem_rd_enb)                                                    // Output register enable                
             );
@@ -517,10 +538,8 @@ module Data_Cache #(
     // Refill path - Cache write units                                          //
     //////////////////////////////////////////////////////////////////////////////
     
-    wire [LINE_RAM_WIDTH - 1 : 0] wr_data_refill;
-    
-    wire [2              - 1 : 0] refill_sel;      // refill_sel = {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
-    
+    wire [1 : 0] refill_sel;                // refill_sel = {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
+           
     // Line RAM data in multiplexer
     genvar z;
     generate 
@@ -543,14 +562,38 @@ module Data_Cache #(
             );
         end
     endgenerate
-        
+    
+    // From refill control unit
+    wire [TAG_WIDTH       - 1 : 0] refill_tag;              // Current refill's tag
+    wire [TAG_ADDR_WIDTH  - 1 : 0] refill_tag_addr;         // Current refill cache line
+    wire [T               - 1 : 0] refill_sect;             // Current refill section
+    wire [ASSOCIATIVITY   - 1 : 0] refill_dst;              // Refill destination set
+    wire [BLOCK_SECTIONS  - 1 : 0] refill_tag_valid;        // Tag valid values to be written
+    
+    // Line memory write port controls
+    assign lin_mem_wr_addr = (refill_sel[1]) ? {refill_tag_addr, refill_sect} : {tag_address_del_2, section_address_del_2};
+    assign lin_mem_wr_enb  = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
+    
+    // Tag memory write port controls
+    assign tag_mem_wr_addr  = (refill_sel[1]) ? refill_tag_addr                : 0;
+    assign tag_mem_wr_enb   = (refill_sel[1]) ? refill_dst                     : 0;
+    assign dirty_mem_wr_enb = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
+    
+    // Tag RAM data in multiplexer
+    assign tag_valid_to_ram = refill_tag_valid;
+    assign tag_to_ram       = refill_tag;
+    assign dirty_to_ram     = (refill_sel[1]) ? 1'b0                           : 1'b1;
+    
     
     //////////////////////////////////////////////////////////////////////////////
     // Primary control systems                                                  //
     //////////////////////////////////////////////////////////////////////////////
     
      Refill_Control_D #(
-    
+        .S(S),
+        .B(B),
+        .a(a),
+        .T(T)
     ) refill_control (
         .CLK(CLK),
         // Inputs from DM2 pipeline stage
@@ -569,11 +612,18 @@ module Data_Cache #(
         // From the Victim cache
         .VICTIM_CACHE_READY(victim_cache_ready),            // From victim cache that it is ready to receive
         .VICTIM_CACHE_WRITE(victim_cache_valid),            // To victim cache that it has to write the data from DM3
-        // To the cache pipeline
+        // To the L1 read ports
         .L1_RD_PORT_SELECT(rd_port_select),                // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
         .EVICT_TAG(evict_tag),                             // Tag for read address at DM1 
         .EVICT_TAG_ADDR(evict_tag_addr),                   // Cache line for read address at DM1 
-        .EVICT_SECT(evict_sect),                           // Section for read address at DM1  
+        .EVICT_SECT(evict_sect),                           // Section for read address at DM1 
+        // To the L1 write ports
+        .L1_WR_PORT_SELECT(refill_sel),                    // Selects the inputs to the Write ports of L1 {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
+        .REFILL_DST(refill_dst),                           // Individual write enables for the line memories
+        .REFILL_TAG(refill_tag),                           // Tag for the refill write
+        .REFILL_TAG_VALID(refill_tag_valid),               // Which sections are valid currently, will be written to tag memory
+        .REFILL_TAG_ADDR(refill_tag_addr),                 // Tag address for the refill write
+        .REFILL_SECT(refill_sect),                         // Section address for the refill write
         // Outputs to the main processor pipeline		
         .CACHE_READY(CACHE_READY),                         // Signal from cache to processor that its pipeline is currently ready to work  
         // Related to controlling the pipeline
@@ -581,7 +631,9 @@ module Data_Cache #(
         .CACHE_PIPE_ENB(cache_pipe_enb),                   // Enable for cache pipeline
         .ADDR_FROM_PROC_SEL(addr_from_proc_sel),           // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}    
         // Related to Address to L2 buffers
-        .SEND_RD_ADDR_TO_L2(send_rd_addr_to_L2)            // Valid signal for the input of Addr_to_L2 section   
+        .SEND_RD_ADDR_TO_L2(send_rd_addr_to_L2),           // Valid signal for the input of Addr_to_L2 section
+        .DATA_FROM_L2_BUFFER_READY(refill_from_L2_ready),  // Ready signal for refill from L2
+        .DATA_FROM_L2_BUFFER_VALID(refill_from_L2_valid)   // Valid signal for refill from L2
     );
     
     //////////////////////////////////////////////////////////////////////////////
