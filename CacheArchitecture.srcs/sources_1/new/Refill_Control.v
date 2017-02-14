@@ -718,7 +718,7 @@ module Refill_Control_I #(
     always @(*) begin
         case (refill_state)
             IDLE        :   critical_ready = !CACHE_HIT & STREAM_HIT;
-            TRANSITION  :   critical_ready = (cur_src != 0);
+            TRANSITION  :   critical_ready = (cur_src != 0) | (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0);
             WRITING_SB  :   critical_ready = 0;
             WRITING_L2  :   critical_ready = (no_completed_wire == 1) & DATA_FROM_L2_BUFFER_VALID 
                                               & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);

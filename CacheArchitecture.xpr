@@ -18,7 +18,7 @@
     <Option Name="CompiledLibDirActivehdl" Val="$PCACHEDIR/compile_simlib/activehdl"/>
     <Option Name="BoardPart" Val=""/>
     <Option Name="SourceMgmtMode" Val="DisplayOnly"/>
-    <Option Name="ActiveSimSet" Val="Test_Ins_Cache"/>
+    <Option Name="ActiveSimSet" Val="Test_Data_Cache"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="EnableCoreContainer" Val="FALSE"/>
     <Option Name="XPMLibraries" Val="XPM_MEMORY"/>
@@ -26,7 +26,7 @@
     <Option Name="IPUserFilesDir" Val="$PPRDIR/CacheArchitecture.ip_user_files"/>
     <Option Name="IPStaticSourceDir" Val="$PPRDIR/CacheArchitecture.ip_user_files/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
-    <Option Name="WTXSimLaunchSim" Val="487"/>
+    <Option Name="WTXSimLaunchSim" Val="501"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
