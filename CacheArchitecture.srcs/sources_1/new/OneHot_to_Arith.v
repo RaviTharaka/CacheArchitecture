@@ -34,6 +34,7 @@ module OneHot_to_Bin #(
     ) (
         // Inputs
         input [WIDTH - 1 : 0] ONE_HOT,
+        input [max(ORDER - 1, 0) : 0] DEFAULT,
         // Outputs
         output reg [max(ORDER - 1, 0) : 0] BIN
     );
@@ -46,7 +47,7 @@ module OneHot_to_Bin #(
         end else if (ORDER == 1) begin
             always @(*) begin
                 case (ONE_HOT) 
-                    default         BIN = 1'd0;
+                    default         BIN = DEFAULT;
                     2'b01 :         BIN = 1'd0;   
                     2'b10 :         BIN = 1'd1;
                 endcase
@@ -54,7 +55,7 @@ module OneHot_to_Bin #(
         end else if (ORDER == 2) begin
             always @(*) begin
                 case (ONE_HOT) 
-                    default         BIN = 2'd0;
+                    default         BIN = DEFAULT;
                     4'b0001 :       BIN = 2'd0;   
                     4'b0010 :       BIN = 2'd1;
                     4'b0100 :       BIN = 2'd2;   
@@ -64,7 +65,7 @@ module OneHot_to_Bin #(
         end else begin
             always @(*) begin
                 case (ONE_HOT)
-                    default         BIN = 3'd0;
+                    default         BIN = DEFAULT;
                     8'b00000001 :   BIN = 3'd0;   
                     8'b00000010 :   BIN = 3'd1;
                     8'b00000100 :   BIN = 3'd2;

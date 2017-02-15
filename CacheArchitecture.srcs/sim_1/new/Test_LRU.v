@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 08/21/2016 02:39:44 PM
+// Create Date: 11/08/2016 11:19:38 PM
 // Design Name: 
-// Module Name: Test_Ins_Cache
+// Module Name: Test_LRU
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Test_Ins_Cache(
-
+module Test_LRU(
+    input CLK
     );
 endmodule
