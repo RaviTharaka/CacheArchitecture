@@ -210,7 +210,19 @@ module Victim_Cache #(
     assign control_to_L2 = ctrl_memory[victim_rd_pos];
     
     assign data_to_L2 = data_memory[{victim_rd_pos, victim_rd_state[B - W - 1 -: T]}][L2_BUS_WIDTH * victim_rd_state[B - W - T - 1 : 0] +: L2_BUS_WIDTH];
-            
+    
+    // Write state management
+    always @(posedge CLK) begin
+        if (L2_wr_buf_ready & L2_wr_buf_valid) begin
+            victim_rd_state <= victim_rd_state + 1;
+        end
+        
+        if ((!victim_cache_empty & !dirty[victim_rd_pos]) | WR_COMPLETE) begin
+            // Read position shifts to the next value
+            {victim_rd_pos_msb, victim_rd_pos} <= {victim_rd_pos_msb, victim_rd_pos} + 1;
+        end
+    end
+                
     always @(posedge CLK) begin
         // Write data, control and data registers for the L2 cache
         if ((L2_wr_buf_valid & WR_TO_L2_READY) | (!L2_wr_buf_full & L2_wr_buf_valid)) begin
@@ -227,20 +239,6 @@ module Victim_Cache #(
             L2_wr_buf_full <= 0;
         end
     end
-    
-    // Write state management
-    always @(posedge CLK) begin
-        if (L2_wr_buf_ready & L2_wr_buf_valid) begin
-            victim_rd_state <= victim_rd_state + 1;
-        end
-    end
-    
-    always @(posedge CLK) begin
-       if ((!victim_cache_empty & !dirty[victim_rd_pos]) | WR_COMPLETE) begin
-            // Read position shifts to the next value
-            {victim_rd_pos_msb, victim_rd_pos} <= {victim_rd_pos_msb, victim_rd_pos} + 1;
-        end
-    end    
     
     
     //////////////////////////////////////////////////////////////////////////////

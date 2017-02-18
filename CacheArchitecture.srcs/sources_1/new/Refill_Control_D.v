@@ -826,7 +826,7 @@ module Refill_Control_D #(
             SHIFT2      :
                 case (REFILL_REQ_CTRL)
                     2'b00 : critical_use = 1;                       // This should never happen
-                    2'b10 : critical_use = CACHE_HIT & L1_WR_PORT_SELECT[1];
+                    2'b10 : critical_use = CACHE_HIT & !L1_WR_PORT_SELECT[1];
                     2'b01 : critical_use = CACHE_HIT;
                     2'b11 : critical_use = 1; 
                 endcase
@@ -867,7 +867,7 @@ module Refill_Control_D #(
             SHIFT2  : 
                 case (REFILL_REQ_CTRL)
                     2'b00 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT);                       // This should never happen
-                    2'b10 : pc_state <= (CACHE_HIT & L1_WR_PORT_SELECT[1])?
+                    2'b10 : pc_state <= (CACHE_HIT & !L1_WR_PORT_SELECT[1])?
                                                  ((no_of_elements == 1)? HITTING : TRANSIT) : 
                                                  SHIFT0;
                     2'b01 : pc_state <= (CACHE_HIT)?

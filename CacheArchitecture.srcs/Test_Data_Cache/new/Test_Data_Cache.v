@@ -33,11 +33,14 @@ module Test_Data_Cache ();
     parameter L2_DELAY_RD       = 7;                     // Read delay of the L2 cache (from start of request upto first reply)
     parameter L2_DELAY_WR       = 4;                     // Write delay of the L2 cache (from sending last data to WR_COMPLETE acknowledgement)
     parameter V                 = 2;                     // Size of the victim cache will be 2^V cache lines
-            
+    
+    parameter MEMORY_ADDR_WIDTH = 16;                    // 2^MEMORY_ADDR_WIDTH is the address width of the main memory of the system
+                
     // Calculated parameters
     localparam L2_BUS_WIDTH     = 1 << W;
     localparam L2_BURST         = 1 << (B - W);
-        
+    localparam MEMORY_DEPTH      = 1 << 16;             
+            
     // Constants
     reg                              TRUE  = 1;
     reg                              FALSE = 0;    
@@ -66,6 +69,11 @@ module Test_Data_Cache ();
     reg  [ADDR_WIDTH        - 1 : 0] ADDR_FROM_PROC;
     reg  [DATA_WIDTH        - 1 : 0] DATA_FROM_PROC;
     wire [DATA_WIDTH        - 1 : 0] DATA_TO_PROC;
+           
+    reg  [2                 - 1 : 0] control_from_proc_del_1 = 0;        
+    reg  [2                 - 1 : 0] control_from_proc_del_2 = 0;        
+    reg  [2                 - 1 : 0] control_from_proc_del_3 = 0;        
+    reg  [2                 - 1 : 0] control_from_proc_del_4 = 0;        
               
     Data_Cache # (
         .S(S),
@@ -103,12 +111,14 @@ module Test_Data_Cache ();
         .DATA_FROM_L2(DATA_FROM_L2)       
     );
     
-    integer fileTrace, readTrace;
+    integer fileTrace, fileResult, readTrace;
     //integer fileResult, writeResult;
     integer i, j, k, l;
     integer instruction_no;
     
     reg read_address;
+    reg [DATA_WIDTH - 1 : 0] memory [0 : MEMORY_DEPTH - 1];
+        
     initial begin
         CLK = 0;
         
@@ -120,6 +130,8 @@ module Test_Data_Cache ();
         DATA_FROM_PROC = 0;
                     
         fileTrace = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/gcc.trac", "r");
+        fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/result.txt", "w");
+        $readmemh ("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/Mem_init.in", memory);
         
         instruction_no = 0;
                 
@@ -136,8 +148,13 @@ module Test_Data_Cache ();
                 readTrace = $fscanf(fileTrace, "%x ", CONTROL_FROM_PROC);
                 readTrace = $fscanf(fileTrace, "%x ", ADDR_FROM_PROC);
                 readTrace = $fscanf(fileTrace, "%x ", DATA_FROM_PROC);
+                if (control_from_proc_del_4 == 2'b01) begin
+                    fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/result.txt", "a");                        
+                    $fwrite(fileResult,"%x\n",DATA_TO_PROC);
+                    $fclose(fileResult);
+                end
                 instruction_no = instruction_no + 1;
-            end  
+            end
             #10;      
         end                
     end
@@ -146,8 +163,17 @@ module Test_Data_Cache ();
         read_address <= CACHE_READY & PROC_READY;
     end
     
+    always @(posedge CLK) begin
+        if (CACHE_READY & PROC_READY) begin
+            control_from_proc_del_1 <= CONTROL_FROM_PROC;
+            control_from_proc_del_2 <= control_from_proc_del_1;
+            control_from_proc_del_3 <= control_from_proc_del_2;
+            control_from_proc_del_4 <= control_from_proc_del_3;
+        end
+    end
+    
     ////////////////////////////////////////////////////////////
-    //              Read port of L2 cache                     // 
+    //              Read port of memory                       // 
     ////////////////////////////////////////////////////////////
     
     reg  [L2_BURST   - 1 : 0] l2_rd_input_state;
@@ -171,7 +197,7 @@ module Test_Data_Cache ();
             end
         
             if (RD_ADDR_TO_L2_VALID && RD_ADDR_TO_L2_READY) begin
-                l2_ready       <= 0;
+                l2_ready          <= 0;
                 l2_rd_input_state <= 1;           
             end else if (l2_rd_input_state != 0) begin
                 l2_rd_input_state <= l2_rd_input_state << 1;
@@ -182,10 +208,10 @@ module Test_Data_Cache ();
             end
             
             if (rd_mem_requests[L2_DELAY_RD - 3]) begin
-                rd_output_addr_reg    <= {rd_mem_addresses[L2_DELAY_RD - 3], 2'b00};
-                rd_output_data_state  <= 1;
+                rd_output_addr_reg   <= {rd_mem_addresses[L2_DELAY_RD - 3], 2'b00};
+                rd_output_data_state <= 1;
             end else if (rd_output_data_state != 0) begin
-                rd_output_data_state  <= rd_output_data_state << 1;
+                rd_output_data_state <= rd_output_data_state << 1;
             end
             
             if (rd_output_data_state != 0) begin            
@@ -197,16 +223,14 @@ module Test_Data_Cache ();
             for (k = 0; k < L2_BURST; k = k + 1) begin
                 if (rd_output_data_state[k] == 1) begin
                     for (l = 0; l < (1 << W - 5); l = l + 1) begin
-                        DATA_FROM_L2[l * DATA_WIDTH         +:                    2] <= 2'b00;
-                        DATA_FROM_L2[l * DATA_WIDTH + 2     +:                W - 5] <= l;
-                        DATA_FROM_L2[l * DATA_WIDTH + W - 3 +:                B - W] <= {rd_output_addr_reg[2 + W + T - 5 +: B - W - T], {(B - W - T){1'b0}} }+ k;
-                        DATA_FROM_L2[l * DATA_WIDTH + B - 3 +: (ADDR_WIDTH + 3 - B)] <= rd_output_addr_reg[ADDR_WIDTH - 1 : B - 3];
-                        //{rd_output_addr_reg[2 + W - 5 +: B - W] + k;
+                        DATA_FROM_L2[l * DATA_WIDTH +: DATA_WIDTH] <= memory[{rd_output_addr_reg[MEMORY_ADDR_WIDTH - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}} + k * (1 << (W - 5))  + l];
                     end
                 end
             end
         end      
     end
+    
+    wire [31 : 0] temp = {rd_output_addr_reg[MEMORY_ADDR_WIDTH - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}};
     
     ////////////////////////////////////////////////////////////
     //              Write port of L2 cache                    // 
@@ -219,13 +243,22 @@ module Test_Data_Cache ();
     assign WR_TO_L2_READY = |(l2_wr_input_state[L2_BURST - 1 : 0]); 
     assign WR_COMPLETE    = l2_wr_input_state[L2_DELAY_WR + L2_BURST  - 1];
     
+    integer current_section = 0;
+    integer m;
+    
     always @(posedge CLK) begin
         if (WR_TO_L2_READY) begin
             if (WR_TO_L2_VALID) begin
                 l2_wr_input_state <= l2_wr_input_state << 1;
+                current_section   <= current_section + 1;  
+                
+                for (m = 0; m < (1 << W - 5); m = m + 1) begin
+                    memory[WR_ADDR_TO_L2[ADDR_WIDTH - 1 : 2] + current_section * (1 << (W - 5)) + m] <= DATA_TO_L2[m * DATA_WIDTH +: DATA_WIDTH];
+                end
+                
                 writeFile = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/Output.trac", "a");
                 $fwrite("%d \t %d \t%d \n", WR_ADDR_TO_L2, DATA_TO_L2, WR_CONTROL_TO_L2);  
-                $fclose(writeFile);      
+                $fclose(writeFile);     
             end    
         end else begin
             if (l2_wr_input_state[L2_DELAY_WR + L2_BURST  - 1]) begin
@@ -233,6 +266,8 @@ module Test_Data_Cache ();
             end else begin
                 l2_wr_input_state <= l2_wr_input_state << 1;
             end
+            
+            current_section   <= 0;
         end
     end
      
