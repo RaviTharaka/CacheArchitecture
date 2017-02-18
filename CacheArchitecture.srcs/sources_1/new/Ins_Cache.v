@@ -112,12 +112,16 @@ module Ins_Cache #(
     wire [DATA_WIDTH * ASSOCIATIVITY - 1 : 0] lin_mux_out_dearray;
     
     // Tag comparison values
-    reg [ASSOCIATIVITY  - 1 : 0] tag_match;                         // Tag matches in a one-hot encoding
-    wire [ASSOCIATIVITY  - 1 : 0] tag_valid_wire;                   // Whether the tag is valid for the given section of the cache block
-    reg [ASSOCIATIVITY  - 1 : 0] tag_valid;                         // Whether the tag is valid for the given section of the cache block
-    wire [a - 1 : 0] set_select;                                    // Tag matches in a binary encoding
-    wire cache_hit = |(tag_match & tag_valid);                      // Immediate cache hit identifier 
-    
+    reg  [ASSOCIATIVITY - 1 : 0] tag_match;                         // Tag matches in a one-hot encoding
+    wire [ASSOCIATIVITY - 1 : 0] tag_valid_wire;                    // Whether the tag is valid for the given section of the cache block
+    reg  [ASSOCIATIVITY - 1 : 0] tag_valid;                         // Whether the tag is valid for the given section of the cache block
+    wire [a             - 1 : 0] set_select;                        // Tag matches in a binary encoding
+    wire                         cache_hit;                         // Immediate cache hit identifier 
+    wire [ASSOCIATIVITY - 1 : 0] hit_set_wire;                      // Whether tag matches and is valid
+        
+    assign hit_set_wire  = (tag_valid & tag_match);
+    assign cache_hit = |hit_set_wire;    
+      
     // Set-multiplexer output values and final register stage
     wire [DATA_WIDTH - 1 : 0] data_to_proc;
     
@@ -145,7 +149,7 @@ module Ins_Cache #(
     wire [ADDR_WIDTH - 2             - 1 : 0] addr_to_L2;
     wire [TAG_WIDTH + TAG_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
     wire [STREAM_SEL_BITS            - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
-    reg [STREAM_SEL_BITS             - 1 : 0] addr_to_L2_src;
+    reg  [STREAM_SEL_BITS             - 1 : 0] addr_to_L2_src;
     wire [STREAM_SEL_BITS            - 1 : 0] data_from_L2_src;
     wire prefetch_queue_wr_enb, prefetch_queue_rd_enb, prefetch_queue_full, prefetch_queue_empty;
     wire ongoing_queue_wr_enb, ongoing_queue_rd_enb, ongoing_queue_full, ongoing_queue_empty;
@@ -261,7 +265,7 @@ module Ins_Cache #(
     OneHot_to_Bin #(
         .ORDER(a)
     ) set_decoder (
-        .ONE_HOT(tag_match),
+        .ONE_HOT(hit_set_wire),
         .DEFAULT(0),
         .BIN(set_select)
     );

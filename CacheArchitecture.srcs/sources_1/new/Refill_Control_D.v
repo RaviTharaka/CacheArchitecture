@@ -432,13 +432,14 @@ module Refill_Control_D #(
     // FSM for refill control                                                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
                 
-    localparam IDLE        = 1;
-    localparam TRANSITION  = 2;
-    localparam WRITING_VIC = 4;
-    localparam WRITING_L2  = 8;
-    localparam FLUSHING    = 16;
+    localparam IDLE         = 1;
+    localparam TRANSITION   = 2;
+    localparam WRITING_VIC  = 4;
+    localparam WRITING_L2   = 8;
+    localparam FLUSHING     = 16;
+    localparam WAITING_CRIT = 32;
     
-    reg [5              - 1 : 0] refill_state,      refill_state_wire;
+    reg [6              - 1 : 0] refill_state,      refill_state_wire;
     reg [T              - 1 : 0] no_completed,      no_completed_wire;
     reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     
@@ -500,22 +501,24 @@ module Refill_Control_D #(
                         end
                     end
                     {T{1'b1}} : begin
-                        if (critical_no == 0) begin
+                        if (critical_used == 0) begin
+                            refill_state_wire = WAITING_CRIT;
+                            no_completed_wire = 0;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                        end else begin
                             if (no_of_elements == 4'b0001 & !admit) begin
                                 refill_state_wire = IDLE;
-                                no_completed_wire = no_completed + 1;
+                                no_completed_wire = 0;
                                 for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
                                     commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                             end else begin
                                 refill_state_wire = TRANSITION;
-                                no_completed_wire = no_completed + 1;
+                                no_completed_wire = 0;
                                 for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
                                     commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                             end 
-                        end else begin
-                            refill_state_wire = refill_state;
-                            no_completed_wire = no_completed;
-                            commited_sections_wire = commited_sections;
+                            
                         end
                     end
                     1         : begin
@@ -554,17 +557,24 @@ module Refill_Control_D #(
                         end
                     end
                     {T{1'b1}} : begin
-                        if (crit_used & DATA_FROM_L2_BUFFER_VALID) begin
-                            if (no_of_elements == 4'b0001 & !admit) begin
-                                refill_state_wire = IDLE;
-                                no_completed_wire = no_completed + 1;
+                        if (DATA_FROM_L2_BUFFER_VALID) begin
+                            if (critical_used == 0) begin
+                                refill_state_wire = WAITING_CRIT;
+                                no_completed_wire = 0;
                                 for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
                                     commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                             end else begin
-                                refill_state_wire = TRANSITION;
-                                no_completed_wire = no_completed + 1;
-                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
-                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                                if (no_of_elements == 4'b0001 & !admit) begin
+                                    refill_state_wire = IDLE;
+                                    no_completed_wire = 0;
+                                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                        commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                                end else begin
+                                    refill_state_wire = TRANSITION;
+                                    no_completed_wire = 0;
+                                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                        commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                                end
                             end 
                         end else begin
                             refill_state_wire = refill_state;
@@ -599,6 +609,24 @@ module Refill_Control_D #(
                 endcase
             end 
             
+            WAITING_CRIT : begin
+                if (critical_used == 0) begin
+                    refill_state_wire = refill_state;
+                    no_completed_wire = no_completed;
+                    commited_sections_wire = commited_sections;
+                end else begin
+                    if (no_of_elements == 4'b0001 & !admit) begin
+                        refill_state_wire = IDLE;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
+                    end else begin
+                        refill_state_wire = TRANSITION;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
+                    end
+                end  
+            end
+                        
             TRANSITION : begin
                 // If current request is a flush command
                 if (cur_ctrl == 2'b11) begin
@@ -667,9 +695,10 @@ module Refill_Control_D #(
         commited_sections <= commited_sections_wire;
     end
 
-    assign remove = ((refill_state == WRITING_L2 ) & no_completed == {T{1'b1}} & crit_used & DATA_FROM_L2_BUFFER_VALID ) |
-                    ((refill_state == WRITING_VIC) & no_completed == {T{1'b1}} & crit_used) |
-                    ((refill_state == FLUSHING   ) & no_completed == {T{1'b1}});
+    assign remove = ((refill_state == WRITING_L2  ) & no_completed == {T{1'b1}} & critical_used & DATA_FROM_L2_BUFFER_VALID ) |
+                    ((refill_state == WRITING_VIC ) & no_completed == {T{1'b1}} & critical_used) |
+                    ((refill_state == WAITING_CRIT) &                             critical_used) |
+                    ((refill_state == FLUSHING    ) & no_completed == {T{1'b1}});
             
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -679,28 +708,29 @@ module Refill_Control_D #(
     // Port select
     always @(*) begin
         case (refill_state)
-            IDLE        : L1_WR_PORT_SELECT = (!CACHE_HIT & VICTIM_HIT & missable_request) ? 2'b10 : 2'b00;
-            TRANSITION  :  
+            IDLE         : L1_WR_PORT_SELECT = (!CACHE_HIT & VICTIM_HIT & missable_request) ? 2'b10 : 2'b00;
+            TRANSITION   :  
                 case ({cur_ctrl == 2'b11, cur_src == 0})
                     2'b01   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) ? 2'b11 : 2'b00; 
                     2'b00   : L1_WR_PORT_SELECT = (cur_evic == 0) ? 2'b10 : 2'b00; 
                     default : L1_WR_PORT_SELECT = 2'b00;
                 endcase
-            WRITING_L2  : 
+            WRITING_L2   : 
                 case (no_completed) 
-                    0         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic  == 0) ? 2'b11 : 2'b00;    
-                    {T{1'b1}} : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & crit_used == 0) ? 2'b11 : 2'b00;    
-                    1         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic  == 0) ? 2'b11 : 2'b00; 
+                    0         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic      == 0) ? 2'b11 : 2'b00;    
+                    {T{1'b1}} : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID                     ) ? 2'b11 : 2'b00;    
+                    1         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic      == 0) ? 2'b11 : 2'b00; 
                     default   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID) ? 2'b11 : 2'b00; 
                 endcase  
-            WRITING_VIC : 
+            WRITING_VIC  : 
                 case (no_completed) 
-                    0         : L1_WR_PORT_SELECT = (cur_evic  == 0) ? 2'b10 : 2'b00;    
-                    {T{1'b1}} : L1_WR_PORT_SELECT = (crit_used == 0) ? 2'b10 : 2'b00;    
-                    1         : L1_WR_PORT_SELECT = (cur_evic  == 0) ? 2'b10 : 2'b00; 
+                    0         : L1_WR_PORT_SELECT = (cur_evic      == 0) ? 2'b10 : 2'b00;    
+                    {T{1'b1}} : L1_WR_PORT_SELECT = 2'b10;    
+                    1         : L1_WR_PORT_SELECT = (cur_evic      == 0) ? 2'b10 : 2'b00; 
                     default   : L1_WR_PORT_SELECT = 2'b10; 
-                endcase                        
-            default     : L1_WR_PORT_SELECT = 2'b00;
+                endcase     
+            WAITING_CRIT : L1_WR_PORT_SELECT = 2'b00;
+            default      : L1_WR_PORT_SELECT = 2'b00;
         endcase
     end 
     
@@ -716,34 +746,35 @@ module Refill_Control_D #(
     reg write_test;
     always @(*) begin
         case (refill_state) 
-            IDLE        : write_test = (!CACHE_HIT & missable_request & VICTIM_HIT);
-            TRANSITION  :  
+            IDLE         : write_test = (!CACHE_HIT & missable_request & VICTIM_HIT);
+            TRANSITION   :  
                 case ({cur_ctrl == 2'b11, cur_src == 0})
                     2'b01   : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)); 
                     2'b00   : write_test = (cur_evic == 0); 
                     default : write_test = 0;
                 endcase
-            WRITING_L2  :
+            WRITING_L2   :
                 case (no_completed) 
-                    0         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic  == 0));   
-                    {T{1'b1}} : write_test = (DATA_FROM_L2_BUFFER_VALID & (crit_used == 0));
-                    1         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic  == 0));   
+                    0         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic      == 0));   
+                    {T{1'b1}} : write_test =  DATA_FROM_L2_BUFFER_VALID;
+                    1         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic      == 0));   
                     default   : write_test =  DATA_FROM_L2_BUFFER_VALID;  
                 endcase  
-            WRITING_VIC : 
+            WRITING_VIC  : 
                 case (no_completed) 
-                    0         : write_test = (cur_evic == 0);   
-                    {T{1'b1}} : write_test = (crit_used == 0);
-                    1         : write_test = (cur_evic == 0);   
+                    0         : write_test = (cur_evic      == 0);   
+                    {T{1'b1}} : write_test = 1;
+                    1         : write_test = (cur_evic      == 0);   
                     default   : write_test = 1;  
                 endcase               
-            default     : write_test = 0;
+            WAITING_CRIT : write_test = 0;
+            default      : write_test = 0;
         endcase
     end    
     
     genvar j;
     generate 
-        for (j = 0; j < ASSOCIATIVITY; j = j + 1) begin
+        for (j = 0; j < ASSOCIATIVITY; j = j + 1) begin : REFILL_DST_LOOP
             wire [a - 1 : 0] temp = ((no_of_elements == 0)? REFILL_REQ_DST_SET : cur_set);
             assign REFILL_DST[j] = (temp == j) & write_test;
         end
@@ -756,9 +787,9 @@ module Refill_Control_D #(
     always @(*) begin
         if (refill_state == WRITING_L2)
             case (no_completed)
-                0         : DATA_FROM_L2_BUFFER_READY = (cur_evic  == 0);   
-                {T{1'b1}} : DATA_FROM_L2_BUFFER_READY = (crit_used == 0);
-                1         : DATA_FROM_L2_BUFFER_READY = (cur_evic  == 0);   
+                0         : DATA_FROM_L2_BUFFER_READY = (cur_evic      == 0);   
+                {T{1'b1}} : DATA_FROM_L2_BUFFER_READY =  1;
+                1         : DATA_FROM_L2_BUFFER_READY = (cur_evic      == 0);   
                 default   : DATA_FROM_L2_BUFFER_READY =  1; 
             endcase
         else 
@@ -771,91 +802,112 @@ module Refill_Control_D #(
     
     localparam HITTING = 0;
     localparam WAIT = 1;
-    localparam PC0 = 2;
-    localparam PC1 = 3;
-    localparam PC2 = 4;
+    localparam SHIFT0 = 2;
+    localparam SHIFT1 = 3;
+    localparam SHIFT2 = 4;
     localparam TRANSIT = 5;
     
     reg [2 : 0] pc_state;
     
     always @(*) begin
+        // For critical ready
         case (refill_state) 
-            IDLE        : critical_ready = !CACHE_HIT & VICTIM_HIT & missable_request;
-            TRANSITION  : critical_ready = (cur_ctrl != 2'b11) & (((cur_src == 0) & (cur_evic == 0) & DATA_FROM_L2_BUFFER_VALID) | 
-                                                              ((cur_src != 0) & (cur_evic == 0)));
-            WRITING_L2  : critical_ready = (cur_evic == 0) & (no_completed == 0) & DATA_FROM_L2_BUFFER_VALID;
-            WRITING_VIC : critical_ready = (cur_evic == 0) & (no_completed == 0);
-            default     : critical_ready = 0;
+            IDLE         : critical_ready = !CACHE_HIT & VICTIM_HIT & missable_request;
+            TRANSITION   : critical_ready = (cur_ctrl != 2'b11) & (((cur_src == 0) & (cur_evic == 0) & DATA_FROM_L2_BUFFER_VALID) | 
+                                                                   ((cur_src != 0) & (cur_evic == 0)));
+            WRITING_L2   : critical_ready = (cur_evic == 0) & (no_completed == 0) & DATA_FROM_L2_BUFFER_VALID;
+            WRITING_VIC  : critical_ready = (cur_evic == 0) & (no_completed == 0);
+            WAITING_CRIT : critical_ready = 0;
+            default      : critical_ready = 0;
+        endcase
+        
+        // For critical use
+        case (pc_state)
+            SHIFT2      :
+                case (REFILL_REQ_CTRL)
+                    2'b00 : critical_use = 1;                       // This should never happen
+                    2'b10 : critical_use = CACHE_HIT & L1_WR_PORT_SELECT[1];
+                    2'b01 : critical_use = CACHE_HIT;
+                    2'b11 : critical_use = 1; 
+                endcase
+            default     : critical_use = 0;
         endcase
     end
     
     always @(posedge CLK) begin
-        if (critical_ready) begin
-            crit_used <= 0;
-        end else begin
-            
-        end
-    end
-    
-    always @(posedge CLK) begin
-        case ({critical_ready, critical_used}) 
-            2'b00 : critical_no <= critical_no;
-            2'b01 : critical_no <= critical_no - 1;
-            2'b10 : critical_no <= critical_no + 1;
-            2'b11 : critical_no <= critical_no;
+        case ({critical_ready, critical_use})
+            2'b00 : critical_used <= critical_used;
+            2'b10 : critical_used <= 1'b0; 
+            2'b01 : critical_used <= 1'b1; 
+            2'b11 : critical_used <= critical_used;            // Not supposed to occur ever 
         endcase
-    end 
-    
+    end
+        
     always @(posedge CLK) begin
         case (pc_state) 
-            HITTING : begin
+            HITTING : 
                 if (real_request)
                     case ({VICTIM_HIT, CACHE_HIT})
                         2'b00 : pc_state <= WAIT;
                         2'b01 : pc_state <= HITTING;
-                        2'b10 : pc_state <= PC0;
+                        2'b10 : pc_state <= SHIFT0;
                         2'b11 : pc_state <= HITTING;
                     endcase
-            end
             
-            WAIT : begin
-                if (critical_ready)                                        //Maybe | (CACHE_HIT & pc_state_del_2 == WAIT) is also needed here
-                    pc_state <= PC0;
-            end
+            WAIT    :
+                if (critical_used == 0 | critical_ready)  //Maybe | (CACHE_HIT & pc_state_del_2 == WAIT) is also needed here
+                    pc_state <= SHIFT0;
             
-            PC0 : pc_state <= PC1;
-            PC1 : pc_state <= PC2;
+            SHIFT0  : 
+                if (L1_RD_PORT_SELECT == 0)
+                    pc_state <= SHIFT1;
+                    
+            SHIFT1  : pc_state <= SHIFT2;
             
-            PC2 : begin
-                if (no_of_elements == 0) 
-                    pc_state <= HITTING;
-                else 
-                    pc_state <= TRANSIT;    
-            end
-                      
-            TRANSIT : begin
+            SHIFT2  : 
+                case (REFILL_REQ_CTRL)
+                    2'b00 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT);                       // This should never happen
+                    2'b10 : pc_state <= (CACHE_HIT & L1_WR_PORT_SELECT[1])?
+                                                 ((no_of_elements == 1)? HITTING : TRANSIT) : 
+                                                 SHIFT0;
+                    2'b01 : pc_state <= (CACHE_HIT)?
+                                                 ((no_of_elements == 1)? HITTING : TRANSIT) : 
+                                                 SHIFT0;
+                    2'b11 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT); 
+                endcase                
+            TRANSIT :
                 if (no_of_elements == 0) begin
-                    case ({STREAM_HIT, CACHE_HIT})
+                    case ({VICTIM_HIT, CACHE_HIT})
                         2'b00 : pc_state <= WAIT;
                         2'b01 : pc_state <= HITTING;
-                        2'b10 : pc_state <= PC0;
+                        2'b10 : pc_state <= SHIFT0;
                         2'b11 : pc_state <= HITTING;
                     endcase
                 end else begin 
-                    case ({STREAM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
+                    case ({VICTIM_HIT, CACHE_HIT})
+                        2'b00 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
                         2'b01 : pc_state <= TRANSIT;
-                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
+                        2'b10 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
                         2'b11 : pc_state <= TRANSIT;
                     endcase
                 end
-            end          
         endcase
     end 
     
-    assign MAIN_PIPE_ENB  = 1;
-    assign ADDR_FROM_PROC_SEL = 1;
-    assign CACHE_READY = (pc_state == HITTING | pc_state == TRANSIT | pc_state == PC2) & CACHE_HIT;
+    assign MAIN_PIPE_ENB      = (pc_state != WAIT);
+    assign ADDR_FROM_PROC_SEL = !(pc_state == SHIFT0 | pc_state == SHIFT1 | (pc_state == HITTING & !CACHE_HIT & real_request) 
+                                 | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT));
+    assign CACHE_READY        = (pc_state == HITTING | pc_state == TRANSIT | pc_state == SHIFT2) & temp;
+    
+    reg temp;
+    
+    always @(*) 
+        case (REFILL_REQ_CTRL)
+            2'b00 : temp = 1;
+            2'b10 : temp = CACHE_HIT & !L1_WR_PORT_SELECT[1];
+            2'b01 : temp = CACHE_HIT;
+            2'b11 : temp = 1;
+        endcase
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial values                                                                               //
@@ -878,7 +930,7 @@ module Refill_Control_D #(
         thr_evic = 0;
         
         refill_state = 1;   
-               
+        pc_state = HITTING;      
     end
          
     // Temporary stuff

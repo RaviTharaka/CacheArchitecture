@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="183997335fs"></ZoomEndTime>
-      <Cursor1Time time="118973000fs"></Cursor1Time>
+      <ZoomStartTime time="69480000fs"></ZoomStartTime>
+      <ZoomEndTime time="336080001fs"></ZoomEndTime>
+      <Cursor1Time time="113480000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="12" />
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
@@ -70,14 +70,10 @@
          <obj_property name="label">DATA_TO_PROC</obj_property>
       </wvobject>
    </wvobject>
-   <wvobject fp_name="group25" type="group">
-      <obj_property name="label">Cache Pipeline</obj_property>
+   <wvobject fp_name="group27" type="group">
+      <obj_property name="label">Main Pipeline</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/Test_Data_Cache/uut/cache_pipe_enb" type="logic">
-         <obj_property name="ElementShortName">cache_pipe_enb</obj_property>
-         <obj_property name="ObjectShortName">cache_pipe_enb</obj_property>
-      </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc" type="array">
          <obj_property name="ElementShortName">addr_from_proc[31:0]</obj_property>
          <obj_property name="ObjectShortName">addr_from_proc[31:0]</obj_property>
@@ -90,11 +86,30 @@
          <obj_property name="ElementShortName">addr_from_proc_del_2[31:0]</obj_property>
          <obj_property name="ObjectShortName">addr_from_proc_del_2[31:0]</obj_property>
       </wvobject>
+      <wvobject fp_name="group214" type="group">
+         <obj_property name="label">Control</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
+            <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_1" type="array">
+            <obj_property name="ElementShortName">control_from_proc_del_1[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_from_proc_del_1[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_2" type="array">
+            <obj_property name="ElementShortName">control_from_proc_del_2[1:0]</obj_property>
+            <obj_property name="ObjectShortName">control_from_proc_del_2[1:0]</obj_property>
+         </wvobject>
+      </wvobject>
    </wvobject>
-   <wvobject fp_name="group27" type="group">
-      <obj_property name="label">Main Pipeline</obj_property>
+   <wvobject fp_name="group25" type="group">
+      <obj_property name="label">Cache Pipeline</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/cache_pipe_enb" type="logic">
+         <obj_property name="ElementShortName">cache_pipe_enb</obj_property>
+         <obj_property name="ObjectShortName">cache_pipe_enb</obj_property>
+      </wvobject>
       <wvobject fp_name="vbus34" type="vbus">
          <obj_property name="label">Addr_DM1</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -173,22 +188,6 @@
          <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
             <obj_property name="ElementShortName">FALSE</obj_property>
             <obj_property name="ObjectShortName">FALSE</obj_property>
-         </wvobject>
-      </wvobject>
-      <wvobject fp_name="group214" type="group">
-         <obj_property name="label">Control</obj_property>
-         <obj_property name="DisplayName">label</obj_property>
-         <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
-            <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
-            <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/control_del_1" type="array">
-            <obj_property name="ElementShortName">control_del_1[1:0]</obj_property>
-            <obj_property name="ObjectShortName">control_del_1[1:0]</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/control_del_2" type="array">
-            <obj_property name="ElementShortName">control_del_2[1:0]</obj_property>
-            <obj_property name="ObjectShortName">control_del_2[1:0]</obj_property>
          </wvobject>
       </wvobject>
    </wvobject>
@@ -763,6 +762,7 @@
    <wvobject fp_name="group1248" type="group">
       <obj_property name="label">L1 write ports</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_sel" type="array">
          <obj_property name="ElementShortName">refill_sel[1:0]</obj_property>
          <obj_property name="ObjectShortName">refill_sel[1:0]</obj_property>
@@ -775,17 +775,27 @@
          <obj_property name="ElementShortName">lin_mem_wr_enb[1:0]</obj_property>
          <obj_property name="ObjectShortName">lin_mem_wr_enb[1:0]</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FFD700</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_wr_addr" type="array">
          <obj_property name="ElementShortName">lin_mem_wr_addr[7:0]</obj_property>
          <obj_property name="ObjectShortName">lin_mem_wr_addr[7:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FF0080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="vbus1807" type="vbus">
          <obj_property name="label">Line Mem Data In</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus1770" type="vbus">
             <obj_property name="label">7</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[255]" type="logic">
                <obj_property name="ElementShortName">[255]</obj_property>
                <obj_property name="ObjectShortName">[255]</obj_property>
@@ -918,6 +928,8 @@
          <wvobject fp_name="vbus1737" type="vbus">
             <obj_property name="label">6</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[223]" type="logic">
                <obj_property name="ElementShortName">[223]</obj_property>
                <obj_property name="ObjectShortName">[223]</obj_property>
@@ -1050,6 +1062,8 @@
          <wvobject fp_name="vbus1704" type="vbus">
             <obj_property name="label">5</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[191]" type="logic">
                <obj_property name="ElementShortName">[191]</obj_property>
                <obj_property name="ObjectShortName">[191]</obj_property>
@@ -1182,6 +1196,8 @@
          <wvobject fp_name="vbus1671" type="vbus">
             <obj_property name="label">4</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[159]" type="logic">
                <obj_property name="ElementShortName">[159]</obj_property>
                <obj_property name="ObjectShortName">[159]</obj_property>
@@ -1314,6 +1330,8 @@
          <wvobject fp_name="vbus1638" type="vbus">
             <obj_property name="label">3</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[127]" type="logic">
                <obj_property name="ElementShortName">[127]</obj_property>
                <obj_property name="ObjectShortName">[127]</obj_property>
@@ -1446,6 +1464,8 @@
          <wvobject fp_name="vbus1605" type="vbus">
             <obj_property name="label">2</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[95]" type="logic">
                <obj_property name="ElementShortName">[95]</obj_property>
                <obj_property name="ObjectShortName">[95]</obj_property>
@@ -1578,6 +1598,8 @@
          <wvobject fp_name="vbus1572" type="vbus">
             <obj_property name="label">1</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[63]" type="logic">
                <obj_property name="ElementShortName">[63]</obj_property>
                <obj_property name="ObjectShortName">[63]</obj_property>
@@ -1710,6 +1732,8 @@
          <wvobject fp_name="vbus1539" type="vbus">
             <obj_property name="label">0</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
             <wvobject fp_name="/Test_Data_Cache/uut/lin_mem_data_in[31]" type="logic">
                <obj_property name="ElementShortName">[31]</obj_property>
                <obj_property name="ObjectShortName">[31]</obj_property>
@@ -1848,14 +1872,21 @@
          <obj_property name="ElementShortName">tag_mem_wr_enb[1:0]</obj_property>
          <obj_property name="ObjectShortName">tag_mem_wr_enb[1:0]</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FFD700</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/dirty_mem_wr_enb" type="array">
          <obj_property name="ElementShortName">dirty_mem_wr_enb[1:0]</obj_property>
          <obj_property name="ObjectShortName">dirty_mem_wr_enb[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#FFD700</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/tag_mem_wr_addr" type="array">
          <obj_property name="ElementShortName">tag_mem_wr_addr[6:0]</obj_property>
          <obj_property name="ObjectShortName">tag_mem_wr_addr[6:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#FF0080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="group1875" type="group">
          <obj_property name="label">Tag Mem Data In</obj_property>
@@ -1864,14 +1895,21 @@
          <wvobject fp_name="/Test_Data_Cache/uut/tag_to_ram" type="array">
             <obj_property name="ElementShortName">tag_to_ram[18:0]</obj_property>
             <obj_property name="ObjectShortName">tag_to_ram[18:0]</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/tag_valid_to_ram" type="array">
             <obj_property name="ElementShortName">tag_valid_to_ram[1:0]</obj_property>
             <obj_property name="ObjectShortName">tag_valid_to_ram[1:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/dirty_to_ram" type="logic">
             <obj_property name="ElementShortName">dirty_to_ram</obj_property>
             <obj_property name="ObjectShortName">dirty_to_ram</obj_property>
+            <obj_property name="CustomSignalColor">#008080</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
       </wvobject>
    </wvobject>
@@ -1914,6 +1952,28 @@
       <wvobject fp_name="/Test_Data_Cache/uut/victim_hit" type="logic">
          <obj_property name="ElementShortName">victim_hit</obj_property>
          <obj_property name="ObjectShortName">victim_hit</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/pc_state" type="array">
+         <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
+         <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
+         <obj_property name="ElementShortName">refill_state[5:0]</obj_property>
+         <obj_property name="ObjectShortName">refill_state[5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/commited_sections" type="array">
+         <obj_property name="ElementShortName">commited_sections[1:0]</obj_property>
+         <obj_property name="ObjectShortName">commited_sections[1:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_ready" type="logic">
+         <obj_property name="ElementShortName">critical_ready</obj_property>
+         <obj_property name="ObjectShortName">critical_ready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_use" type="logic">
+         <obj_property name="ElementShortName">critical_use</obj_property>
+         <obj_property name="ObjectShortName">critical_use</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group171" type="group">
@@ -1969,28 +2029,10 @@
          <obj_property name="ElementShortName">evict</obj_property>
          <obj_property name="ObjectShortName">evict</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
-         <obj_property name="ElementShortName">refill_state[4:0]</obj_property>
-         <obj_property name="ObjectShortName">refill_state[4:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/commited_sections" type="array">
-         <obj_property name="ElementShortName">commited_sections[1:0]</obj_property>
-         <obj_property name="ObjectShortName">commited_sections[1:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/crit_ready" type="logic">
-         <obj_property name="ElementShortName">crit_ready</obj_property>
-         <obj_property name="ObjectShortName">crit_ready</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/crit_used" type="logic">
-         <obj_property name="ElementShortName">crit_used</obj_property>
-         <obj_property name="ObjectShortName">crit_used</obj_property>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="group172" type="group">
       <obj_property name="label">Victim Cache</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/evic_empty_wire" type="logic">
          <obj_property name="ElementShortName">evic_empty_wire</obj_property>
          <obj_property name="ObjectShortName">evic_empty_wire</obj_property>

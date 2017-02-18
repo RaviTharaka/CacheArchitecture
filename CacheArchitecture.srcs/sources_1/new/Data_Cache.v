@@ -342,7 +342,7 @@ module Data_Cache #(
     OneHot_to_Bin #(
         .ORDER(a)
     ) set_decoder (
-        .ONE_HOT(tag_match),
+        .ONE_HOT(hit_set_wire),
         .DEFAULT(replace),
         .BIN(set_select)
     );
