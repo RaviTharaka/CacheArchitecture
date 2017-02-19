@@ -526,6 +526,13 @@ module Refill_Control_I #(
     // FSM for refill control                                                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
     
+    localparam IDLE         = 1;
+    localparam TRANSITION   = 2;
+    localparam WRITING_VIC  = 4;
+    localparam WRITING_L2   = 8;
+    localparam FLUSHING     = 16;
+    localparam WAITING_CRIT = 32;
+    
     localparam IDLE       = 0;
     localparam TRANSITION = 1;
     localparam WRITING_SB = 2;

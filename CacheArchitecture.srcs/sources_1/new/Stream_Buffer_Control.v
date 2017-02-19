@@ -22,48 +22,49 @@
 
 module Stream_Buffer_Control #(
         // Primary parameters
-        parameter N = 3,                                            // Number of stream buffers
-        parameter ADDR_WIDTH = 26,                                  // Width needed to address a cache line
-        parameter p = 4,                                            // Prefetch queue's depth is 2^p
-        parameter T = 1,                                            // Width to depth translation amount for the Line Memory
+        parameter N          = 3,                                            // Number of stream buffers
+        parameter n          = 1,                                            // Depth of stream buffers would be 2^n 
+        parameter ADDR_WIDTH = 26,                                           // Width needed to address a cache line
+        parameter p          = 2,                                            // Prefetch queue's depth is 2^p
+        parameter T          = 1,                                            // Width to depth translation amount for the Line Memory
         
         // Calculated parameters
         localparam STREAM_SEL_BITS  = logb2(N + 1)
                 
     ) (
-        input CLK,
+        input                                 CLK,
         
         // Data in for the stream buffers
-        input [STREAM_SEL_BITS - 1 : 0] DATA_FROM_L2_SRC,           // From which source the current L2 data comes 
-        output DATA_FROM_L2_BUFFER_READY,                           // Infroms L2 data buffer that stream buffers are ready to sample the data
-        input DATA_FROM_L2_BUFFER_VALID,                            // L2 data buffer informs that the data is ready for sampling
+        input      [STREAM_SEL_BITS  - 1 : 0] DATA_FROM_L2_SRC,           // From which source the current L2 data comes 
+        output                                DATA_FROM_L2_BUFFER_READY,  // Infroms L2 data buffer that stream buffers are ready to sample the data
+        input                                 DATA_FROM_L2_BUFFER_VALID,  // L2 data buffer informs that the data is ready for sampling
                     
         // Status and control of the stream buffers            
-        output [T - 1 : 0] STREAM_BUF_SECTION_SEL,                  // Which section in the stream buffer to read (common to all buffers)
-        output [N - 1 : 0] STREAM_BUF_RESET,                        // Resets each stream buffer (one per each buffer)
-        output [N - 1 : 0] STREAM_BUF_WR_ENB,                       // Write enable for the stream buffer (one per each buffer)
-        output [N - 1 : 0] STREAM_BUF_RD_ENB,                       // Read enable for the stream buffer (one per each buffer)
-        input [N - 1 : 0] STREAM_BUF_EMPTY,                         // Empty signal from the stream buffer (one per each buffer)
-        input [N - 1 : 0] STREAM_BUF_FULL,                          // Full signal from the stream buffer (one per each buffer)
+        output     [T                - 1 : 0] STREAM_BUF_SECTION_SEL,     // Which section in the stream buffer to read (common to all buffers)
+        output     [N                - 1 : 0] STREAM_BUF_RESET,           // Resets each stream buffer (one per each buffer)
+        output     [N                - 1 : 0] STREAM_BUF_WR_ENB,          // Write enable for the stream buffer (one per each buffer)
+        output     [N                - 1 : 0] STREAM_BUF_RD_ENB,          // Read enable for the stream buffer (one per each buffer)
+        input      [N                - 1 : 0] STREAM_BUF_EMPTY,           // Empty signal from the stream buffer (one per each buffer)
+        input      [N                - 1 : 0] STREAM_BUF_FULL,            // Full signal from the stream buffer (one per each buffer)
         
         // Ongoing queue management
-        output ONGOING_QUEUE_RD_ENB,                                // Tells the ongoing queue that current data transfer was completed                        
+        output                                ONGOING_QUEUE_RD_ENB,       // Tells the ongoing queue that current data transfer was completed                        
                                    
         // Request queue management                           
-        input PREFETCH_QUEUE_FULL,                                  // Full signal from the prefetch queue
-        output PREFETCH_QUEUE_WR_ENB,                               // Write enable for the prefetch queue
-        output [ADDR_WIDTH - 1 : 0] PREFETCH_QUEUE_ADDR,            // Request to be sent to L2
-        output [STREAM_SEL_BITS - 1 : 0] PREFETCH_QUEUE_SRC,        // Which buffer is requesting (1,2,3,....N)
+        input                                 PREFETCH_QUEUE_FULL,        // Full signal from the prefetch queue
+        output                                PREFETCH_QUEUE_WR_ENB,      // Write enable for the prefetch queue
+        output     [ADDR_WIDTH       - 1 : 0] PREFETCH_QUEUE_ADDR,        // Request to be sent to L2
+        output     [STREAM_SEL_BITS  - 1 : 0] PREFETCH_QUEUE_SRC,         // Which buffer is requesting (1,2,3,....N)
         
         // Main pipeline                     
-        input [ADDR_WIDTH + T - 1 : 0] PC_IN,                       // PC to check whether it hits
-        output reg HIT,                                             // One of the stream buffers has hit
-        output reg [STREAM_SEL_BITS - 1 : 0] HIT_BUF_NO,            // Which buffer has hit
-        input SECTION_COMMIT,                                       // For the current hit, a section was committed to LineRAM
+        input      [ADDR_WIDTH + T   - 1 : 0] PC_IN,                      // PC to check whether it hits
+        output reg                            HIT,                        // One of the stream buffers has hit
+        output reg [STREAM_SEL_BITS  - 1 : 0] HIT_BUF_NO,                 // Which buffer has hit
+        input                                 SECTION_COMMIT,             // For the current hit, a section was committed to LineRAM
         
         // Stream buffer allocation commands
-        input ALLOCATE,                                             // Commands the stream buffers to allocate a new stream
-        input [ADDR_WIDTH - 1 : 0] ALLOCATE_ADDR                    // The address for the new allocation
+        input                                 ALLOCATE,                   // Commands the stream buffers to allocate a new stream
+        input      [ADDR_WIDTH       - 1 : 0] ALLOCATE_ADDR               // The address for the new allocation
     );
     
     //////////////////////////////////////////////////////////////////////////////
@@ -157,24 +158,23 @@ module Stream_Buffer_Control #(
     // Sending requests to prefetch queue                                       //
     //////////////////////////////////////////////////////////////////////////////
     
-    wire [ADDR_WIDTH - 1 : 0] next_request [0 : N - 1];
-    wire [N - 1 : 0] prefetch_requested;
-    
+    wire [ADDR_WIDTH     - 1 : 0] next_request [0 : N - 1];
+    wire [N              - 1 : 0] prefetch_requested;
+    wire [N              - 1 : 0] prefetch_valid;
+        
     reg [STREAM_SEL_BITS - 1 : 0] prefetch_state;
     
     always @(posedge CLK) begin
-        if (PREFETCH_QUEUE_WR_ENB) begin
-            if (prefetch_state == {STREAM_SEL_BITS{1'b1}}) begin
-                prefetch_state <= 1;
-            end else begin
-                prefetch_state <= prefetch_state + 1;
-            end
+        if (prefetch_state == {STREAM_SEL_BITS{1'b1}}) begin
+            prefetch_state <= 1;
+        end else begin
+            prefetch_state <= prefetch_state + 1;
         end
     end
     
-    assign PREFETCH_QUEUE_WR_ENB = !PREFETCH_QUEUE_FULL;
-    assign PREFETCH_QUEUE_SRC = prefetch_state;
-    assign PREFETCH_QUEUE_ADDR = next_request[prefetch_state - 1];
+    assign PREFETCH_QUEUE_WR_ENB = !PREFETCH_QUEUE_FULL & prefetch_valid[prefetch_state - 1];
+    assign PREFETCH_QUEUE_SRC    = prefetch_state;
+    assign PREFETCH_QUEUE_ADDR   = next_request[prefetch_state - 1];
     
     //////////////////////////////////////////////////////////////////////////////
     // Allocating a stream buffer to new stream                                 //
@@ -184,6 +184,8 @@ module Stream_Buffer_Control #(
     wire [N - 1 : 0] buffer_reset;
     wire [N - 1 : 0] lru;   
     wire [N - 1 : 0] used = hit_commit | buffer_reset;
+    
+    assign STREAM_BUF_RESET = buffer_reset;
        
     LRU #(
         .N(N)
@@ -196,13 +198,14 @@ module Stream_Buffer_Control #(
     genvar i;
     generate  
         for (i = 0; i < N; i = i + 1) begin : BUF_LOOP
-            assign hit_commit[i] = SECTION_COMMIT & output_state == N & output_buffer[i];
-            assign buffer_reset[i] = ALLOCATE & lru[i];
+            assign hit_commit[i]         = SECTION_COMMIT & output_state == N & output_buffer[i];
+            assign buffer_reset[i]       = ALLOCATE & lru[i];
             assign prefetch_requested[i] = PREFETCH_QUEUE_WR_ENB & (i + 1 == prefetch_state);
             
             Stream_Buffer_Single_Control #(
                 .ADDR_WIDTH(ADDR_WIDTH),
-                .p(p)    
+                .p(p),
+                .n(n)   
             ) stream_buffer_single_control (
                 .CLK(CLK),
                 .BUFFER_RESET(buffer_reset[i]),
@@ -210,6 +213,7 @@ module Stream_Buffer_Control #(
                 .ADDR_IN(PC_IN[ADDR_WIDTH + T - 1 : T]),
                 .STREAM_BUFFER_HIT(stream_buf_hit[i]),
                 .HIT_COMMIT(hit_commit[i]),
+                .PREFETCH_VALID(prefetch_valid[i]),
                 .PREFETCH_REQUESTED(prefetch_requested[i]),
                 .PREFETCH_COMMITED(refill_state == {T{1'b1}} & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_BUFFER_VALID & (i + 1 == DATA_FROM_L2_SRC)),
                 .REFILL_ENB(refill_enb[i]),

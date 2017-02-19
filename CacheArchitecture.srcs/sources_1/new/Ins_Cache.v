@@ -22,143 +22,107 @@
 
 module Ins_Cache #(
         // Fixed parameters
-        localparam ADDR_WIDTH       = 32,
-        localparam DATA_WIDTH       = 32,
+        localparam ADDR_WIDTH           = 32,
+        localparam DATA_WIDTH           = 32,
            
         // Primary parameters
-        parameter S                 = 17,                    // Size of the cache will be 2^S bits
-        parameter B                 = 9,                     // Size of a block will be 2^B bits
-        parameter a                 = 1,                     // Associativity of the cache would be 2^a
-        parameter T                 = 1,                     // Width to depth translation amount
-        parameter W                 = 7,                     // Width of the L2-L1 bus would be 2^W
-        parameter L2_DELAY          = 7,                     // Delay of the second level of cache
-        parameter N                 = 3,                     // Number of stream buffers
-        parameter n                 = 3,                     // Depth of stream buffers would be 2^n
-        parameter p                 = 4,                     // Prefetch queue's depth is 2^p
+        parameter S                     = 17,                    // Size of the cache will be 2^S bits
+        parameter B                     = 9,                     // Size of a block will be 2^B bits
+        parameter a                     = 1,                     // Associativity of the cache would be 2^a
+        parameter T                     = 1,                     // Width to depth translation amount
+        parameter W                     = 7,                     // Width of the L2-L1 bus would be 2^W
+        parameter L2_DELAY              = 7,                     // Delay of the second level of cache
+        parameter N                     = 3,                     // Number of stream buffers
+        parameter n                     = 1,                     // Depth of stream buffers would be 2^n
+        parameter p                     = 2,                     // Prefetch queue's depth is 2^p
         
         // Calculated parameters
-        localparam BYTES_PER_WORD   = logb2(DATA_WIDTH/8),
+        localparam BYTES_PER_WORD       = logb2(DATA_WIDTH/8),
         
-        localparam CACHE_SIZE       = 1 << S,
-        localparam BLOCK_SIZE       = 1 << B,
-        localparam ASSOCIATIVITY    = 1 << a,
+        localparam CACHE_SIZE           = 1 << S,
+        localparam BLOCK_SIZE           = 1 << B,
+        localparam ASSOCIATIVITY        = 1 << a,
         
-        localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
-        localparam LINE_ADDR_WIDTH  = S - a - B + T,
-        localparam TAG_ADDR_WIDTH   = S - a - B,
+        localparam TAG_WIDTH            = ADDR_WIDTH + 3 + a - S,
+        localparam LINE_ADDR_WIDTH      = S - a - B + T,
+        localparam TAG_ADDR_WIDTH       = S - a - B,
         
-        localparam L2_BUS_WIDTH     = 1 << W,
-        localparam BLOCK_SECTIONS   = 1 << T,
+        localparam L2_BUS_WIDTH         = 1 << W,
+        localparam BLOCK_SECTIONS       = 1 << T,
         
-        localparam SET_SIZE         = CACHE_SIZE / ASSOCIATIVITY,
-        localparam LINE_RAM_WIDTH   = 1 << (B - T),
-        localparam LINE_RAM_DEPTH   = 1 << LINE_ADDR_WIDTH,
-        localparam TAG_RAM_WIDTH    = TAG_WIDTH + BLOCK_SECTIONS,
-        localparam TAG_RAM_DEPTH    = 1 << TAG_ADDR_WIDTH,
+        localparam SET_SIZE             = CACHE_SIZE / ASSOCIATIVITY,
+        localparam LINE_RAM_WIDTH       = 1 << (B - T),
+        localparam LINE_RAM_DEPTH       = 1 << LINE_ADDR_WIDTH,
+        localparam TAG_RAM_WIDTH        = TAG_WIDTH + BLOCK_SECTIONS,
+        localparam TAG_RAM_DEPTH        = 1 << TAG_ADDR_WIDTH,
         
         localparam PREFETCH_QUEUE_DEPTH = 1 << p,
-        localparam STREAM_BUF_DEPTH = 1 << n,
-        localparam STREAM_SEL_BITS  = logb2(N + 1),
+        localparam STREAM_BUF_DEPTH     = 1 << n,
+        localparam STREAM_SEL_BITS      = logb2(N + 1),
         
-        localparam L2_BURST = 1 << (B - W)
+        localparam L2_BURST             = 1 << (B - W)
     ) (
         // Standard inputs
-        input CLK,
-        input RSTN,
-        
-        // Input address bus from the processor
-        input BRANCH,
-        input [ADDR_WIDTH - 1 : 0]  BRANCH_ADDR_IN,
+        input                               CLK,
+        input                               RSTN,
         
         // Status signals between processor and cache
-        input PROC_READY,
-        output CACHE_READY,
+        input                               PROC_READY,
+        output                              CACHE_READY,
+                
+        // Input address bus from the processor
+        input                               BRANCH,
+        input      [ADDR_WIDTH     - 1 : 0] BRANCH_ADDR_IN,
                 
         // Output data bus to the processor
-        output reg [DATA_WIDTH - 1 : 0] DATA_TO_PROC,
+        output reg [DATA_WIDTH     - 1 : 0] DATA_TO_PROC,
         
         // Input data bus from L2 cache        
-        input DATA_FROM_L2_VALID,
-        output DATA_FROM_L2_READY,
-        input [L2_BUS_WIDTH - 1 : 0] DATA_FROM_L2,
+        input                               DATA_FROM_L2_VALID,
+        output                              DATA_FROM_L2_READY,
+        input      [L2_BUS_WIDTH   - 1 : 0] DATA_FROM_L2,
         
         // Output address bus to L2 cache
-        input ADDR_TO_L2_READY,
-        output ADDR_TO_L2_VALID,      
+        input                               ADDR_TO_L2_READY,
+        output                              ADDR_TO_L2_VALID,      
         output reg [ADDR_WIDTH - 2 - 1 : 0] ADDR_TO_L2
           
     );
-        
-    // Tag memory wires
-    wire [ASSOCIATIVITY - 1 : 0] tag_mem_wr_enb;
-    wire [TAG_WIDTH - 1 : 0] tag_from_ram [0 : ASSOCIATIVITY - 1];
-    wire [BLOCK_SECTIONS - 1 : 0] tag_valid_from_ram [0 : ASSOCIATIVITY - 1];
     
-    wire tag_mem_rd_enb;
-    wire [TAG_ADDR_WIDTH - 1 : 0] tag_mem_wr_addr;   
-    wire [TAG_WIDTH - 1 : 0] tag_to_ram;
-    wire [BLOCK_SECTIONS - 1 : 0] tag_valid_to_ram;
-      
-    // Line memory wires
-    wire [ASSOCIATIVITY - 1 : 0] lin_mem_wr_enb;
-    wire [LINE_RAM_WIDTH - 1 : 0] lin_data_out  [0 : ASSOCIATIVITY - 1];
+    //////////////////////////////////////////////////////////////////////////////
+    // Globally important wires and signals                                     //
+    //////////////////////////////////////////////////////////////////////////////
     
-    wire lin_mem_rd_enb;
-    wire [LINE_ADDR_WIDTH - 1 : 0] lin_mem_wr_addr;   
-    wire [LINE_RAM_WIDTH - 1 : 0] lin_mem_data_in; 
-    
-    // Cache line multiplexer wires
-    wire [DATA_WIDTH     - 1 : 0] lin_mux_out   [0 : ASSOCIATIVITY - 1];
-    wire [DATA_WIDTH * ASSOCIATIVITY - 1 : 0] lin_mux_out_dearray;
-    
-    // Tag comparison values
-    reg  [ASSOCIATIVITY - 1 : 0] tag_match;                         // Tag matches in a one-hot encoding
-    wire [ASSOCIATIVITY - 1 : 0] tag_valid_wire;                    // Whether the tag is valid for the given section of the cache block
-    reg  [ASSOCIATIVITY - 1 : 0] tag_valid;                         // Whether the tag is valid for the given section of the cache block
-    wire [a             - 1 : 0] set_select;                        // Tag matches in a binary encoding
-    wire                         cache_hit;                         // Immediate cache hit identifier 
-    wire [ASSOCIATIVITY - 1 : 0] hit_set_wire;                      // Whether tag matches and is valid
-        
-    assign hit_set_wire  = (tag_valid & tag_match);
-    assign cache_hit = |hit_set_wire;    
-      
-    // Set-multiplexer output values and final register stage
-    wire [DATA_WIDTH - 1 : 0] data_to_proc;
+    wire                      cache_hit;                         // Immediate cache hit identifier 
+    wire                      cache_pipe_enb;                    // Enable the cache pipeline
+    wire                      pc_pipe_enb;                       // Enable the PC pipeline
+    wire                      send_addr_to_L2;                   // Send address at DM3 to L2                                                 
+                   
+    wire [DATA_WIDTH - 1 : 0] data_to_proc;                      // Read result to processor
+             
+         
+    //////////////////////////////////////////////////////////////////////////////
+    // Cache data path - Decoding the read/write address                        //
+    //////////////////////////////////////////////////////////////////////////////
+     
+    // PC register and its delays
+    wire [2               - 1 : 0] pc_sel;                                            // pc_sel = {0(PC + 4), 1 (Branch path), 2or3 (Delayed PC)}
+    reg  [ADDR_WIDTH      - 1 : 0] pc, pc_del_1, pc_del_2;
+           
+    // Sections of address bus
+    wire [BYTES_PER_WORD  - 1 : 0] byte_address    = pc[0                             +: BYTES_PER_WORD   ];
+    wire [B - T - 5       - 1 : 0] word_address    = pc[BYTES_PER_WORD                +: (B - T - 5)      ];
+    wire [LINE_ADDR_WIDTH - 1 : 0] line_address    = pc[(BYTES_PER_WORD + B - T - 5)  +: (S - a - B + T)  ];
+    wire [TAG_ADDR_WIDTH  - 1 : 0] tag_address     = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+    wire [TAG_WIDTH       - 1 : 0] tag             = pc[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+    wire [T               - 1 : 0] section_address = pc[(BYTES_PER_WORD + B - T - 5)  +: T                ];
     
     // Cache pipeline registers and their control signals
-    wire cache_pipe_enb;
-    reg [TAG_WIDTH       - 1 : 0] tag_del_1, tag_del_2;
-    reg [TAG_ADDR_WIDTH  - 1 : 0] tag_address_del_1, tag_address_del_2;
+    reg [TAG_WIDTH       - 1 : 0] tag_del_1,             tag_del_2;
+    reg [TAG_ADDR_WIDTH  - 1 : 0] tag_address_del_1,     tag_address_del_2;
     reg [T               - 1 : 0] section_address_del_1, section_address_del_2;
-    reg [B - T - 5       - 1 : 0] word_address_del_1, word_address_del_2;
-    
-    // PC register and its delays
-    wire [1 : 0] pc_sel;                                            // pc_sel = {0(PC + 4), 1 (Branch path), 2or3 (Delayed PC)}
-    wire pc_pipe_enb;                                               // Enable the PC pipeline
-    reg [ADDR_WIDTH - 1 : 0] pc, pc_del_1, pc_del_2;
-    
-    // Sections of address bus
-    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = pc[0                             +: BYTES_PER_WORD   ];
-    wire [B - T - 5       - 1 : 0]   word_address        = pc[BYTES_PER_WORD                +: (B - T - 5)      ];
-    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = pc[(BYTES_PER_WORD + B - T - 5)  +: (S - a - B + T)  ];
-    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = pc[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
-    wire [TAG_WIDTH       - 1 : 0]   tag                 = pc[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
-    wire [T               - 1 : 0]   section_address     = pc[(BYTES_PER_WORD + B - T - 5)  +: T                ];
-    
-    // Address to L2 related wires
-    wire [ADDR_WIDTH - 2             - 1 : 0] addr_to_L2;
-    wire [TAG_WIDTH + TAG_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_out, prefetch_queue_addr_in;
-    wire [STREAM_SEL_BITS            - 1 : 0] prefetch_queue_src_in, prefetch_queue_src_out;
-    reg  [STREAM_SEL_BITS             - 1 : 0] addr_to_L2_src;
-    wire [STREAM_SEL_BITS            - 1 : 0] data_from_L2_src;
-    wire prefetch_queue_wr_enb, prefetch_queue_rd_enb, prefetch_queue_full, prefetch_queue_empty;
-    wire ongoing_queue_wr_enb, ongoing_queue_rd_enb, ongoing_queue_full, ongoing_queue_empty;
-    
-    // Data from L2 related wires
-    wire stream_buffer_ready;
-    wire l1_refill_ready;
-    wire data_stored_stream_buf, data_stored_lineRAM;
-         
+    reg [B - T - 5       - 1 : 0] word_address_del_1,    word_address_del_2;
+              
     always @(posedge CLK) begin
         // Output regsiter for the cache architecture
         if (CACHE_READY) begin
@@ -179,21 +143,55 @@ module Ins_Cache #(
         
         // Pipeline for internal address requests (cache level PC)
         if (cache_pipe_enb) begin
-            tag_del_1 <= tag;
-            tag_del_2 <= tag_del_1;
+            tag_del_1             <= tag;
+            tag_del_2             <= tag_del_1;
             section_address_del_1 <= section_address;
             section_address_del_2 <= section_address_del_1;
-            word_address_del_1 <= word_address;
-            word_address_del_2 <= word_address_del_1;
-            tag_address_del_1 <= tag_address;
-            tag_address_del_2 <= tag_address_del_1;
+            word_address_del_1    <= word_address;
+            word_address_del_2    <= word_address_del_1;
+            tag_address_del_1     <= tag_address;
+            tag_address_del_2     <= tag_address_del_1;
         end
-        
     end
+            
+    //////////////////////////////////////////////////////////////////////////////
+    // Cache data path - Memories and muxes                                     //
+    //////////////////////////////////////////////////////////////////////////////
+            
+    // Tag memory wires
+    wire [ASSOCIATIVITY   - 1 : 0] tag_mem_wr_enb;
+    wire [TAG_ADDR_WIDTH  - 1 : 0] tag_mem_wr_addr;   
+    wire [TAG_WIDTH       - 1 : 0] tag_to_ram;
+    wire [BLOCK_SECTIONS  - 1 : 0] tag_valid_to_ram;
+        
+    wire                           tag_mem_rd_enb;
+    wire [TAG_WIDTH       - 1 : 0] tag_from_ram       [0 : ASSOCIATIVITY - 1];
+    wire [BLOCK_SECTIONS  - 1 : 0] tag_valid_from_ram [0 : ASSOCIATIVITY - 1];
+          
+    // Line memory wires
+    wire [ASSOCIATIVITY   - 1 : 0] lin_mem_wr_enb;
+    wire [LINE_ADDR_WIDTH - 1 : 0] lin_mem_wr_addr;   
+    wire [LINE_RAM_WIDTH  - 1 : 0] lin_mem_data_in; 
     
-    // Generation and coding variables   
+    wire                           lin_mem_rd_enb;
+    wire [LINE_RAM_WIDTH  - 1 : 0] lin_data_out      [0 : ASSOCIATIVITY - 1];
+    
+    
+    // Tag comparison values
+    wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                    // Whether the tag is valid for the given section of the cache block
+    reg  [ASSOCIATIVITY   - 1 : 0] tag_valid;                         // Whether the tag is valid for the given section of the cache block
+    reg  [ASSOCIATIVITY   - 1 : 0] tag_match;                         // Tag matches in a one-hot encoding
+    wire [ASSOCIATIVITY   - 1 : 0] hit_set_wire;                      // Whether tag matches and is valid
+    wire [a               - 1 : 0] set_select;                        // Tag matches in a binary encoding
+            
+    assign hit_set_wire  = (tag_valid & tag_match);
+    assign cache_hit     = |hit_set_wire;    
+    
+    // Cache line multiplexer wires
+    wire [DATA_WIDTH                 - 1 : 0] lin_mux_out [0 : ASSOCIATIVITY - 1];
+    wire [DATA_WIDTH * ASSOCIATIVITY - 1 : 0] lin_mux_out_dearray;
+     
     genvar i;
-                
     generate
         for (i = 0; i < ASSOCIATIVITY; i = i + 1) begin : ASSOC_LOOP
             Mem_Simple_Dual_Port #(
@@ -285,16 +283,33 @@ module Ins_Cache #(
     // Refill path - Address to L2 section                                      //
     //////////////////////////////////////////////////////////////////////////////
     
+    // Address to L2 related wires
+    wire [ADDR_WIDTH - 2             - 1 : 0] addr_to_L2;
+    reg  [STREAM_SEL_BITS            - 1 : 0] addr_to_L2_src;
+    wire [STREAM_SEL_BITS            - 1 : 0] data_from_L2_src;
+    
+    wire                                      prefetch_queue_wr_enb,  prefetch_queue_rd_enb;
+    wire                                      prefetch_queue_full,    prefetch_queue_empty;
+    wire [TAG_WIDTH + TAG_ADDR_WIDTH - 1 : 0] prefetch_queue_addr_in, prefetch_queue_addr_out;
+    wire [STREAM_SEL_BITS            - 1 : 0] prefetch_queue_src_in,  prefetch_queue_src_out;
+        
+    // Data from L2 related wires
+    wire                                      stream_buffer_ready;
+    wire                                      l1_refill_ready;
+    wire                                      data_stored_stream_buf, data_stored_lineRAM;
+     
     // The activation signal for the Address to L2 Section (from the main control unit)
-    wire send_addr_to_L2;                                                                  
     
     // High priority queue for storing immediate L2 requests 
-    wire [ADDR_WIDTH - 2 - 1 : 0] fetch_queue_out;
-    wire fetch_queue_empty;
+    wire [ADDR_WIDTH - 2            - 1 : 0] fetch_queue_out;
+    wire                                     fetch_queue_empty;
     
     // Ready signal from the ADDR_TO_L2 register
-    wire addr_to_L2_ready; 
+    wire                                     addr_to_L2_ready; 
+    wire [2                         - 1 : 0] addr_to_L2_sel;
     
+    assign addr_to_L2_sel = {fetch_queue_empty, send_addr_to_L2};
+        
     // A 3-deep low-latency FWFT FIFO for storing high priority fetch requests
     Fetch_Queue #(
         .WIDTH(ADDR_WIDTH - 2)
@@ -322,7 +337,6 @@ module Ins_Cache #(
         .DATA_OUT({prefetch_queue_src_out, prefetch_queue_addr_out})
     );
     
-    wire [1 : 0] addr_to_L2_sel = {fetch_queue_empty, send_addr_to_L2};
         
     // Address to L2 final multiplexer
     Multiplexer #(
@@ -334,13 +348,15 @@ module Ins_Cache #(
         .OUT(addr_to_L2)
     );
     
-    wire addr_to_L2_valid = (send_addr_to_L2 | !fetch_queue_empty | !prefetch_queue_empty);
-    reg addr_to_L2_full;        
+    wire addr_to_L2_valid;
+    reg  addr_to_L2_full;        
+        
+    assign addr_to_L2_valid = (send_addr_to_L2 | !fetch_queue_empty | !prefetch_queue_empty);
             
     always @(posedge CLK) begin
         // Output address register for the L2 cache
         if ((addr_to_L2_valid & ADDR_TO_L2_READY) | (!addr_to_L2_full & addr_to_L2_valid)) begin
-            ADDR_TO_L2 <= addr_to_L2;
+            ADDR_TO_L2     <= addr_to_L2;
             addr_to_L2_src <= (addr_to_L2_sel == 2)? prefetch_queue_src_out : 0;
         end
         
@@ -360,6 +376,9 @@ module Ins_Cache #(
     // Refill path - L2 delay path                                              //
     //////////////////////////////////////////////////////////////////////////////
     
+    wire ongoing_queue_wr_enb, ongoing_queue_rd_enb;
+    wire ongoing_queue_full,   ongoing_queue_empty;
+        
     assign ongoing_queue_wr_enb = ADDR_TO_L2_VALID & ADDR_TO_L2_READY;
     assign ongoing_queue_rd_enb = (data_from_L2_src == 0)? data_stored_lineRAM : data_stored_stream_buf;
                 
@@ -384,7 +403,7 @@ module Ins_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     wire [LINE_RAM_WIDTH / L2_BUS_WIDTH - 1 : 0] data_from_L2_buffer_enb;
-    reg [LINE_RAM_WIDTH - 1 : 0] data_from_L2_buffer;
+    reg  [LINE_RAM_WIDTH                - 1 : 0] data_from_L2_buffer;
     
     // Buffer for storing data from L2, until they are read into the Stream Buffers or Line RAMs
     integer j;        
@@ -398,6 +417,7 @@ module Ins_Cache #(
     
     wire data_from_L2_buffer_ready;
     wire data_from_L2_buffer_valid;    
+    
     assign data_from_L2_buffer_ready = (data_from_L2_src == 0)? l1_refill_ready : stream_buffer_ready;                                        
     
     // Control unit for Data_From_L2 buffer
@@ -419,10 +439,10 @@ module Ins_Cache #(
     //////////////////////////////////////////////////////////////////////////////
             
     wire [LINE_RAM_WIDTH * N - 1 : 0] stream_buf_out;   
-    wire [logb2(N + 1) - 1 : 0] lin_mem_data_in_sel; 
-    wire [N - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full, stream_buf_reset;   
-    wire [T - 1 : 0] stream_buf_section_sel; 
-    wire section_commit;
+    wire [logb2(N + 1)       - 1 : 0] lin_mem_data_in_sel; 
+    wire [N                  - 1 : 0] stream_buf_rd_enb, stream_buf_wr_enb, stream_buf_empty, stream_buf_full, stream_buf_reset;   
+    wire [T                  - 1 : 0] stream_buf_section_sel; 
+    wire                              section_commit;
            
     // Set of stream buffers
     generate 
@@ -446,21 +466,21 @@ module Ins_Cache #(
         end
     endgenerate
     
-   // Temporary
-   reg x,y,z;
-   always @(posedge CLK) begin
+    // Temporary
+    reg x,y,z;
+    always @(posedge CLK) begin
        x <= cache_hit;
        y <= x;
        z <= y;
-   end   
-   initial begin
+    end   
+    initial begin
        x = 1;
        y = 1;
        z = 1;
-   end
+    end
    
     wire [STREAM_SEL_BITS - 1 : 0] hit_buf_no;
-    wire stream_hit;
+    wire                           stream_hit;
     
     Stream_Buffer_Control #(
         .N(N),
@@ -481,15 +501,17 @@ module Ins_Cache #(
         .STREAM_BUF_FULL(stream_buf_full),
         .STREAM_BUF_EMPTY(stream_buf_empty),
         .ONGOING_QUEUE_RD_ENB(data_stored_stream_buf),
+        // Entering requests into prefetch queue
         .PREFETCH_QUEUE_WR_ENB(prefetch_queue_wr_enb),
         .PREFETCH_QUEUE_FULL(prefetch_queue_full),
         .PREFETCH_QUEUE_ADDR(prefetch_queue_addr_in),
         .PREFETCH_QUEUE_SRC(prefetch_queue_src_in),
-        .PC_IN(pc[ADDR_WIDTH - 1 -: (TAG_WIDTH + LINE_ADDR_WIDTH + T)]),
+        // From main pipeline
+        .PC_IN({tag, tag_address, section_address}),
         .HIT(stream_hit),
         .HIT_BUF_NO(hit_buf_no),
         .SECTION_COMMIT(section_commit),
-        .ALLOCATE(!cache_hit & !(!x & !y & !z)),                                                            // Temporary
+        .ALLOCATE(send_addr_to_L2),                                               // Temporary
         .ALLOCATE_ADDR({tag_del_2, tag_address_del_2} + 1)                        // Temporary
     );
                                                        
@@ -553,7 +575,6 @@ module Ins_Cache #(
                
     );
     
-        
     Ins_Cache_Control #(
         .S(S),
         .B(B),
@@ -577,24 +598,24 @@ module Ins_Cache #(
     
     initial begin
         // Processor always starts with the zeroth instruction
-        pc       = 13235634;   
-        pc_del_1 = 42235213;
-        pc_del_2 = 124537765;
+        pc                    = 13235624;   
+        pc_del_1              = 13235620;
+        pc_del_2              = 13235616;
         
-        word_address_del_1        = pc_del_1[BYTES_PER_WORD                +: (B - T - 5)      ];
-        tag_address_del_1         = pc_del_1[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
-        tag_del_1                 = pc_del_1[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
-        section_address_del_1     = pc_del_1[(BYTES_PER_WORD + B - T - 5)  +: T                ];
+        word_address_del_1    = pc_del_1[BYTES_PER_WORD                +: (B - T - 5)      ];
+        tag_address_del_1     = pc_del_1[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+        tag_del_1             = pc_del_1[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+        section_address_del_1 = pc_del_1[(BYTES_PER_WORD + B - T - 5)  +: T                ];
         
-        word_address_del_2       = pc_del_2[BYTES_PER_WORD                +: (B - T - 5)      ];
-        tag_address_del_2        = pc_del_2[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
-        tag_del_2                = pc_del_2[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
-        section_address_del_2    = pc_del_2[(BYTES_PER_WORD + B - T - 5)  +: T                ];
+        word_address_del_2    = pc_del_2[BYTES_PER_WORD                +: (B - T - 5)      ];
+        tag_address_del_2     = pc_del_2[(BYTES_PER_WORD + B - 5)      +: (S - a - B)      ];
+        tag_del_2             = pc_del_2[(ADDR_WIDTH - 1)              -: TAG_WIDTH        ];
+        section_address_del_2 = pc_del_2[(BYTES_PER_WORD + B - T - 5)  +: T                ];
             
-        tag_valid = 0;
-        tag_match = 0;  
-        addr_to_L2_full = 0;
-        ADDR_TO_L2 = 0;
+        tag_valid             = 0;
+        tag_match             = 0;  
+        addr_to_L2_full       = 0;
+        ADDR_TO_L2            = 0;
     end
     
     // Log value calculation

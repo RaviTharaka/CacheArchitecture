@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="41796359000fs"></ZoomStartTime>
-      <ZoomEndTime time="41988159001fs"></ZoomEndTime>
-      <Cursor1Time time="41958359000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="209000001fs"></ZoomEndTime>
+      <Cursor1Time time="2800000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="15" />
    <wave_markers>
@@ -32,7 +32,6 @@
    <wvobject fp_name="vbus1066" type="vbus">
       <obj_property name="label">Current PC</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/tag" type="array">
          <obj_property name="ElementShortName">tag[18:0]</obj_property>
          <obj_property name="ObjectShortName">tag[18:0]</obj_property>
@@ -1485,18 +1484,6 @@
          <obj_property name="ElementShortName">fetch_queue_empty</obj_property>
          <obj_property name="ObjectShortName">fetch_queue_empty</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/addr_to_L2_ready" type="logic">
-         <obj_property name="ElementShortName">addr_to_L2_ready</obj_property>
-         <obj_property name="ObjectShortName">addr_to_L2_ready</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/addr_to_L2_valid" type="logic">
-         <obj_property name="ElementShortName">addr_to_L2_valid</obj_property>
-         <obj_property name="ObjectShortName">addr_to_L2_valid</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Ins_Cache/uut/addr_to_L2_full" type="logic">
-         <obj_property name="ElementShortName">addr_to_L2_full</obj_property>
-         <obj_property name="ObjectShortName">addr_to_L2_full</obj_property>
-      </wvobject>
       <wvobject fp_name="/Test_Ins_Cache/uut/ADDR_TO_L2_READY" type="logic">
          <obj_property name="ElementShortName">ADDR_TO_L2_READY</obj_property>
          <obj_property name="ObjectShortName">ADDR_TO_L2_READY</obj_property>
@@ -1654,7 +1641,6 @@
    <wvobject fp_name="group330" type="group">
       <obj_property name="label">Data From L2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/DATA_FROM_L2_VALID" type="logic">
          <obj_property name="ElementShortName">DATA_FROM_L2_VALID</obj_property>
          <obj_property name="ObjectShortName">DATA_FROM_L2_VALID</obj_property>
@@ -2763,6 +2749,11 @@
    <wvobject fp_name="group1026" type="group">
       <obj_property name="label">Stream buffers</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/ALLOCATE" type="logic">
+         <obj_property name="ElementShortName">ALLOCATE</obj_property>
+         <obj_property name="ObjectShortName">ALLOCATE</obj_property>
+      </wvobject>
       <wvobject fp_name="group559" type="group">
          <obj_property name="label">Prefetch Queue</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -2922,43 +2913,43 @@
          <obj_property name="DisplayName">label</obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /request_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
-            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
+            <obj_property name="ElementShortName">request_counter[1:0]</obj_property>
+            <obj_property name="ObjectShortName">request_counter[1:0]</obj_property>
             <obj_property name="label">request_counter1</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">commit_counter[5:0]</obj_property>
-            <obj_property name="ObjectShortName">commit_counter[5:0]</obj_property>
+            <obj_property name="ElementShortName">commit_counter[3:0]</obj_property>
+            <obj_property name="ObjectShortName">commit_counter[3:0]</obj_property>
             <obj_property name="label">commit_counter1</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /request_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
-            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
+            <obj_property name="ElementShortName">request_counter[1:0]</obj_property>
+            <obj_property name="ObjectShortName">request_counter[1:0]</obj_property>
             <obj_property name="label">request_counter2</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">commit_counter[5:0]</obj_property>
-            <obj_property name="ObjectShortName">commit_counter[5:0]</obj_property>
+            <obj_property name="ElementShortName">commit_counter[3:0]</obj_property>
+            <obj_property name="ObjectShortName">commit_counter[3:0]</obj_property>
             <obj_property name="label">commit_counter2</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /request_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">request_counter[3:0]</obj_property>
-            <obj_property name="ObjectShortName">request_counter[3:0]</obj_property>
+            <obj_property name="ElementShortName">request_counter[1:0]</obj_property>
+            <obj_property name="ObjectShortName">request_counter[1:0]</obj_property>
             <obj_property name="label">request_counter3</obj_property>
             <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /commit_counter" type="array">
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="ElementShortName">commit_counter[5:0]</obj_property>
-            <obj_property name="ObjectShortName">commit_counter[5:0]</obj_property>
+            <obj_property name="ElementShortName">commit_counter[3:0]</obj_property>
+            <obj_property name="ObjectShortName">commit_counter[3:0]</obj_property>
             <obj_property name="label">commit_counter3</obj_property>
             <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          </wvobject>
@@ -3066,7 +3057,7 @@
          <wvobject fp_name="vbus593" type="vbus">
             <obj_property name="label">TOQ[1] * 64</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[0].stream_buffer_single_control /top_of_queue[25]" type="logic">
                <obj_property name="ElementShortName">[25]</obj_property>
                <obj_property name="ObjectShortName">[25]</obj_property>
@@ -3199,7 +3190,7 @@
          <wvobject fp_name="vbus658" type="vbus">
             <obj_property name="label">TOQ[2] * 64</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[1].stream_buffer_single_control /top_of_queue[25]" type="logic">
                <obj_property name="ElementShortName">[25]</obj_property>
                <obj_property name="ObjectShortName">[25]</obj_property>
@@ -3332,7 +3323,7 @@
          <wvobject fp_name="vbus713" type="vbus">
             <obj_property name="label">TOQ[3] * 64</obj_property>
             <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <obj_property name="Radix">HEXRADIX</obj_property>
             <wvobject fp_name="/Test_Ins_Cache/uut/stream_buffer_control/\BUF_LOOP[2].stream_buffer_single_control /top_of_queue[25]" type="logic">
                <obj_property name="ElementShortName">[25]</obj_property>
                <obj_property name="ObjectShortName">[25]</obj_property>
@@ -3514,6 +3505,7 @@
    <wvobject fp_name="group687" type="group">
       <obj_property name="label">Refill Control</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/REFILL_REQ_LINE" type="array">
          <obj_property name="ElementShortName">REFILL_REQ_LINE[6:0]</obj_property>
          <obj_property name="ObjectShortName">REFILL_REQ_LINE[6:0]</obj_property>
@@ -3538,7 +3530,6 @@
          <obj_property name="label">Tests</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Ins_Cache/uut/refill_control/equal_n2" type="logic">
             <obj_property name="ElementShortName">equal_n2</obj_property>
             <obj_property name="ObjectShortName">equal_n2</obj_property>
@@ -3625,7 +3616,6 @@
       <wvobject fp_name="group701" type="group">
          <obj_property name="label">Request</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus763" type="vbus">
             <obj_property name="label">Current</obj_property>
             <obj_property name="DisplayName">label</obj_property>

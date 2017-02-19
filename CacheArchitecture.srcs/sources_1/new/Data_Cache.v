@@ -92,21 +92,23 @@ module Data_Cache #(
     // Globally important wires and signals                                     //
     //////////////////////////////////////////////////////////////////////////////
             
-    wire             send_rd_addr_to_L2;        // Instructs the RD_ADDR_TO_L2 unit to send address to L2  
+    wire                      send_rd_addr_to_L2;        // Instructs the RD_ADDR_TO_L2 unit to send address to L2  
     
-    wire             refill_from_L2_ready;      // Instructs the DATA_FROM_L2 unit that the data it has is ready to be sampled
-    wire             refill_from_L2_valid;      // States the DATA_FROM_L2 unit has valid data 
+    wire                      refill_from_L2_ready;      // Instructs the DATA_FROM_L2 unit that the data it has is ready to be sampled
+    wire                      refill_from_L2_valid;      // States the DATA_FROM_L2 unit has valid data 
       
-    wire             cache_pipe_enb;            // Enables the cache processes
-    wire             main_pipe_enb;               // Enables the main processor pipeline
-    wire             input_from_proc_sel;       // input_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}, same for control and data from processor also
+    wire                      cache_pipe_enb;            // Enables the cache processes
+    wire                      main_pipe_enb;             // Enables the main processor pipeline
+    wire                      input_from_proc_sel;       // input_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}, same for control and data from processor also
     
-    wire             cache_hit;                 // L1 cache has hit
-    wire             victim_hit;                // Victim cache has hit
+    wire                      cache_hit;                 // L1 cache has hit
+    wire                      victim_hit;                // Victim cache has hit
     
-    wire             victim_cache_ready;        // Victim cache is ready to write
-    wire             victim_cache_valid;        // Victim cache write is valid
+    wire                      victim_cache_ready;        // Victim cache is ready to write
+    wire                      victim_cache_valid;        // Victim cache write is valid
     
+    wire [DATA_WIDTH - 1 : 0] data_to_proc;        // Data going back to the processor   
+        
     //////////////////////////////////////////////////////////////////////////////
     // Cache data path - Decoding the read/write address                        //
     //////////////////////////////////////////////////////////////////////////////
@@ -192,31 +194,29 @@ module Data_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     // Wires for the tag memories
+    wire [ASSOCIATIVITY   - 1 : 0] tag_mem_wr_enb;     
+    wire [ASSOCIATIVITY   - 1 : 0] dirty_mem_wr_enb;     
     wire [TAG_ADDR_WIDTH  - 1 : 0] tag_mem_wr_addr; 
-    
     wire [TAG_WIDTH       - 1 : 0] tag_to_ram;
     wire [BLOCK_SECTIONS  - 1 : 0] tag_valid_to_ram;
     wire                           dirty_to_ram;
-     
-    wire [ASSOCIATIVITY   - 1 : 0] tag_mem_wr_enb;     
-    wire [ASSOCIATIVITY   - 1 : 0] dirty_mem_wr_enb;     
-    wire                           tag_mem_rd_enb = cache_pipe_enb;
-    
+         
+    wire                           tag_mem_rd_enb;
     wire [TAG_WIDTH       - 1 : 0] tag_from_ram             [0 : ASSOCIATIVITY - 1];
     wire [BLOCK_SECTIONS  - 1 : 0] tag_valid_from_ram       [0 : ASSOCIATIVITY - 1];
     wire                           dirty_from_ram           [0 : ASSOCIATIVITY - 1];
     
+    assign tag_mem_rd_enb = cache_pipe_enb;
     
     // Wires for the line memories
+    wire [ASSOCIATIVITY   - 1 : 0] lin_mem_wr_enb;     
     wire [LINE_ADDR_WIDTH - 1 : 0] lin_mem_wr_addr;   
-     
     wire [LINE_RAM_WIDTH  - 1 : 0] lin_mem_data_in;    
                     
-    wire [ASSOCIATIVITY   - 1 : 0] lin_mem_wr_enb;     
-    wire                           lin_mem_rd_enb = cache_pipe_enb;
-    
+    wire                           lin_mem_rd_enb;
     wire [LINE_RAM_WIDTH  - 1 : 0] lin_data_out             [0 : ASSOCIATIVITY - 1];
     
+    assign lin_mem_rd_enb = cache_pipe_enb;
                   
     // Tag comparison and validness checking 
     wire [ASSOCIATIVITY   - 1 : 0] tag_valid_wire;                     // Whether the tag is valid for the given section of the cache block (DM2)
@@ -225,9 +225,8 @@ module Data_Cache #(
     wire [ASSOCIATIVITY   - 1 : 0] hit_set_wire;                       // Whether tag matches and is valid
     
     assign hit_set_wire  = (tag_valid & tag_match);
-    assign cache_hit = |hit_set_wire;    
-       
-        
+    assign cache_hit     = |hit_set_wire;    
+               
     // Set multiplexer wires    
     wire [a                              - 1 : 0] set_select;          // Tag matches in a binary encoding  
     
@@ -240,14 +239,8 @@ module Data_Cache #(
     wire [TAG_WIDTH                      - 1 : 0] tag_set_mux_out;     // Tag after selecting the proper set
     wire                                          dirty_set_mux_out;   // Dirty after selecting the proper set
     wire                                          valid_set_mux_out;   // Valid after selecting the proper set
-    
-    
-    // Cache line multiplexer wires
-    wire [DATA_WIDTH                     - 1 : 0] data_to_proc;        // Data going back to the processor   
-    
-                            
+                           
     genvar i;
-        
     generate
         for (i = 0; i < ASSOCIATIVITY; i = i + 1) begin : ASSOC_LOOP
             Mem_Simple_Dual_Port #(

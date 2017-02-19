@@ -246,7 +246,7 @@ module Victim_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     // Full is when read counter and write counter differs by V
-    assign victim_cache_full = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb != victim_wr_pos_msb);
+    assign victim_cache_full  = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb != victim_wr_pos_msb);
     // Empty is when read counter and write counter is equal
     assign victim_cache_empty = (victim_rd_pos == victim_wr_pos) & (victim_rd_pos_msb == victim_wr_pos_msb);
     
