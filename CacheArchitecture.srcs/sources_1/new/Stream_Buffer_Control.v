@@ -74,7 +74,7 @@ module Stream_Buffer_Control #(
     // Hits if any of the stream buffers have a hit
     wire [N - 1 : 0] stream_buf_hit;  
     always @(posedge CLK) begin
-        HIT <= |(stream_buf_hit);
+        HIT <= |(stream_buf_hit & ~buffer_reset);
     end
     
     // HIT_BUF_NO is the highest numbered buffer that has the required Cache Line
@@ -198,7 +198,7 @@ module Stream_Buffer_Control #(
     genvar i;
     generate  
         for (i = 0; i < N; i = i + 1) begin : BUF_LOOP
-            assign hit_commit[i]         = SECTION_COMMIT & output_state == N & output_buffer[i];
+            assign hit_commit[i]         = SECTION_COMMIT & (output_state == {T{1'b1}}) & output_buffer[i];
             assign buffer_reset[i]       = ALLOCATE & lru[i];
             assign prefetch_requested[i] = PREFETCH_QUEUE_WR_ENB & (i + 1 == prefetch_state);
             

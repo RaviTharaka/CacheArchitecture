@@ -105,7 +105,7 @@ module Test_Ins_Cache ();
         
         RSTN         = 1;
         PROC_READY   = 1;
-        BRANCH       = 0;
+        BRANCH       = 1;
         readTrace    = $fscanf(fileTrace, "%x ", BRANCH_ADDR_IN);
         #10;
         

@@ -45,14 +45,14 @@ module Stream_Buffer_Single_Control #(
     reg [ADDR_WIDTH - 1 : 0] top_of_queue;
     
     reg [n              : 0] request_counter;                       // Number of prefetch requests sent to prefetch queue
-    reg [p          + 1 : 0] commit_counter;                        // Number of requests which has finished arriving
+    reg [p          + 2 : 0] commit_counter;                        // Number of requests which has finished arriving
                                                                     // Negative commit means arriving data will be discarded
                                                                     
-    assign REFILL_ENB = !commit_counter[p + 1];
+    assign REFILL_ENB = !commit_counter[p + 2];
     
     // Hit miss status of the stream buffer
     always @(posedge CLK) begin
-        STREAM_BUFFER_HIT <= (ADDR_IN == top_of_queue) & (!commit_counter[p + 1]) & (commit_counter != 0);
+        STREAM_BUFFER_HIT <= (ADDR_IN == top_of_queue) & (!commit_counter[p + 1]) & (commit_counter != 0) & !BUFFER_RESET;
     end    
     
     // Next request to be sent to L2 to fill the stream buffer
@@ -98,7 +98,10 @@ module Stream_Buffer_Single_Control #(
     // Commit counter management
     always @(posedge CLK) begin
         if (BUFFER_RESET) begin
-            commit_counter <= commit_counter - {{(p + 1 - n){1'b0}}, request_counter_wire};
+            if (PREFETCH_COMMITED)
+                commit_counter <= commit_counter - {{(p + 2 - n){1'b0}}, request_counter_wire} + 1;
+            else    
+                commit_counter <= commit_counter - {{(p + 2 - n){1'b0}}, request_counter_wire};
         end else begin
             case ({PREFETCH_COMMITED, HIT_COMMIT})
                 2'b00 : commit_counter <= commit_counter;    

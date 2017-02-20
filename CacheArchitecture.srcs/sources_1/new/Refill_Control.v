@@ -87,6 +87,14 @@ module Refill_Control_I #(
         output [1                   : 0] PC_SEL                         // Mux select for PC [pc_sel = {0(PC + 4), 1(Branch path), 2 or 3(PC delay 2)}]  
     );
     
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Globally important figures                                                                  //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    reg  critical_ready;                             // The critical word currently being pushed into L1 and ready
+    wire critical_use;                               // Last critical word currently being used so next request can be started
+    reg  critical_used;                              // Critical word is used
+    
     // If the stream buffers doesn't hit, it means a priority address request to L2 (src == 00)
     wire [STREAM_SEL_BITS - 1 : 0] refill_req_src = (STREAM_HIT)? STREAM_SRC : 0;
     
@@ -134,12 +142,14 @@ module Refill_Control_I #(
     // Solution - Admission only if the IF3 request came from a valid PC on the PC pipeline
     reg         pc_pipe_enb_del_1;
     reg [1 : 0] pc_sel_del_1;
+    reg [1 : 0] pc_sel_del_2;
     reg         pc_admissible;
     
     always @(posedge CLK) begin
         pc_pipe_enb_del_1 <= PC_PIPE_ENB;
         pc_sel_del_1      <= PC_SEL;
-        pc_admissible     <= pc_pipe_enb_del_1 & (pc_sel_del_1 == 2'b00 | pc_sel_del_1 == 2'b01);
+        pc_sel_del_2      <= pc_sel_del_1;
+        pc_admissible     <= pc_pipe_enb_del_1 & (pc_sel_del_2 == 2'b00 | pc_sel_del_2 == 2'b01);
     end    
     
     // Whether to admit to or remove from the refill queue
@@ -528,18 +538,12 @@ module Refill_Control_I #(
     
     localparam IDLE         = 1;
     localparam TRANSITION   = 2;
-    localparam WRITING_VIC  = 4;
+    localparam WRITING_SB   = 4;
     localparam WRITING_L2   = 8;
-    localparam FLUSHING     = 16;
-    localparam WAITING_CRIT = 32;
+    localparam WAITING_CRIT = 16;
     
-    localparam IDLE       = 0;
-    localparam TRANSITION = 1;
-    localparam WRITING_SB = 2;
-    localparam WRITING_L2 = 3;
-    
-    reg [1 : 0] refill_state, refill_state_wire;
-    reg [T - 1 : 0] no_completed, no_completed_wire;
+    reg [5              - 1 : 0] refill_state,      refill_state_wire;
+    reg [T              - 1 : 0] no_completed,      no_completed_wire;
     reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     
     integer i;
@@ -584,9 +588,8 @@ module Refill_Control_I #(
                     if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0) begin
                         refill_state_wire = WRITING_L2;
                         no_completed_wire = 1;
-                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-                            commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-                        end
+                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                            commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                     end else begin
                         refill_state_wire = WRITING_L2;
                         no_completed_wire = 0;
@@ -596,67 +599,109 @@ module Refill_Control_I #(
             end
             
             WRITING_SB : begin
-                // When whole block is finished, go to idle state or transition state
-                if (no_completed == {T{1'b1}}) begin
-                    if (no_of_elements == 4'b0001 & !admit) begin
-                        refill_state_wire = IDLE;
-                    end else begin
-                        refill_state_wire = TRANSITION;
-                    end 
-                end else begin
-                    refill_state_wire = refill_state;                    
-                end
-                
-                for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-                    if (i[T - 1 : 0] == cur_sect + no_completed) begin
-                        commited_sections_wire[i] = 1; 
-                    end else begin
-                        commited_sections_wire[i] = commited_sections[i];
-                    end                       
-                end
-                
-                no_completed_wire = no_completed + 1;
+                case (no_completed)
+                    {T{1'b1}} : begin
+                        if (critical_used | critical_use) begin
+                            if (no_of_elements == 4'b0001 & !admit) begin
+                                refill_state_wire = IDLE;
+                                no_completed_wire = 0;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            end else begin
+                                refill_state_wire = TRANSITION;
+                                no_completed_wire = 0;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            end 
+                        end else begin
+                            refill_state_wire = WAITING_CRIT;
+                            no_completed_wire = 0;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                        end           
+                    end
+                    default   : begin
+                        refill_state_wire = refill_state; 
+                        no_completed_wire = no_completed + 1;
+                        for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                            commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];      
+                    end
+                endcase
             end
             
             WRITING_L2 : begin
-                if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0)) begin
-                    // When whole block is fetched, go to idle state or transition
-                    if (no_completed == {T{1'b1}}) begin
-                        if (no_of_elements == 4'b0001 & !admit) begin
-                            refill_state_wire = IDLE;
+                case (no_completed) 
+                    {T{1'b1}} : begin
+                        if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0)) begin
+                            if (critical_used | critical_use) begin
+                                if (no_of_elements == 4'b0001 & !admit) begin
+                                    refill_state_wire = IDLE;
+                                    no_completed_wire = 0;
+                                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                        commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                                end else begin
+                                    refill_state_wire = TRANSITION;
+                                    no_completed_wire = 0;
+                                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                        commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                                end  
+                            end else begin
+                                refill_state_wire = WAITING_CRIT;
+                                no_completed_wire = 0;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            end
                         end else begin
-                            refill_state_wire = TRANSITION;
-                        end  
+                            refill_state_wire = refill_state;
+                            no_completed_wire = no_completed;
+                            commited_sections_wire = commited_sections;
+                        end
+                    end
+                    default   : begin
+                        if (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0)) begin
+                            refill_state_wire = refill_state;
+                            no_completed_wire = no_completed + 1;
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                        end else begin
+                            refill_state_wire = refill_state;
+                            no_completed_wire = no_completed;
+                            commited_sections_wire = commited_sections;
+                        end
+                    end
+                endcase
+            end
+            
+            default : begin
+                if (critical_used | critical_use) begin
+                    if (no_of_elements == 4'b0001 & !admit) begin
+                        refill_state_wire = IDLE;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end else begin
-                        refill_state_wire = refill_state;
+                        refill_state_wire = TRANSITION;
+                        no_completed_wire = 0;
+                        commited_sections_wire = 0;
                     end
-                    
-                    for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-                        if (i[T - 1 : 0] == cur_sect + no_completed) begin
-                            commited_sections_wire[i] = 1; 
-                        end else begin
-                            commited_sections_wire[i] = commited_sections[i];
-                        end                       
-                    end
-                                            
-                    no_completed_wire = no_completed + 1;                                        
                 end else begin
-                    no_completed_wire = no_completed;
                     refill_state_wire = refill_state;
+                    no_completed_wire = no_completed;
                     commited_sections_wire = commited_sections;
-                end        
+                end  
             end
         endcase
     end
     
     always @(posedge CLK) begin
-        no_completed <= no_completed_wire;
-        refill_state <= refill_state_wire;
+        no_completed      <= no_completed_wire;
+        refill_state      <= refill_state_wire;
         commited_sections <= commited_sections_wire;
     end
     
-    assign remove = ((refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}}))
-                            | ((refill_state == WRITING_SB) & (no_completed == {T{1'b1}}));
+    assign remove = ((refill_state == WRITING_SB  ) & (no_completed == {T{1'b1}}) & (critical_used | critical_use)) |
+                    ((refill_state == WAITING_CRIT)                               & (critical_used | critical_use)) |
+                    ((refill_state == WRITING_L2  ) & (no_completed == {T{1'b1}}) & (critical_used | critical_use)  
+                            & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0));
         
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -664,14 +709,14 @@ module Refill_Control_I #(
     //////////////////////////////////////////////////////////////////////////////////////////////////
          
     // Addresses        
-    assign TAG_MEM_WR_ADDR      = (no_of_elements == 0)? REFILL_REQ_LINE : cur_line;
+    assign TAG_MEM_WR_ADDR      = (no_of_elements == 0)? REFILL_REQ_LINE                      : cur_line;
     assign LIN_MEM_WR_ADDR      = (no_of_elements == 0)? ({REFILL_REQ_LINE, REFILL_REQ_SECT}) : ({cur_line, (cur_sect + no_completed)});
     
     // Data
     assign TAG_MEM_TAG_IN       = (no_of_elements == 0)? REFILL_REQ_TAG : cur_tag;
-    assign TAG_MEM_TAG_VALID_IN = commited_sections_wire;
     assign LIN_MEM_DATA_IN_SEL  = (no_of_elements == 0)? refill_req_src : cur_src;
-    
+    assign TAG_MEM_TAG_VALID_IN = commited_sections_wire;
+        
     // Write enables
     reg write_test;
     always @(*) begin
@@ -680,6 +725,7 @@ module Refill_Control_I #(
             TRANSITION  :   write_test = (cur_src != 0) | (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0);
             WRITING_SB  :   write_test = 1'b1;
             WRITING_L2  :   write_test = DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
+            default     :   write_test = 0;
         endcase
     end
     
@@ -691,9 +737,13 @@ module Refill_Control_I #(
     // Instructions for Data from L2 and prefetch control unit                                      //
     //////////////////////////////////////////////////////////////////////////////////////////////////
         
-    assign SECTION_COMMIT = (refill_state == WRITING_SB) | (refill_state == IDLE & !CACHE_HIT & STREAM_HIT) | (refill_state == TRANSITION & (cur_src != 0));
+    assign SECTION_COMMIT = (refill_state == WRITING_SB) | 
+                            (refill_state == IDLE       & !CACHE_HIT & STREAM_HIT) | 
+                            (refill_state == TRANSITION & (cur_src != 0));
     
-    assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2) | (refill_state == TRANSITION & cur_src == 0);
+    assign DATA_FROM_L2_BUFFER_READY = (refill_state == WRITING_L2) | 
+                                       (refill_state == TRANSITION & cur_src == 0);
+                                       
     assign ONGOING_QUEUE_RD_ENB = (refill_state == WRITING_L2) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY 
                                         & (DATA_FROM_L2_SRC == 0) & (no_completed == {T{1'b1}});   
             
@@ -718,8 +768,6 @@ module Refill_Control_I #(
     localparam TRANSIT = 5;
     
     // FSM for enabling the PC pipeline
-    reg critical_ready, critical_used;
-    reg [1 : 0] critical_no;
     reg [2 : 0] pc_state, pc_state_del_1, pc_state_del_2;
             
     always @(*) begin
@@ -727,26 +775,20 @@ module Refill_Control_I #(
             IDLE        :   critical_ready = !CACHE_HIT & STREAM_HIT;
             TRANSITION  :   critical_ready = (cur_src != 0) | (DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & DATA_FROM_L2_SRC == 0);
             WRITING_SB  :   critical_ready = 0;
-            WRITING_L2  :   critical_ready = (no_completed_wire == 1) & DATA_FROM_L2_BUFFER_VALID 
-                                              & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
-        endcase
-        
-        case (pc_state) 
-            HITTING : critical_used = 0;
-            WAIT    : critical_used = critical_ready | critical_no != 0;
-            PC0     : critical_used = 0;
-            PC1     : critical_used = 0;
-            PC2     : critical_used = 0;
-            TRANSIT : critical_used = (critical_ready & !CACHE_HIT) | (no_of_elements != 0 & critical_no != 0 & !CACHE_HIT);
+            WRITING_L2  :   critical_ready = (no_completed_wire == 1) & DATA_FROM_L2_BUFFER_VALID & DATA_FROM_L2_BUFFER_READY & (DATA_FROM_L2_SRC == 0);
+            default     :   critical_ready = 0;
         endcase
     end
             
+    // Finding whether critical use
+    assign critical_use = equal_n0 & CACHE_HIT & pc_state == PC2;        
+            
     always @(posedge CLK) begin
-        case ({critical_ready, critical_used}) 
-            2'b00 : critical_no <= critical_no;
-            2'b01 : critical_no <= critical_no - 1;
-            2'b10 : critical_no <= critical_no + 1;
-            2'b11 : critical_no <= critical_no;
+        case ({critical_ready, critical_use}) 
+            2'b00 : critical_used <= critical_used;
+            2'b01 : critical_used <= 1'b1;
+            2'b10 : critical_used <= 1'b0;
+            2'b11 : critical_used <= critical_used;
         endcase
     end 
     
@@ -754,7 +796,7 @@ module Refill_Control_I #(
         case (pc_state) 
             HITTING : begin
                 case ({STREAM_HIT, CACHE_HIT})
-                    2'b00 : pc_state <= WAIT;
+                    2'b00 : pc_state <= PC0;
                     2'b01 : pc_state <= HITTING;
                     2'b10 : pc_state <= PC0;
                     2'b11 : pc_state <= HITTING;
@@ -762,7 +804,7 @@ module Refill_Control_I #(
             end
             
             WAIT : begin
-                if (critical_ready | critical_no != 0 | (CACHE_HIT & pc_state_del_2 == WAIT)) 
+                if (critical_ready | critical_used == 0)  // | (CACHE_HIT & pc_state_del_2 == WAIT)
                     pc_state <= PC0;
             end
             
@@ -770,10 +812,13 @@ module Refill_Control_I #(
             PC1 : pc_state <= PC2;
             
             PC2 : begin
-                if (no_of_elements == 0) 
-                    pc_state <= HITTING;
-                else 
-                    pc_state <= TRANSIT;    
+                if (CACHE_HIT)        
+                    if (no_of_elements == 1) 
+                        pc_state <= HITTING;
+                    else 
+                        pc_state <= TRANSIT;
+                else
+                    pc_state <= PC0; 
             end
             
             TRANSIT : begin
@@ -786,9 +831,9 @@ module Refill_Control_I #(
                     endcase
                 end else begin 
                     case ({STREAM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
+                        2'b00 : pc_state <= (critical_used != 0 | critical_ready)? PC0 : WAIT;
                         2'b01 : pc_state <= TRANSIT;
-                        2'b10 : pc_state <= (critical_no != 0 | critical_ready)? PC0 : WAIT;
+                        2'b10 : pc_state <= (critical_used != 0 | critical_ready)? PC0 : WAIT;
                         2'b11 : pc_state <= TRANSIT;
                     endcase
                 end
@@ -803,10 +848,17 @@ module Refill_Control_I #(
         
     // Enabling the PC pipeline 
     assign PC_PIPE_ENB = (pc_state != WAIT);
-    assign PC_SEL = {(pc_state == PC0 | pc_state == PC1 | (pc_state == HITTING & !CACHE_HIT) 
-                         | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT)) , BRANCH};
+    assign PC_SEL = {(pc_state == PC0 | 
+                      pc_state == PC1 | 
+                     (pc_state == PC2     & !CACHE_HIT) |
+                     (pc_state == HITTING & !CACHE_HIT) |
+                      pc_state == WAIT | 
+                     (pc_state == TRANSIT & !CACHE_HIT)), 
+                                                         BRANCH};
     
-    assign CACHE_READY = (pc_state == HITTING | pc_state == TRANSIT | pc_state == PC2) & CACHE_HIT;
+    assign CACHE_READY = (pc_state == HITTING | 
+                          pc_state == TRANSIT | 
+                          pc_state == PC2)       & CACHE_HIT;
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial conditions - for simulation                                                          //
@@ -814,7 +866,7 @@ module Refill_Control_I #(
         
     initial begin
         no_of_elements = 0;
-        refill_state = 0;   
+        refill_state = 1;   
         
         pc_state = HITTING; 
         pc_state_del_1 = HITTING; 
@@ -823,8 +875,9 @@ module Refill_Control_I #(
         pc_pipe_enb_del_1 = 1;
         pc_admissible     = 1;
         pc_sel_del_1      = 0;
+        pc_sel_del_2      = 0;
         
-        critical_no = 0; 
+        critical_used = 1; 
 //        clash_n0 = 0;
 //        clash_n1 = 0;
 //        clash_n2 = 0;

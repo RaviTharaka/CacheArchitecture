@@ -517,8 +517,7 @@ module Refill_Control_D #(
                                 no_completed_wire = 0;
                                 for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
                                     commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
-                            end 
-                            
+                            end                             
                         end
                     end
                     1         : begin
@@ -638,9 +637,8 @@ module Refill_Control_D #(
                         if (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) begin
                             refill_state_wire = WRITING_L2;
                             no_completed_wire = 1;
-                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-                            end
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                         end else begin
                             refill_state_wire = WRITING_L2;
                             no_completed_wire = 0;
@@ -650,9 +648,8 @@ module Refill_Control_D #(
                         if (cur_evic == 0) begin
                             refill_state_wire = WRITING_VIC;
                             no_completed_wire = 1;
-                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1) begin
-                                commited_sections_wire[i] = (i[T - 1 : 0] == REFILL_REQ_SECT);
-                            end
+                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                         end else begin
                             refill_state_wire = WRITING_VIC;
                             no_completed_wire = 0;
@@ -720,7 +717,7 @@ module Refill_Control_D #(
                     0         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic      == 0) ? 2'b11 : 2'b00;    
                     {T{1'b1}} : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID                     ) ? 2'b11 : 2'b00;    
                     1         : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & cur_evic      == 0) ? 2'b11 : 2'b00; 
-                    default   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID) ? 2'b11 : 2'b00; 
+                    default   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID                     ) ? 2'b11 : 2'b00; 
                 endcase  
             WRITING_VIC  : 
                 case (no_completed) 
@@ -755,16 +752,16 @@ module Refill_Control_D #(
                 endcase
             WRITING_L2   :
                 case (no_completed) 
-                    0         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic      == 0));   
+                    0         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0));   
                     {T{1'b1}} : write_test =  DATA_FROM_L2_BUFFER_VALID;
-                    1         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic      == 0));   
+                    1         : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0));   
                     default   : write_test =  DATA_FROM_L2_BUFFER_VALID;  
                 endcase  
             WRITING_VIC  : 
                 case (no_completed) 
-                    0         : write_test = (cur_evic      == 0);   
+                    0         : write_test = (cur_evic == 0);   
                     {T{1'b1}} : write_test = 1;
-                    1         : write_test = (cur_evic      == 0);   
+                    1         : write_test = (cur_evic == 0);   
                     default   : write_test = 1;  
                 endcase               
             WAITING_CRIT : write_test = 0;
@@ -787,9 +784,9 @@ module Refill_Control_D #(
     always @(*) begin
         if (refill_state == WRITING_L2)
             case (no_completed)
-                0         : DATA_FROM_L2_BUFFER_READY = (cur_evic      == 0);   
+                0         : DATA_FROM_L2_BUFFER_READY = (cur_evic == 0);   
                 {T{1'b1}} : DATA_FROM_L2_BUFFER_READY =  1;
-                1         : DATA_FROM_L2_BUFFER_READY = (cur_evic      == 0);   
+                1         : DATA_FROM_L2_BUFFER_READY = (cur_evic == 0);   
                 default   : DATA_FROM_L2_BUFFER_READY =  1; 
             endcase
         else 
@@ -823,14 +820,14 @@ module Refill_Control_D #(
         
         // For critical use
         case (pc_state)
-            SHIFT2      :
+            SHIFT2    :
                 case (REFILL_REQ_CTRL)
                     2'b00 : critical_use = 1;                       // This should never happen
                     2'b10 : critical_use = CACHE_HIT & !L1_WR_PORT_SELECT[1];
                     2'b01 : critical_use = CACHE_HIT;
                     2'b11 : critical_use = 1; 
                 endcase
-            default     : critical_use = 0;
+            default  : critical_use = 0;
         endcase
     end
     
