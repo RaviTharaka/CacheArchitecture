@@ -39,7 +39,7 @@ module Test_Data_Cache ();
     // Calculated parameters
     localparam L2_BUS_WIDTH     = 1 << W;
     localparam L2_BURST         = 1 << (B - W);
-    localparam MEMORY_DEPTH      = 1 << 16;             
+    localparam MEMORY_DEPTH     = 1 << MEMORY_ADDR_WIDTH;             
             
     // Constants
     reg                              TRUE  = 1;
@@ -223,7 +223,7 @@ module Test_Data_Cache ();
             for (k = 0; k < L2_BURST; k = k + 1) begin
                 if (rd_output_data_state[k] == 1) begin
                     for (l = 0; l < (1 << W - 5); l = l + 1) begin
-                        DATA_FROM_L2[l * DATA_WIDTH +: DATA_WIDTH] <= memory[{rd_output_addr_reg[MEMORY_ADDR_WIDTH - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}} + k * (1 << (W - 5))  + l];
+                        DATA_FROM_L2[l * DATA_WIDTH +: DATA_WIDTH] <= memory[{rd_output_addr_reg[MEMORY_ADDR_WIDTH + 2 - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}} + k * (1 << (W - 5))  + l];
                     end
                 end
             end

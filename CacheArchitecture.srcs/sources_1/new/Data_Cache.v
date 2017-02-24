@@ -532,6 +532,30 @@ module Data_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     wire [1 : 0] refill_sel;                // refill_sel = {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
+    
+    // Storing data from previous cycle, since data_set_mux_out is not always the most updated one
+    reg  [DATA_WIDTH      - 1 : 0] data_del_3,         data_del_4;
+    reg  [WORDS_PER_SECT  - 1 : 0] word_address_del_3, word_address_del_4;
+    reg                            equal_n0, equal_n1, equal_n1_del_1;
+    
+    reg  [LINE_RAM_WIDTH  - 1 : 0] l1_data_out;
+    
+    always @(posedge CLK) begin
+         if (cache_pipe_enb) begin
+            // Find if previous request and current request are same
+            equal_n1_del_1 <= equal_n1;   
+                        
+            equal_n0 <= (tag_del_2 == tag_del_1) & ({tag_address_del_2, section_address_del_2} == {tag_address_del_1, section_address_del_1}) & (control_del_2 == 2'b10); //(DM3 == DM2)
+            equal_n1 <= (tag_del_2 == tag      ) & ({tag_address_del_2, section_address_del_2} == {tag_address      , section_address      }) & (control_del_2 == 2'b10); //(DM3 == DM1) 
+            
+            // Requires previous data and addresses    
+            word_address_del_3 <= word_address_del_2;
+            word_address_del_4 <= word_address_del_3;
+            
+            data_del_3 <= data_del_2;
+            data_del_4 <= data_del_3;
+        end
+    end     
            
     // Line RAM data in multiplexer
     genvar z;
@@ -541,6 +565,23 @@ module Data_Cache #(
             
             assign lin_mem_data_in_sel[1] = refill_sel[1];
             assign lin_mem_data_in_sel[0] = (refill_sel[1])? refill_sel[0] : (z != word_address_del_2);
+            
+            // Bypass for cache writes
+            always @(*) begin
+                case ({equal_n0, equal_n1_del_1}) 
+                    2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_3 == z) ? data_del_3 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_4 == z) ? data_del_4 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b11 : begin
+                        case ({word_address_del_3 == z, word_address_del_4 == z}) 
+                            2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                            2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_4;
+                            2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
+                            2'b11 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
+                        endcase
+                    end
+                endcase
+            end
                         
             Multiplexer #(
                 .ORDER(2),
@@ -549,7 +590,7 @@ module Data_Cache #(
                 .SELECT(lin_mem_data_in_sel),
                 .IN({data_from_L2_buffer[DATA_WIDTH * z +: DATA_WIDTH], 
                      victim_cache_refill[DATA_WIDTH * z +: DATA_WIDTH],
-                     data_set_mux_out   [DATA_WIDTH * z +: DATA_WIDTH], 
+                     l1_data_out        [DATA_WIDTH * z +: DATA_WIDTH], 
                      data_del_2}),
                 .OUT(lin_mem_data_in    [DATA_WIDTH * z +: DATA_WIDTH])
             );
