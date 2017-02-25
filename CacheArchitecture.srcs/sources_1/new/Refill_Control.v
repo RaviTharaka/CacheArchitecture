@@ -848,13 +848,13 @@ module Refill_Control_I #(
         
     // Enabling the PC pipeline 
     assign PC_PIPE_ENB = (pc_state != WAIT);
-    assign PC_SEL = {(pc_state == PC0 | 
-                      pc_state == PC1 | 
-                     (pc_state == PC2     & !CACHE_HIT) |
-                     (pc_state == HITTING & !CACHE_HIT) |
-                      pc_state == WAIT | 
-                     (pc_state == TRANSIT & !CACHE_HIT)), 
-                                                         BRANCH};
+    assign PC_SEL = {(   pc_state == PC0
+                      |  pc_state == PC1
+                      | (pc_state == PC2     & !CACHE_HIT)
+                      | (pc_state == HITTING & !CACHE_HIT)
+                      |  pc_state == WAIT
+                      | (pc_state == TRANSIT & !CACHE_HIT)), 
+                                                             BRANCH};
     
     assign CACHE_READY = (pc_state == HITTING | 
                           pc_state == TRANSIT | 

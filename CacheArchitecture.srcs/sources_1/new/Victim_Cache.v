@@ -44,7 +44,9 @@ module Victim_Cache #(
         localparam TAG_ADDR_WIDTH       = S - a - B, 
         
         localparam SEARCH_ADDR_WIDTH    = TAG_WIDTH + TAG_ADDR_WIDTH + T,
-        localparam ADDR_MEMORY_WIDTH    = TAG_WIDTH + TAG_ADDR_WIDTH
+        localparam ADDR_MEMORY_WIDTH    = TAG_WIDTH + TAG_ADDR_WIDTH,
+        
+        localparam BLOCK_SECTIONS   = 1 << T                
     ) (
         input                                  CLK,
         
@@ -58,6 +60,7 @@ module Victim_Cache #(
         
         // Search port from L1 cache
         input      [SEARCH_ADDR_WIDTH - 1 : 0] SEARCH_ADDR,
+        input                                  VICTIM_COMMIT, 
         
         // Ports back to L1 cache
         output reg                             VICTIM_HIT,
@@ -77,12 +80,12 @@ module Victim_Cache #(
     // Memories of the victim cache                                             //
     //////////////////////////////////////////////////////////////////////////////
         
-    reg [LINE_RAM_WIDTH     - 1 : 0] data_memory [0 : VICTIM_CACHE_DEPTH * T - 1];
-    reg [ADDR_MEMORY_WIDTH  - 1 : 0] addr_memory [0 : VICTIM_CACHE_DEPTH     - 1];
-    reg                              ctrl_memory [0 : VICTIM_CACHE_DEPTH     - 1];
+    reg [LINE_RAM_WIDTH     - 1 : 0] data_memory [0 : VICTIM_CACHE_DEPTH * BLOCK_SECTIONS - 1];
+    reg [ADDR_MEMORY_WIDTH  - 1 : 0] addr_memory [0 : VICTIM_CACHE_DEPTH                  - 1];
+    reg                              ctrl_memory [0 : VICTIM_CACHE_DEPTH                  - 1];
         
-    reg                              dirty       [0 : VICTIM_CACHE_DEPTH     - 1];
-    reg                              valid       [0 : VICTIM_CACHE_DEPTH     - 1];
+    reg                              dirty       [0 : VICTIM_CACHE_DEPTH                  - 1];
+    reg                              valid       [0 : VICTIM_CACHE_DEPTH                  - 1];
     
     wire                             victim_cache_empty;
     wire                             victim_cache_full;
@@ -119,25 +122,70 @@ module Victim_Cache #(
     
     
     // Convert the one-hot type encoding of equality to binary
-    wire [V - 1 : 0] hit_address;
+    reg [V - 1 : 0] hit_address;
+    reg [V - 1 : 0] temp;
     
-    OneHot_to_Bin #(
-        .ORDER(V)
-    ) set_decoder (
-        .ONE_HOT(equality),
-        .DEFAULT(0),
-        .BIN(hit_address)
-    );
-    
-    // If hit, DATA_TO_L1 register should be filled from the data_memory
-    wire [V + T - 1 : 0] data_sel = {hit_address, sect_address}; 
-    
-    always @(posedge CLK) begin
-        if (victim_hit) begin
-            DATA_TO_L1 <= data_memory[data_sel];
-        end        
+    integer j;
+    always @(*) begin
+        if (|equality)
+            for (j = 0; j < VICTIM_CACHE_DEPTH; j = j + 1) begin
+                temp = victim_wr_pos + j;
+                if (equality[temp]) begin
+                    hit_address = temp;
+                end else begin
+                    hit_address = hit_address;
+                end
+            end
+        else begin
+            hit_address = 0;
+        end
     end
     
+    // States for sending data burst to L1
+    reg [T - 1 : 0] burst_state;
+    
+    always @(posedge CLK) begin
+        if (VICTIM_COMMIT) begin
+            burst_state <= 2;            
+        end else begin
+            if (burst_state != 0) begin
+                burst_state <= burst_state + 1;
+            end 
+        end
+    end
+    
+    // If hit, DATA_TO_L1 register should be filled from the data_memory
+    reg [T - 1 : 0] sect_sel_del_1;
+    reg [V - 1 : 0] hit_addr_del_1;
+    
+    reg [T - 1 : 0] sect_sel_in_burst;
+    reg [V - 1 : 0] hit_addr_in_burst;
+    
+    wire [T     - 1 : 0] sect_addr_in_commit = sect_sel_del_1 + 1;
+    wire [T     - 1 : 0] sect_addr_in_burst  = sect_address   + burst_state;
+      
+    wire [V + T - 1 : 0] data_sel            = {hit_address, sect_address}; 
+    wire [V + T - 1 : 0] data_sel_in_commit  = {hit_addr_del_1, sect_addr_in_commit}; 
+    wire [V + T - 1 : 0] data_sel_in_burst   = {hit_addr_in_burst, sect_sel_in_burst}; 
+             
+    always @(posedge CLK) begin
+        sect_sel_del_1 <= sect_address;
+        hit_addr_del_1 <= hit_address;
+        
+        if (VICTIM_COMMIT) begin
+            sect_sel_in_burst <= sect_sel_del_1;
+            hit_addr_in_burst <= hit_addr_del_1;
+        end
+        
+        case ({VICTIM_COMMIT, victim_hit, burst_state != 0})
+            3'b000  : DATA_TO_L1 <= DATA_TO_L1;           
+            3'b001  : DATA_TO_L1 <= data_memory[data_sel_in_burst];   
+            3'b010  : DATA_TO_L1 <= data_memory[data_sel]; 
+            3'b011  : DATA_TO_L1 <= data_memory[data_sel_in_burst]; 
+              
+            default : DATA_TO_L1 <= data_memory[data_sel_in_commit]; 
+        endcase  
+    end
     
     //////////////////////////////////////////////////////////////////////////////
     // Writing data to victim cache                                             //
@@ -162,7 +210,7 @@ module Victim_Cache #(
         if (WR_FROM_L1_VALID & WR_FROM_L1_READY) begin
             // Updates the tag memories at the first stage (dirty bit written further below in code)
             if (victim_wr_state == 0) begin
-                addr_memory[victim_wr_pos] <= ADDR_FROM_L1;
+                addr_memory[victim_wr_pos] <= ADDR_FROM_L1[SEARCH_ADDR_WIDTH - 1  : T];
                 ctrl_memory[victim_wr_pos] <= CONTROL_FROM_L1;
             end
             
@@ -172,7 +220,7 @@ module Victim_Cache #(
             // At the last stage of the write 
             if (victim_wr_state == {T{1'b1}}) begin
                 // Valid bit is turned off for the next write position and turned on for the current
-                valid[victim_wr_pos] <= 1'b1;
+                valid[victim_wr_pos]     <= 1'b1;
                 valid[victim_wr_pos + 1] <= 1'b0;
                 
                 // Write position shifts to the next value
@@ -206,7 +254,7 @@ module Victim_Cache #(
     assign L2_wr_buf_ready = !L2_wr_buf_full | WR_TO_L2_READY; 
     assign WR_TO_L2_VALID  = L2_wr_buf_full;
             
-    assign wr_addr_to_L2 = addr_memory[victim_rd_pos];
+    assign wr_addr_to_L2 = {addr_memory[victim_rd_pos], {(ADDR_WIDTH - 2 - ADDR_MEMORY_WIDTH){1'b0}}};
     assign control_to_L2 = ctrl_memory[victim_rd_pos];
     
     assign data_to_L2 = data_memory[{victim_rd_pos, victim_rd_state[B - W - 1 -: T]}][L2_BUS_WIDTH * victim_rd_state[B - W - T - 1 : 0] +: L2_BUS_WIDTH];
@@ -275,13 +323,15 @@ module Victim_Cache #(
         victim_wr_pos     = 0;
         victim_wr_pos_msb = 0;
         
+        burst_state       = 0;
+        
         victim_rd_state   = 0;
         victim_rd_pos     = 0;
         victim_rd_pos_msb = 0;
         
         L2_wr_buf_full    = 0;
         
-        for (i = 0; i < VICTIM_CACHE_DEPTH * T; i = i + 1) begin
+        for (i = 0; i < VICTIM_CACHE_DEPTH * BLOCK_SECTIONS; i = i + 1) begin
             data_memory[i] = 0;
         end
         
@@ -289,6 +339,7 @@ module Victim_Cache #(
             addr_memory[i] = 0;
             ctrl_memory[i] = 0;
             valid[i]       = 0;
+            dirty[i]       = 0;
             equality[i]    = 0;
         end    
         

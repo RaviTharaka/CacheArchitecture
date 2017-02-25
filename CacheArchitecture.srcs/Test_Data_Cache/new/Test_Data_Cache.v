@@ -133,8 +133,8 @@ module Test_Data_Cache ();
         fileResult = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/result.txt", "w");
         $readmemh ("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/Mem_init.in", memory);
         
-        instruction_no = 0;
-                
+        instruction_no = 1;
+                 
         #106;
         PROC_READY = 1;
         
@@ -187,6 +187,21 @@ module Test_Data_Cache ();
         
     assign RD_ADDR_TO_L2_READY = l2_ready & DATA_FROM_L2_READY;    
     
+    wire [32    - 1 : 0] temp1 = {rd_output_addr_reg[MEMORY_ADDR_WIDTH + 2 - 1 : 2 + B - 5    ], {(B - 5    ){1'b0}}};
+    wire [B - 5 - 1 : 0] temp2 = {rd_output_addr_reg[2 + B - 5             - 1 : 2 + W - 5 + T], {(W - 5 + T){1'b0}}};
+    
+    genvar p,q;
+    wire [31 : 0] read_value [L2_BURST - 1 : 0][(1 << W - 5) - 1 : 0];
+    generate
+        for (p = 0; p < L2_BURST; p = p + 1) begin
+            for (q = 0; q < (1 << W - 5); q = q + 1) begin
+                wire [B - 5 - 1 : 0] temp3 = temp2 + {p[B - W - 1 : 0], {(W - 5){1'b0}}};
+                
+                assign read_value[p][q] = memory[temp1 + temp3 + q];
+            end
+        end
+    endgenerate
+        
     always @(posedge CLK) begin
         if (DATA_FROM_L2_READY) begin
             rd_mem_requests[0]  <= RD_ADDR_TO_L2_VALID && RD_ADDR_TO_L2_READY;
@@ -223,14 +238,12 @@ module Test_Data_Cache ();
             for (k = 0; k < L2_BURST; k = k + 1) begin
                 if (rd_output_data_state[k] == 1) begin
                     for (l = 0; l < (1 << W - 5); l = l + 1) begin
-                        DATA_FROM_L2[l * DATA_WIDTH +: DATA_WIDTH] <= memory[{rd_output_addr_reg[MEMORY_ADDR_WIDTH + 2 - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}} + k * (1 << (W - 5))  + l];
+                        DATA_FROM_L2[l * DATA_WIDTH +: DATA_WIDTH] <= read_value[k][l];                                
                     end
                 end
             end
         end      
     end
-    
-    wire [31 : 0] temp = {rd_output_addr_reg[MEMORY_ADDR_WIDTH - 1 : 2 + B - 5 - T], {(B - 5 - T){1'b0}}};
     
     ////////////////////////////////////////////////////////////
     //              Write port of L2 cache                    // 

@@ -56,6 +56,7 @@ module Refill_Control_D #(
         // From the Victim cache
         input                                VICTIM_CACHE_READY,            // From victim cache that it is ready to receive
         output                               VICTIM_CACHE_WRITE,            // To victim cache that it has to write the data from DM3
+        output reg                           VICTIM_COMMIT,                 // To victim cache that it has hit and must send a burst of data
         
         // To the L1 read ports
         output                               L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
@@ -85,8 +86,6 @@ module Refill_Control_D #(
         output MAIN_PIPE_ENB,                       // Enable for main pipeline registers
         output CACHE_PIPE_ENB,                      // Enable for cache pipeline
         output ADDR_FROM_PROC_SEL                   // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}   
-        
-                 
     );
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +246,7 @@ module Refill_Control_D #(
     always @(*) begin
         case ({admit, remove, evict}) 
             3'b100 : begin
-                cur_evic_wire = (no_of_elements == 4'b0000)? 0                : cur_evic;
+                cur_evic_wire = (no_of_elements == 4'b0000)? REFILL_REQ_VALID : cur_evic;
                 fir_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : fir_evic;
                 sec_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : sec_evic;
                 thr_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : thr_evic;
@@ -271,7 +270,7 @@ module Refill_Control_D #(
                 thr_evic_wire = thr_evic;
             end
             3'b101 : begin
-                cur_evic_wire = (no_of_elements == 4'b0000)? 0                : cur_evic & !compl_evic[0];
+                cur_evic_wire = (no_of_elements == 4'b0000)? REFILL_REQ_VALID : cur_evic & !compl_evic[0];
                 fir_evic_wire = (no_of_elements == 4'b0001)? REFILL_REQ_VALID : fir_evic & !compl_evic[1];
                 sec_evic_wire = (no_of_elements == 4'b0011)? REFILL_REQ_VALID : sec_evic & !compl_evic[2];
                 thr_evic_wire = (no_of_elements == 4'b0111)? REFILL_REQ_VALID : thr_evic & !compl_evic[3];
@@ -355,6 +354,7 @@ module Refill_Control_D #(
     localparam E_EVIC_FIN = {1'b1, {(1 + BLOCK_SECTIONS){1'b0}}};   // Finished an eviction
     
     reg [2 + BLOCK_SECTIONS - 1 : 0] evic_state, evic_state_del_1, evic_state_del_2;
+    reg [T                  - 1 : 0] evic_no;
     
     assign evict              = (evic_state == E_EVIC_FIN);
     
@@ -365,21 +365,34 @@ module Refill_Control_D #(
         if (VICTIM_CACHE_READY) begin
             case (evic_state)
                 E_HITTING  : begin
-                    if (admit & REFILL_REQ_VALID) 
+                    if (admit & REFILL_REQ_VALID) begin
                         evic_state <= E_WAITING << 2;
+                        evic_no    <= 1;
+                    end    
                 end 
                 E_WAITING  : begin
-                    evic_state <= (cur_evic_wire)? E_WAITING << 1 : E_WAITING;    
+                    evic_state <= (cur_evic_wire)? E_WAITING << 1 : E_WAITING;  
+                    evic_no    <= (cur_evic_wire)? 0              : 0;  
                 end
                 E_EVIC_FIN : begin
                     case ({evic_empty_wire, next_evic_ready})
-                        2'b00   : evic_state <= E_WAITING;
-                        2'b01   : evic_state <= E_EVIC_STA;
-                        default : evic_state <= E_HITTING;
+                        2'b00   : begin
+                            evic_state <= E_WAITING;
+                            evic_no    <= 0;
+                        end
+                        2'b01   : begin
+                            evic_state <= E_EVIC_STA;
+                            evic_no    <= 0;
+                        end
+                        default : begin
+                            evic_state <= E_HITTING;
+                            evic_no    <= 0;
+                        end
                     endcase
                 end    
                 default   : begin
                     evic_state <= evic_state << 1;
+                    evic_no    <= evic_no + 1;
                 end
             endcase
         end
@@ -395,27 +408,27 @@ module Refill_Control_D #(
             4'b0001  : begin
                 EVICT_TAG      = cur_vtag;
                 EVICT_TAG_ADDR = cur_line;
-                EVICT_SECT     = cur_sect;
+                EVICT_SECT     = cur_sect + evic_no;
             end
             4'b0010  : begin
                 EVICT_TAG      = fir_vtag;
                 EVICT_TAG_ADDR = fir_line;
-                EVICT_SECT     = fir_sect;
+                EVICT_SECT     = fir_sect + evic_no;
             end
             4'b0100  : begin
                 EVICT_TAG      = sec_vtag;
                 EVICT_TAG_ADDR = sec_line;
-                EVICT_SECT     = sec_sect;
+                EVICT_SECT     = sec_sect + evic_no;
             end
             4'b1000  : begin
                 EVICT_TAG      = thr_vtag;
                 EVICT_TAG_ADDR = thr_line;
-                EVICT_SECT     = thr_sect;
+                EVICT_SECT     = thr_sect + evic_no;
             end
             default  : begin
                 EVICT_TAG      = REFILL_REQ_VTAG;
                 EVICT_TAG_ADDR = REFILL_REQ_LINE;
-                EVICT_SECT     = REFILL_REQ_SECT;
+                EVICT_SECT     = REFILL_REQ_SECT + evic_no;
             end
         endcase
     end       
@@ -778,6 +791,30 @@ module Refill_Control_D #(
     endgenerate
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Instructions for Victim cache                                                                //
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+        
+    always @(*) begin
+        case (refill_state) 
+            IDLE         : VICTIM_COMMIT = (!CACHE_HIT & missable_request & VICTIM_HIT);
+            TRANSITION   :  
+                case ({cur_ctrl == 2'b11, cur_src == 0})
+                    2'b00   : VICTIM_COMMIT = (cur_evic == 0); 
+                    default : VICTIM_COMMIT = 0;
+                endcase
+            WRITING_L2   : VICTIM_COMMIT = 0;                
+            WRITING_VIC  : 
+                case (no_completed) 
+                    0         : VICTIM_COMMIT = (cur_evic == 0);   
+                    default   : VICTIM_COMMIT = 0;  
+                endcase               
+            WAITING_CRIT : VICTIM_COMMIT = 0;
+            default      : VICTIM_COMMIT = 0;
+        endcase
+    end     
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for Data from L2                                                                //
     //////////////////////////////////////////////////////////////////////////////////////////////////
      
@@ -789,7 +826,12 @@ module Refill_Control_D #(
                 1         : DATA_FROM_L2_BUFFER_READY = (cur_evic == 0);   
                 default   : DATA_FROM_L2_BUFFER_READY =  1; 
             endcase
-        else 
+        else if (refill_state == TRANSITION)
+            if (cur_src == 0 & DATA_FROM_L2_BUFFER_VALID & cur_evic == 0)
+                DATA_FROM_L2_BUFFER_READY = 1;
+            else 
+                DATA_FROM_L2_BUFFER_READY = 0;
+        else
             DATA_FROM_L2_BUFFER_READY = 0;
     end
     
@@ -881,7 +923,7 @@ module Refill_Control_D #(
                         2'b11 : pc_state <= HITTING;
                     endcase
                 end else begin 
-                    case ({VICTIM_HIT, CACHE_HIT})
+                    case ({VICTIM_HIT, CACHE_HIT | !real_request})
                         2'b00 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
                         2'b01 : pc_state <= TRANSIT;
                         2'b10 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
@@ -891,21 +933,29 @@ module Refill_Control_D #(
         endcase
     end 
     
-    assign MAIN_PIPE_ENB      = (pc_state != WAIT);
-    assign ADDR_FROM_PROC_SEL = !(pc_state == SHIFT0 | pc_state == SHIFT1 | (pc_state == HITTING & !CACHE_HIT & real_request) 
-                                 | pc_state == WAIT | (pc_state == TRANSIT & !CACHE_HIT));
-    assign CACHE_READY        = (pc_state == HITTING | pc_state == TRANSIT | pc_state == SHIFT2) & temp;
-    
     reg temp;
-    
-    always @(*) 
+    always @(*) begin
         case (REFILL_REQ_CTRL)
             2'b00 : temp = 1;
             2'b10 : temp = CACHE_HIT & !L1_WR_PORT_SELECT[1];
             2'b01 : temp = CACHE_HIT;
             2'b11 : temp = 1;
         endcase
-        
+    end
+    
+    assign MAIN_PIPE_ENB      = (pc_state != WAIT) & !(pc_state == SHIFT0 & L1_RD_PORT_SELECT != 0);
+    assign ADDR_FROM_PROC_SEL = !(   pc_state == SHIFT0
+                                  |  pc_state == SHIFT1 
+                                  | (pc_state == SHIFT2  & !CACHE_HIT)
+                                  | (pc_state == HITTING & !CACHE_HIT & real_request)
+                                  |  pc_state == WAIT   
+                                  | (pc_state == TRANSIT & !CACHE_HIT & real_request));
+    
+    assign CACHE_READY        = (pc_state == HITTING | 
+                                 pc_state == TRANSIT | 
+                                 pc_state == SHIFT2)   & temp;
+    
+       
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial values                                                                               //
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -920,6 +970,7 @@ module Refill_Control_D #(
         flush_request       = 0;
         
         evic_state     = E_HITTING;
+        evic_no        = 0;
         
         cur_evic = 0;
         fir_evic = 0;

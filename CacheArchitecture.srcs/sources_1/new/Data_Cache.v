@@ -317,10 +317,54 @@ module Data_Cache #(
             
             // De-array the lin_data_out wire
             assign lin_ram_out_dearray [LINE_RAM_WIDTH * i +: LINE_RAM_WIDTH] = lin_data_out  [i];
-            
         end
     endgenerate
     
+    // Storing data from previous cycles, since data_set_mux_out is not always the most updated one
+    reg  [DATA_WIDTH      - 1 : 0] data_del_3,         data_del_4;
+    reg  [WORDS_PER_SECT  - 1 : 0] word_address_del_3, word_address_del_4;
+    reg                            equal_n0, equal_n1, equal_n1_del_1;
+    
+    reg  [LINE_RAM_WIDTH  - 1 : 0] l1_data_out;
+    
+    always @(posedge CLK) begin
+         if (cache_pipe_enb) begin
+            // Find if previous request and current request are same
+            equal_n1_del_1 <= equal_n1;   
+                        
+            equal_n0 <= (tag_del_2 == tag_del_1) & ({tag_address_del_2, section_address_del_2} == {tag_address_del_1, section_address_del_1}) & (control_del_2 == 2'b10); //(DM3 == DM2)
+            equal_n1 <= (tag_del_2 == tag      ) & ({tag_address_del_2, section_address_del_2} == {tag_address      , section_address      }) & (control_del_2 == 2'b10); //(DM3 == DM1) 
+            
+            // Requires previous data and addresses    
+            word_address_del_3 <= word_address_del_2;
+            word_address_del_4 <= word_address_del_3;
+            
+            data_del_3 <= data_del_2;
+            data_del_4 <= data_del_3;
+        end
+    end     
+           
+    genvar z;
+    generate 
+        for (z = 0; z < (1 << WORDS_PER_SECT); z = z + 1) begin : DM3_LOOP
+            always @(*) begin
+                case ({equal_n0, equal_n1_del_1}) 
+                    2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_3 == z) ? data_del_3 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_4 == z) ? data_del_4 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                    2'b11 : begin
+                        case ({word_address_del_3 == z, word_address_del_4 == z}) 
+                            2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
+                            2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_4;
+                            2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
+                            2'b11 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
+                        endcase
+                    end
+                endcase
+            end
+        end
+    endgenerate
+
     // Replacement policy unit
     Replacement_Unit #(
         .S(S),
@@ -386,7 +430,7 @@ module Data_Cache #(
         .WIDTH(DATA_WIDTH)
     ) word_mux (
         .SELECT(word_address_del_2),
-        .IN(data_set_mux_out),
+        .IN(l1_data_out),
         .OUT(data_to_proc)
     );
     
@@ -507,7 +551,7 @@ module Data_Cache #(
     ) victim_cache (
         .CLK(CLK),
         // Write port from L1 cache
-        .DATA_FROM_L1(data_set_mux_out),
+        .DATA_FROM_L1(l1_data_out),
         .ADDR_FROM_L1({tag_set_mux_out, tag_address_del_2, section_address_del_2}),
         .DIRTY_FROM_L1(dirty_set_mux_out),
         .CONTROL_FROM_L1(victim_cache_control),
@@ -517,6 +561,7 @@ module Data_Cache #(
         .SEARCH_ADDR({tag, tag_address, section_address}),
         // Ports back to L1 cache
         .VICTIM_HIT(victim_hit),
+        .VICTIM_COMMIT(victim_commit),
         .DATA_TO_L1(victim_cache_refill),
         // Write port to L2
         .WR_TO_L2_READY(WR_TO_L2_READY),
@@ -533,66 +578,25 @@ module Data_Cache #(
     
     wire [1 : 0] refill_sel;                // refill_sel = {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
     
-    // Storing data from previous cycle, since data_set_mux_out is not always the most updated one
-    reg  [DATA_WIDTH      - 1 : 0] data_del_3,         data_del_4;
-    reg  [WORDS_PER_SECT  - 1 : 0] word_address_del_3, word_address_del_4;
-    reg                            equal_n0, equal_n1, equal_n1_del_1;
-    
-    reg  [LINE_RAM_WIDTH  - 1 : 0] l1_data_out;
-    
-    always @(posedge CLK) begin
-         if (cache_pipe_enb) begin
-            // Find if previous request and current request are same
-            equal_n1_del_1 <= equal_n1;   
-                        
-            equal_n0 <= (tag_del_2 == tag_del_1) & ({tag_address_del_2, section_address_del_2} == {tag_address_del_1, section_address_del_1}) & (control_del_2 == 2'b10); //(DM3 == DM2)
-            equal_n1 <= (tag_del_2 == tag      ) & ({tag_address_del_2, section_address_del_2} == {tag_address      , section_address      }) & (control_del_2 == 2'b10); //(DM3 == DM1) 
-            
-            // Requires previous data and addresses    
-            word_address_del_3 <= word_address_del_2;
-            word_address_del_4 <= word_address_del_3;
-            
-            data_del_3 <= data_del_2;
-            data_del_4 <= data_del_3;
-        end
-    end     
-           
     // Line RAM data in multiplexer
-    genvar z;
+    genvar y;
     generate 
-        for (z = 0; z < (1 << WORDS_PER_SECT); z = z + 1) begin : REFILL_LOOP
+        for (y = 0; y < (1 << WORDS_PER_SECT); y = y + 1) begin : REFILL_LOOP
             wire [1 : 0] lin_mem_data_in_sel;
             
             assign lin_mem_data_in_sel[1] = refill_sel[1];
-            assign lin_mem_data_in_sel[0] = (refill_sel[1])? refill_sel[0] : (z != word_address_del_2);
-            
-            // Bypass for cache writes
-            always @(*) begin
-                case ({equal_n0, equal_n1_del_1}) 
-                    2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
-                    2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_3 == z) ? data_del_3 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
-                    2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = (word_address_del_4 == z) ? data_del_4 : data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
-                    2'b11 : begin
-                        case ({word_address_del_3 == z, word_address_del_4 == z}) 
-                            2'b00 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_set_mux_out[DATA_WIDTH * z +: DATA_WIDTH];
-                            2'b01 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_4;
-                            2'b10 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
-                            2'b11 : l1_data_out[DATA_WIDTH * z +: DATA_WIDTH] = data_del_3;
-                        endcase
-                    end
-                endcase
-            end
-                        
+            assign lin_mem_data_in_sel[0] = (refill_sel[1])? refill_sel[0] : (y != word_address_del_2);
+             
             Multiplexer #(
                 .ORDER(2),
                 .WIDTH(DATA_WIDTH)
             ) lin_mem_data_in_mux (
                 .SELECT(lin_mem_data_in_sel),
-                .IN({data_from_L2_buffer[DATA_WIDTH * z +: DATA_WIDTH], 
-                     victim_cache_refill[DATA_WIDTH * z +: DATA_WIDTH],
-                     l1_data_out        [DATA_WIDTH * z +: DATA_WIDTH], 
+                .IN({data_from_L2_buffer[DATA_WIDTH * y +: DATA_WIDTH], 
+                     victim_cache_refill[DATA_WIDTH * y +: DATA_WIDTH],
+                     l1_data_out        [DATA_WIDTH * y +: DATA_WIDTH], 
                      data_del_2}),
-                .OUT(lin_mem_data_in    [DATA_WIDTH * z +: DATA_WIDTH])
+                .OUT(lin_mem_data_in    [DATA_WIDTH * y +: DATA_WIDTH])
             );
         end
     endgenerate
@@ -609,7 +613,7 @@ module Data_Cache #(
     assign lin_mem_wr_enb  = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
     
     // Tag memory write port controls
-    assign tag_mem_wr_addr  = (refill_sel[1]) ? refill_tag_addr                : 0;
+    assign tag_mem_wr_addr  = (refill_sel[1]) ? refill_tag_addr                : tag_address_del_2;
     assign tag_mem_wr_enb   = (refill_sel[1]) ? refill_dst                     : 0;
     assign dirty_mem_wr_enb = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
     
@@ -643,9 +647,10 @@ module Data_Cache #(
         .REFILL_REQ_DIRTY(dirty_set_mux_out),               // Dirty bit coming out of tag memory delayed to DM3
         .REFILL_REQ_CTRL(control_del_2),                    // Instruction at DM3
         .REFILL_REQ_VALID(valid_set_mux_out),               // Valid bit coming out of tag memory delayed to DM3
-        // From the Victim cache
+        // To and from the Victim cache
         .VICTIM_CACHE_READY(victim_cache_ready),            // From victim cache that it is ready to receive
         .VICTIM_CACHE_WRITE(victim_cache_valid),            // To victim cache that it has to write the data from DM3
+        .VICTIM_COMMIT(victim_commit),                      // To victim cache that it has hit and must send a burst of data
         // To the L1 read ports
         .L1_RD_PORT_SELECT(rd_port_select),                // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
         .EVICT_TAG(evict_tag),                             // Tag for read address at DM1 
