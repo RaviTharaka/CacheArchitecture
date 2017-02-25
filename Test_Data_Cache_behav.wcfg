@@ -11,13 +11,14 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="5881466667fs"></ZoomStartTime>
-      <ZoomEndTime time="11631466668fs"></ZoomEndTime>
-      <Cursor1Time time="6839800000fs"></Cursor1Time>
+      <ZoomStartTime time="65107500000fs"></ZoomStartTime>
+      <ZoomEndTime time="65726000001fs"></ZoomEndTime>
+      <Cursor1Time time="65245000000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="13" />
    <wave_markers>
-      <marker time="6839800000" label="" />
+      <marker time="17049267000" label="" />
+      <marker time="32319800000" label="" />
    </wave_markers>
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
@@ -58,6 +59,8 @@
          <obj_property name="ObjectShortName">DATA_FROM_PROC[31:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          <obj_property name="label">DATA_FROM_PROC</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/CONTROL_FROM_PROC" type="array">
          <obj_property name="DisplayName">label</obj_property>
@@ -65,6 +68,8 @@
          <obj_property name="ObjectShortName">CONTROL_FROM_PROC[1:0]</obj_property>
          <obj_property name="Radix">HEXRADIX</obj_property>
          <obj_property name="label">CONTROL_FROM_PROC</obj_property>
+         <obj_property name="CustomSignalColor">#808000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/DATA_TO_PROC" type="array">
          <obj_property name="DisplayName">label</obj_property>
@@ -72,44 +77,8 @@
          <obj_property name="ObjectShortName">DATA_TO_PROC[31:0]</obj_property>
          <obj_property name="label">DATA_TO_PROC</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-   </wvobject>
-   <wvobject fp_name="group27" type="group">
-      <obj_property name="label">Main Pipeline</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
-         <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
-         <obj_property name="CustomSignalColor">#808000</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_1" type="array">
-         <obj_property name="ElementShortName">control_from_proc_del_1[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_from_proc_del_1[1:0]</obj_property>
-         <obj_property name="CustomSignalColor">#808000</obj_property>
-         <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_2" type="array">
-         <obj_property name="ElementShortName">control_from_proc_del_2[1:0]</obj_property>
-         <obj_property name="ObjectShortName">control_from_proc_del_2[1:0]</obj_property>
-         <obj_property name="CustomSignalColor">#808000</obj_property>
-         <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc" type="array">
-         <obj_property name="ElementShortName">addr_from_proc[31:0]</obj_property>
-         <obj_property name="ObjectShortName">addr_from_proc[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc_del_1" type="array">
-         <obj_property name="ElementShortName">addr_from_proc_del_1[31:0]</obj_property>
-         <obj_property name="ObjectShortName">addr_from_proc_del_1[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc_del_2" type="array">
-         <obj_property name="ElementShortName">addr_from_proc_del_2[31:0]</obj_property>
-         <obj_property name="ObjectShortName">addr_from_proc_del_2[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group25" type="group">
@@ -229,6 +198,91 @@
             <obj_property name="CustomSignalColor">#FF0080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group27" type="group">
+      <obj_property name="label">Main Pipeline</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc" type="array">
+         <obj_property name="ElementShortName">control_from_proc[1:0]</obj_property>
+         <obj_property name="ObjectShortName">control_from_proc[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_1" type="array">
+         <obj_property name="ElementShortName">control_from_proc_del_1[1:0]</obj_property>
+         <obj_property name="ObjectShortName">control_from_proc_del_1[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/control_from_proc_del_2" type="array">
+         <obj_property name="ElementShortName">control_from_proc_del_2[1:0]</obj_property>
+         <obj_property name="ObjectShortName">control_from_proc_del_2[1:0]</obj_property>
+         <obj_property name="CustomSignalColor">#808000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc" type="array">
+         <obj_property name="ElementShortName">addr_from_proc[31:0]</obj_property>
+         <obj_property name="ObjectShortName">addr_from_proc[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc_del_1" type="array">
+         <obj_property name="ElementShortName">addr_from_proc_del_1[31:0]</obj_property>
+         <obj_property name="ObjectShortName">addr_from_proc_del_1[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/addr_from_proc_del_2" type="array">
+         <obj_property name="ElementShortName">addr_from_proc_del_2[31:0]</obj_property>
+         <obj_property name="ObjectShortName">addr_from_proc_del_2[31:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group107" type="group">
+      <obj_property name="label">Hit status</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/hit_set_wire" type="array">
+         <obj_property name="ElementShortName">hit_set_wire[1:0]</obj_property>
+         <obj_property name="ObjectShortName">hit_set_wire[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/cache_hit" type="logic">
+         <obj_property name="ElementShortName">cache_hit</obj_property>
+         <obj_property name="ObjectShortName">cache_hit</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_hit" type="logic">
+         <obj_property name="ElementShortName">victim_hit</obj_property>
+         <obj_property name="ObjectShortName">victim_hit</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/evic_state" type="array">
+         <obj_property name="ElementShortName">evic_state[3:0]</obj_property>
+         <obj_property name="ObjectShortName">evic_state[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/pc_state" type="array">
+         <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
+         <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
+         <obj_property name="ElementShortName">refill_state[5:0]</obj_property>
+         <obj_property name="ObjectShortName">refill_state[5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/commited_sections" type="array">
+         <obj_property name="ElementShortName">commited_sections[1:0]</obj_property>
+         <obj_property name="ObjectShortName">commited_sections[1:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_ready" type="logic">
+         <obj_property name="ElementShortName">critical_ready</obj_property>
+         <obj_property name="ObjectShortName">critical_ready</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_use" type="logic">
+         <obj_property name="ElementShortName">critical_use</obj_property>
+         <obj_property name="ObjectShortName">critical_use</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_used" type="logic">
+         <obj_property name="ElementShortName">critical_used</obj_property>
+         <obj_property name="ObjectShortName">critical_used</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group106" type="group">
@@ -1942,7 +1996,6 @@
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="CustomSignalColor">#008080</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
-         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus1539" type="vbus">
             <obj_property name="label">0</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -3084,13 +3137,576 @@
          <obj_property name="ElementShortName">WR_TO_L2_VALID</obj_property>
          <obj_property name="ObjectShortName">WR_TO_L2_VALID</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/WR_ADDR_TO_L2" type="array">
-         <obj_property name="ElementShortName">WR_ADDR_TO_L2[29:0]</obj_property>
-         <obj_property name="ObjectShortName">WR_ADDR_TO_L2[29:0]</obj_property>
+      <wvobject fp_name="vbus2902" type="vbus">
+         <obj_property name="label">WriteAddressToL2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_ADDR_TO_L2" type="array">
+            <obj_property name="ElementShortName">WR_ADDR_TO_L2[29:0]</obj_property>
+            <obj_property name="ObjectShortName">WR_ADDR_TO_L2[29:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+            <obj_property name="ElementShortName">FALSE</obj_property>
+            <obj_property name="ObjectShortName">FALSE</obj_property>
+         </wvobject>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/DATA_TO_L2" type="array">
-         <obj_property name="ElementShortName">DATA_TO_L2[127:0]</obj_property>
-         <obj_property name="ObjectShortName">DATA_TO_L2[127:0]</obj_property>
+      <wvobject fp_name="vbus2865" type="vbus">
+         <obj_property name="label">Data3</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[127]" type="logic">
+            <obj_property name="ElementShortName">[127]</obj_property>
+            <obj_property name="ObjectShortName">[127]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[126]" type="logic">
+            <obj_property name="ElementShortName">[126]</obj_property>
+            <obj_property name="ObjectShortName">[126]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[125]" type="logic">
+            <obj_property name="ElementShortName">[125]</obj_property>
+            <obj_property name="ObjectShortName">[125]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[124]" type="logic">
+            <obj_property name="ElementShortName">[124]</obj_property>
+            <obj_property name="ObjectShortName">[124]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[123]" type="logic">
+            <obj_property name="ElementShortName">[123]</obj_property>
+            <obj_property name="ObjectShortName">[123]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[122]" type="logic">
+            <obj_property name="ElementShortName">[122]</obj_property>
+            <obj_property name="ObjectShortName">[122]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[121]" type="logic">
+            <obj_property name="ElementShortName">[121]</obj_property>
+            <obj_property name="ObjectShortName">[121]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[120]" type="logic">
+            <obj_property name="ElementShortName">[120]</obj_property>
+            <obj_property name="ObjectShortName">[120]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[119]" type="logic">
+            <obj_property name="ElementShortName">[119]</obj_property>
+            <obj_property name="ObjectShortName">[119]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[118]" type="logic">
+            <obj_property name="ElementShortName">[118]</obj_property>
+            <obj_property name="ObjectShortName">[118]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[117]" type="logic">
+            <obj_property name="ElementShortName">[117]</obj_property>
+            <obj_property name="ObjectShortName">[117]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[116]" type="logic">
+            <obj_property name="ElementShortName">[116]</obj_property>
+            <obj_property name="ObjectShortName">[116]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[115]" type="logic">
+            <obj_property name="ElementShortName">[115]</obj_property>
+            <obj_property name="ObjectShortName">[115]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[114]" type="logic">
+            <obj_property name="ElementShortName">[114]</obj_property>
+            <obj_property name="ObjectShortName">[114]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[113]" type="logic">
+            <obj_property name="ElementShortName">[113]</obj_property>
+            <obj_property name="ObjectShortName">[113]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[112]" type="logic">
+            <obj_property name="ElementShortName">[112]</obj_property>
+            <obj_property name="ObjectShortName">[112]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[111]" type="logic">
+            <obj_property name="ElementShortName">[111]</obj_property>
+            <obj_property name="ObjectShortName">[111]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[110]" type="logic">
+            <obj_property name="ElementShortName">[110]</obj_property>
+            <obj_property name="ObjectShortName">[110]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[109]" type="logic">
+            <obj_property name="ElementShortName">[109]</obj_property>
+            <obj_property name="ObjectShortName">[109]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[108]" type="logic">
+            <obj_property name="ElementShortName">[108]</obj_property>
+            <obj_property name="ObjectShortName">[108]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[107]" type="logic">
+            <obj_property name="ElementShortName">[107]</obj_property>
+            <obj_property name="ObjectShortName">[107]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[106]" type="logic">
+            <obj_property name="ElementShortName">[106]</obj_property>
+            <obj_property name="ObjectShortName">[106]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[105]" type="logic">
+            <obj_property name="ElementShortName">[105]</obj_property>
+            <obj_property name="ObjectShortName">[105]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[104]" type="logic">
+            <obj_property name="ElementShortName">[104]</obj_property>
+            <obj_property name="ObjectShortName">[104]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[103]" type="logic">
+            <obj_property name="ElementShortName">[103]</obj_property>
+            <obj_property name="ObjectShortName">[103]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[102]" type="logic">
+            <obj_property name="ElementShortName">[102]</obj_property>
+            <obj_property name="ObjectShortName">[102]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[101]" type="logic">
+            <obj_property name="ElementShortName">[101]</obj_property>
+            <obj_property name="ObjectShortName">[101]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[100]" type="logic">
+            <obj_property name="ElementShortName">[100]</obj_property>
+            <obj_property name="ObjectShortName">[100]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[99]" type="logic">
+            <obj_property name="ElementShortName">[99]</obj_property>
+            <obj_property name="ObjectShortName">[99]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[98]" type="logic">
+            <obj_property name="ElementShortName">[98]</obj_property>
+            <obj_property name="ObjectShortName">[98]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[97]" type="logic">
+            <obj_property name="ElementShortName">[97]</obj_property>
+            <obj_property name="ObjectShortName">[97]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[96]" type="logic">
+            <obj_property name="ElementShortName">[96]</obj_property>
+            <obj_property name="ObjectShortName">[96]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="vbus2832" type="vbus">
+         <obj_property name="label">Data2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[95]" type="logic">
+            <obj_property name="ElementShortName">[95]</obj_property>
+            <obj_property name="ObjectShortName">[95]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[94]" type="logic">
+            <obj_property name="ElementShortName">[94]</obj_property>
+            <obj_property name="ObjectShortName">[94]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[93]" type="logic">
+            <obj_property name="ElementShortName">[93]</obj_property>
+            <obj_property name="ObjectShortName">[93]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[92]" type="logic">
+            <obj_property name="ElementShortName">[92]</obj_property>
+            <obj_property name="ObjectShortName">[92]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[91]" type="logic">
+            <obj_property name="ElementShortName">[91]</obj_property>
+            <obj_property name="ObjectShortName">[91]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[90]" type="logic">
+            <obj_property name="ElementShortName">[90]</obj_property>
+            <obj_property name="ObjectShortName">[90]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[89]" type="logic">
+            <obj_property name="ElementShortName">[89]</obj_property>
+            <obj_property name="ObjectShortName">[89]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[88]" type="logic">
+            <obj_property name="ElementShortName">[88]</obj_property>
+            <obj_property name="ObjectShortName">[88]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[87]" type="logic">
+            <obj_property name="ElementShortName">[87]</obj_property>
+            <obj_property name="ObjectShortName">[87]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[86]" type="logic">
+            <obj_property name="ElementShortName">[86]</obj_property>
+            <obj_property name="ObjectShortName">[86]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[85]" type="logic">
+            <obj_property name="ElementShortName">[85]</obj_property>
+            <obj_property name="ObjectShortName">[85]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[84]" type="logic">
+            <obj_property name="ElementShortName">[84]</obj_property>
+            <obj_property name="ObjectShortName">[84]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[83]" type="logic">
+            <obj_property name="ElementShortName">[83]</obj_property>
+            <obj_property name="ObjectShortName">[83]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[82]" type="logic">
+            <obj_property name="ElementShortName">[82]</obj_property>
+            <obj_property name="ObjectShortName">[82]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[81]" type="logic">
+            <obj_property name="ElementShortName">[81]</obj_property>
+            <obj_property name="ObjectShortName">[81]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[80]" type="logic">
+            <obj_property name="ElementShortName">[80]</obj_property>
+            <obj_property name="ObjectShortName">[80]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[79]" type="logic">
+            <obj_property name="ElementShortName">[79]</obj_property>
+            <obj_property name="ObjectShortName">[79]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[78]" type="logic">
+            <obj_property name="ElementShortName">[78]</obj_property>
+            <obj_property name="ObjectShortName">[78]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[77]" type="logic">
+            <obj_property name="ElementShortName">[77]</obj_property>
+            <obj_property name="ObjectShortName">[77]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[76]" type="logic">
+            <obj_property name="ElementShortName">[76]</obj_property>
+            <obj_property name="ObjectShortName">[76]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[75]" type="logic">
+            <obj_property name="ElementShortName">[75]</obj_property>
+            <obj_property name="ObjectShortName">[75]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[74]" type="logic">
+            <obj_property name="ElementShortName">[74]</obj_property>
+            <obj_property name="ObjectShortName">[74]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[73]" type="logic">
+            <obj_property name="ElementShortName">[73]</obj_property>
+            <obj_property name="ObjectShortName">[73]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[72]" type="logic">
+            <obj_property name="ElementShortName">[72]</obj_property>
+            <obj_property name="ObjectShortName">[72]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[71]" type="logic">
+            <obj_property name="ElementShortName">[71]</obj_property>
+            <obj_property name="ObjectShortName">[71]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[70]" type="logic">
+            <obj_property name="ElementShortName">[70]</obj_property>
+            <obj_property name="ObjectShortName">[70]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[69]" type="logic">
+            <obj_property name="ElementShortName">[69]</obj_property>
+            <obj_property name="ObjectShortName">[69]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[68]" type="logic">
+            <obj_property name="ElementShortName">[68]</obj_property>
+            <obj_property name="ObjectShortName">[68]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[67]" type="logic">
+            <obj_property name="ElementShortName">[67]</obj_property>
+            <obj_property name="ObjectShortName">[67]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[66]" type="logic">
+            <obj_property name="ElementShortName">[66]</obj_property>
+            <obj_property name="ObjectShortName">[66]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[65]" type="logic">
+            <obj_property name="ElementShortName">[65]</obj_property>
+            <obj_property name="ObjectShortName">[65]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[64]" type="logic">
+            <obj_property name="ElementShortName">[64]</obj_property>
+            <obj_property name="ObjectShortName">[64]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="vbus2799" type="vbus">
+         <obj_property name="label">Data1</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[63]" type="logic">
+            <obj_property name="ElementShortName">[63]</obj_property>
+            <obj_property name="ObjectShortName">[63]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[62]" type="logic">
+            <obj_property name="ElementShortName">[62]</obj_property>
+            <obj_property name="ObjectShortName">[62]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[61]" type="logic">
+            <obj_property name="ElementShortName">[61]</obj_property>
+            <obj_property name="ObjectShortName">[61]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[60]" type="logic">
+            <obj_property name="ElementShortName">[60]</obj_property>
+            <obj_property name="ObjectShortName">[60]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[59]" type="logic">
+            <obj_property name="ElementShortName">[59]</obj_property>
+            <obj_property name="ObjectShortName">[59]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[58]" type="logic">
+            <obj_property name="ElementShortName">[58]</obj_property>
+            <obj_property name="ObjectShortName">[58]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[57]" type="logic">
+            <obj_property name="ElementShortName">[57]</obj_property>
+            <obj_property name="ObjectShortName">[57]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[56]" type="logic">
+            <obj_property name="ElementShortName">[56]</obj_property>
+            <obj_property name="ObjectShortName">[56]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[55]" type="logic">
+            <obj_property name="ElementShortName">[55]</obj_property>
+            <obj_property name="ObjectShortName">[55]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[54]" type="logic">
+            <obj_property name="ElementShortName">[54]</obj_property>
+            <obj_property name="ObjectShortName">[54]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[53]" type="logic">
+            <obj_property name="ElementShortName">[53]</obj_property>
+            <obj_property name="ObjectShortName">[53]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[52]" type="logic">
+            <obj_property name="ElementShortName">[52]</obj_property>
+            <obj_property name="ObjectShortName">[52]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[51]" type="logic">
+            <obj_property name="ElementShortName">[51]</obj_property>
+            <obj_property name="ObjectShortName">[51]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[50]" type="logic">
+            <obj_property name="ElementShortName">[50]</obj_property>
+            <obj_property name="ObjectShortName">[50]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[49]" type="logic">
+            <obj_property name="ElementShortName">[49]</obj_property>
+            <obj_property name="ObjectShortName">[49]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[48]" type="logic">
+            <obj_property name="ElementShortName">[48]</obj_property>
+            <obj_property name="ObjectShortName">[48]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[47]" type="logic">
+            <obj_property name="ElementShortName">[47]</obj_property>
+            <obj_property name="ObjectShortName">[47]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[46]" type="logic">
+            <obj_property name="ElementShortName">[46]</obj_property>
+            <obj_property name="ObjectShortName">[46]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[45]" type="logic">
+            <obj_property name="ElementShortName">[45]</obj_property>
+            <obj_property name="ObjectShortName">[45]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[44]" type="logic">
+            <obj_property name="ElementShortName">[44]</obj_property>
+            <obj_property name="ObjectShortName">[44]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[43]" type="logic">
+            <obj_property name="ElementShortName">[43]</obj_property>
+            <obj_property name="ObjectShortName">[43]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[42]" type="logic">
+            <obj_property name="ElementShortName">[42]</obj_property>
+            <obj_property name="ObjectShortName">[42]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[41]" type="logic">
+            <obj_property name="ElementShortName">[41]</obj_property>
+            <obj_property name="ObjectShortName">[41]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[40]" type="logic">
+            <obj_property name="ElementShortName">[40]</obj_property>
+            <obj_property name="ObjectShortName">[40]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[39]" type="logic">
+            <obj_property name="ElementShortName">[39]</obj_property>
+            <obj_property name="ObjectShortName">[39]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[38]" type="logic">
+            <obj_property name="ElementShortName">[38]</obj_property>
+            <obj_property name="ObjectShortName">[38]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[37]" type="logic">
+            <obj_property name="ElementShortName">[37]</obj_property>
+            <obj_property name="ObjectShortName">[37]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[36]" type="logic">
+            <obj_property name="ElementShortName">[36]</obj_property>
+            <obj_property name="ObjectShortName">[36]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[35]" type="logic">
+            <obj_property name="ElementShortName">[35]</obj_property>
+            <obj_property name="ObjectShortName">[35]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[34]" type="logic">
+            <obj_property name="ElementShortName">[34]</obj_property>
+            <obj_property name="ObjectShortName">[34]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[33]" type="logic">
+            <obj_property name="ElementShortName">[33]</obj_property>
+            <obj_property name="ObjectShortName">[33]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[32]" type="logic">
+            <obj_property name="ElementShortName">[32]</obj_property>
+            <obj_property name="ObjectShortName">[32]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="vbus2766" type="vbus">
+         <obj_property name="label">Data0</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="CustomSignalColor">#008080</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[31]" type="logic">
+            <obj_property name="ElementShortName">[31]</obj_property>
+            <obj_property name="ObjectShortName">[31]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[30]" type="logic">
+            <obj_property name="ElementShortName">[30]</obj_property>
+            <obj_property name="ObjectShortName">[30]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[29]" type="logic">
+            <obj_property name="ElementShortName">[29]</obj_property>
+            <obj_property name="ObjectShortName">[29]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[28]" type="logic">
+            <obj_property name="ElementShortName">[28]</obj_property>
+            <obj_property name="ObjectShortName">[28]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[27]" type="logic">
+            <obj_property name="ElementShortName">[27]</obj_property>
+            <obj_property name="ObjectShortName">[27]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[26]" type="logic">
+            <obj_property name="ElementShortName">[26]</obj_property>
+            <obj_property name="ObjectShortName">[26]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[25]" type="logic">
+            <obj_property name="ElementShortName">[25]</obj_property>
+            <obj_property name="ObjectShortName">[25]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[24]" type="logic">
+            <obj_property name="ElementShortName">[24]</obj_property>
+            <obj_property name="ObjectShortName">[24]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[23]" type="logic">
+            <obj_property name="ElementShortName">[23]</obj_property>
+            <obj_property name="ObjectShortName">[23]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[22]" type="logic">
+            <obj_property name="ElementShortName">[22]</obj_property>
+            <obj_property name="ObjectShortName">[22]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[21]" type="logic">
+            <obj_property name="ElementShortName">[21]</obj_property>
+            <obj_property name="ObjectShortName">[21]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[20]" type="logic">
+            <obj_property name="ElementShortName">[20]</obj_property>
+            <obj_property name="ObjectShortName">[20]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[19]" type="logic">
+            <obj_property name="ElementShortName">[19]</obj_property>
+            <obj_property name="ObjectShortName">[19]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[18]" type="logic">
+            <obj_property name="ElementShortName">[18]</obj_property>
+            <obj_property name="ObjectShortName">[18]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[17]" type="logic">
+            <obj_property name="ElementShortName">[17]</obj_property>
+            <obj_property name="ObjectShortName">[17]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[16]" type="logic">
+            <obj_property name="ElementShortName">[16]</obj_property>
+            <obj_property name="ObjectShortName">[16]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[15]" type="logic">
+            <obj_property name="ElementShortName">[15]</obj_property>
+            <obj_property name="ObjectShortName">[15]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[14]" type="logic">
+            <obj_property name="ElementShortName">[14]</obj_property>
+            <obj_property name="ObjectShortName">[14]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[13]" type="logic">
+            <obj_property name="ElementShortName">[13]</obj_property>
+            <obj_property name="ObjectShortName">[13]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[12]" type="logic">
+            <obj_property name="ElementShortName">[12]</obj_property>
+            <obj_property name="ObjectShortName">[12]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[11]" type="logic">
+            <obj_property name="ElementShortName">[11]</obj_property>
+            <obj_property name="ObjectShortName">[11]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[10]" type="logic">
+            <obj_property name="ElementShortName">[10]</obj_property>
+            <obj_property name="ObjectShortName">[10]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[9]" type="logic">
+            <obj_property name="ElementShortName">[9]</obj_property>
+            <obj_property name="ObjectShortName">[9]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[8]" type="logic">
+            <obj_property name="ElementShortName">[8]</obj_property>
+            <obj_property name="ObjectShortName">[8]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[7]" type="logic">
+            <obj_property name="ElementShortName">[7]</obj_property>
+            <obj_property name="ObjectShortName">[7]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[6]" type="logic">
+            <obj_property name="ElementShortName">[6]</obj_property>
+            <obj_property name="ObjectShortName">[6]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[5]" type="logic">
+            <obj_property name="ElementShortName">[5]</obj_property>
+            <obj_property name="ObjectShortName">[5]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[4]" type="logic">
+            <obj_property name="ElementShortName">[4]</obj_property>
+            <obj_property name="ObjectShortName">[4]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[3]" type="logic">
+            <obj_property name="ElementShortName">[3]</obj_property>
+            <obj_property name="ObjectShortName">[3]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[2]" type="logic">
+            <obj_property name="ElementShortName">[2]</obj_property>
+            <obj_property name="ObjectShortName">[2]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[1]" type="logic">
+            <obj_property name="ElementShortName">[1]</obj_property>
+            <obj_property name="ObjectShortName">[1]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[0]" type="logic">
+            <obj_property name="ElementShortName">[0]</obj_property>
+            <obj_property name="ObjectShortName">[0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/victim_rd_state" type="array">
+         <obj_property name="ElementShortName">victim_rd_state[1:0]</obj_property>
+         <obj_property name="ObjectShortName">victim_rd_state[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/rd_overall_state" type="array">
+         <obj_property name="ElementShortName">rd_overall_state[1:0]</obj_property>
+         <obj_property name="ObjectShortName">rd_overall_state[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/victim_rd_pos" type="array">
+         <obj_property name="ElementShortName">victim_rd_pos[1:0]</obj_property>
+         <obj_property name="ObjectShortName">victim_rd_pos[1:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/WR_CONTROL_TO_L2" type="logic">
          <obj_property name="ElementShortName">WR_CONTROL_TO_L2</obj_property>
@@ -3100,49 +3716,23 @@
          <obj_property name="ElementShortName">WR_COMPLETE</obj_property>
          <obj_property name="ObjectShortName">WR_COMPLETE</obj_property>
       </wvobject>
-   </wvobject>
-   <wvobject fp_name="group107" type="group">
-      <obj_property name="label">Hit status</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/Test_Data_Cache/uut/hit_set_wire" type="array">
-         <obj_property name="ElementShortName">hit_set_wire[1:0]</obj_property>
-         <obj_property name="ObjectShortName">hit_set_wire[1:0]</obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/L2_wr_buf_full" type="logic">
+         <obj_property name="ElementShortName">L2_wr_buf_full</obj_property>
+         <obj_property name="ObjectShortName">L2_wr_buf_full</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/cache_hit" type="logic">
-         <obj_property name="ElementShortName">cache_hit</obj_property>
-         <obj_property name="ObjectShortName">cache_hit</obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/L2_wr_buf_ready" type="logic">
+         <obj_property name="ElementShortName">L2_wr_buf_ready</obj_property>
+         <obj_property name="ObjectShortName">L2_wr_buf_ready</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/victim_hit" type="logic">
-         <obj_property name="ElementShortName">victim_hit</obj_property>
-         <obj_property name="ObjectShortName">victim_hit</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/pc_state" type="array">
-         <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
-         <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
-         <obj_property name="ElementShortName">refill_state[5:0]</obj_property>
-         <obj_property name="ObjectShortName">refill_state[5:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/commited_sections" type="array">
-         <obj_property name="ElementShortName">commited_sections[1:0]</obj_property>
-         <obj_property name="ObjectShortName">commited_sections[1:0]</obj_property>
-         <obj_property name="Radix">BINARYRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_ready" type="logic">
-         <obj_property name="ElementShortName">critical_ready</obj_property>
-         <obj_property name="ObjectShortName">critical_ready</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_use" type="logic">
-         <obj_property name="ElementShortName">critical_use</obj_property>
-         <obj_property name="ObjectShortName">critical_use</obj_property>
+      <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/L2_wr_buf_valid" type="logic">
+         <obj_property name="ElementShortName">L2_wr_buf_valid</obj_property>
+         <obj_property name="ObjectShortName">L2_wr_buf_valid</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group171" type="group">
       <obj_property name="label">Request Queue</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/no_of_elements" type="array">
          <obj_property name="ElementShortName">no_of_elements[3:0]</obj_property>
          <obj_property name="ObjectShortName">no_of_elements[3:0]</obj_property>
@@ -3192,29 +3782,9 @@
          <obj_property name="ElementShortName">evict</obj_property>
          <obj_property name="ObjectShortName">evict</obj_property>
       </wvobject>
-      <wvobject fp_name="group1705" type="group">
-         <obj_property name="label">Current Request</obj_property>
+      <wvobject fp_name="group1566" type="group">
+         <obj_property name="label">Current</obj_property>
          <obj_property name="DisplayName">label</obj_property>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_tag" type="array">
-            <obj_property name="ElementShortName">cur_tag[18:0]</obj_property>
-            <obj_property name="ObjectShortName">cur_tag[18:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_vtag" type="array">
-            <obj_property name="ElementShortName">cur_vtag[18:0]</obj_property>
-            <obj_property name="ObjectShortName">cur_vtag[18:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_line" type="array">
-            <obj_property name="ElementShortName">cur_line[6:0]</obj_property>
-            <obj_property name="ObjectShortName">cur_line[6:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_sect" type="array">
-            <obj_property name="ElementShortName">cur_sect[0:0]</obj_property>
-            <obj_property name="ObjectShortName">cur_sect[0:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_src" type="array">
             <obj_property name="ElementShortName">cur_src[0:0]</obj_property>
             <obj_property name="ObjectShortName">cur_src[0:0]</obj_property>
@@ -3243,6 +3813,318 @@
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_evic" type="logic">
             <obj_property name="ElementShortName">cur_evic</obj_property>
             <obj_property name="ObjectShortName">cur_evic</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group1565" type="group">
+         <obj_property name="label">Victims</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="vbus1504" type="vbus">
+            <obj_property name="label">CurrentVictim</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_vtag" type="array">
+               <obj_property name="ElementShortName">cur_vtag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_vtag[18:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_line" type="array">
+               <obj_property name="ElementShortName">cur_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_line[6:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_sect" type="array">
+               <obj_property name="ElementShortName">cur_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_sect[0:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1564" type="vbus">
+            <obj_property name="label">FirstVictim</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_vtag" type="array">
+               <obj_property name="ElementShortName">fir_vtag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_vtag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_line" type="array">
+               <obj_property name="ElementShortName">fir_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_sect" type="array">
+               <obj_property name="ElementShortName">fir_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1563" type="vbus">
+            <obj_property name="label">SecondVictim</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_vtag" type="array">
+               <obj_property name="ElementShortName">sec_vtag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_vtag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_line" type="array">
+               <obj_property name="ElementShortName">sec_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_sect" type="array">
+               <obj_property name="ElementShortName">sec_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1562" type="vbus">
+            <obj_property name="label">ThirdVictim</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_vtag" type="array">
+               <obj_property name="ElementShortName">thr_vtag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_vtag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_line" type="array">
+               <obj_property name="ElementShortName">thr_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_sect" type="array">
+               <obj_property name="ElementShortName">thr_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group1705" type="group">
+         <obj_property name="label">Requests</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="vbus1495" type="vbus">
+            <obj_property name="label">CurrentRequest</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_tag" type="array">
+               <obj_property name="ElementShortName">cur_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_tag[18:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_line" type="array">
+               <obj_property name="ElementShortName">cur_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_line[6:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_sect" type="array">
+               <obj_property name="ElementShortName">cur_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">cur_sect[0:0]</obj_property>
+               <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1543" type="vbus">
+            <obj_property name="label">FirstRequest</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_tag" type="array">
+               <obj_property name="ElementShortName">fir_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_line" type="array">
+               <obj_property name="ElementShortName">fir_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/fir_sect" type="array">
+               <obj_property name="ElementShortName">fir_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">fir_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1542" type="vbus">
+            <obj_property name="label">SecondRequest</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_tag" type="array">
+               <obj_property name="ElementShortName">sec_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_line" type="array">
+               <obj_property name="ElementShortName">sec_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/sec_sect" type="array">
+               <obj_property name="ElementShortName">sec_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">sec_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+         </wvobject>
+         <wvobject fp_name="vbus1541" type="vbus">
+            <obj_property name="label">ThirdRequest</obj_property>
+            <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_tag" type="array">
+               <obj_property name="ElementShortName">thr_tag[18:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_tag[18:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_line" type="array">
+               <obj_property name="ElementShortName">thr_line[6:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_line[6:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/uut/refill_control/thr_sect" type="array">
+               <obj_property name="ElementShortName">thr_sect[0:0]</obj_property>
+               <obj_property name="ObjectShortName">thr_sect[0:0]</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
+            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
+               <obj_property name="ElementShortName">FALSE</obj_property>
+               <obj_property name="ObjectShortName">FALSE</obj_property>
+            </wvobject>
          </wvobject>
       </wvobject>
    </wvobject>
@@ -5014,600 +5896,49 @@
             <obj_property name="ObjectShortName">WR_FROM_L1_READY</obj_property>
          </wvobject>
       </wvobject>
-      <wvobject fp_name="group1121" type="group">
-         <obj_property name="label">Write to L2</obj_property>
-         <obj_property name="DisplayName">label</obj_property>
-         <obj_property name="isExpanded"></obj_property>
-         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_TO_L2_READY" type="logic">
-            <obj_property name="ElementShortName">WR_TO_L2_READY</obj_property>
-            <obj_property name="ObjectShortName">WR_TO_L2_READY</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_TO_L2_VALID" type="logic">
-            <obj_property name="ElementShortName">WR_TO_L2_VALID</obj_property>
-            <obj_property name="ObjectShortName">WR_TO_L2_VALID</obj_property>
-         </wvobject>
-         <wvobject fp_name="vbus2902" type="vbus">
-            <obj_property name="label">WriteAddressToL2</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_ADDR_TO_L2" type="array">
-               <obj_property name="ElementShortName">WR_ADDR_TO_L2[29:0]</obj_property>
-               <obj_property name="ObjectShortName">WR_ADDR_TO_L2[29:0]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/FALSE" type="logic">
-               <obj_property name="ElementShortName">FALSE</obj_property>
-               <obj_property name="ObjectShortName">FALSE</obj_property>
-            </wvobject>
-         </wvobject>
-         <wvobject fp_name="vbus2865" type="vbus">
-            <obj_property name="label">Data3</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[127]" type="logic">
-               <obj_property name="ElementShortName">[127]</obj_property>
-               <obj_property name="ObjectShortName">[127]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[126]" type="logic">
-               <obj_property name="ElementShortName">[126]</obj_property>
-               <obj_property name="ObjectShortName">[126]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[125]" type="logic">
-               <obj_property name="ElementShortName">[125]</obj_property>
-               <obj_property name="ObjectShortName">[125]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[124]" type="logic">
-               <obj_property name="ElementShortName">[124]</obj_property>
-               <obj_property name="ObjectShortName">[124]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[123]" type="logic">
-               <obj_property name="ElementShortName">[123]</obj_property>
-               <obj_property name="ObjectShortName">[123]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[122]" type="logic">
-               <obj_property name="ElementShortName">[122]</obj_property>
-               <obj_property name="ObjectShortName">[122]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[121]" type="logic">
-               <obj_property name="ElementShortName">[121]</obj_property>
-               <obj_property name="ObjectShortName">[121]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[120]" type="logic">
-               <obj_property name="ElementShortName">[120]</obj_property>
-               <obj_property name="ObjectShortName">[120]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[119]" type="logic">
-               <obj_property name="ElementShortName">[119]</obj_property>
-               <obj_property name="ObjectShortName">[119]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[118]" type="logic">
-               <obj_property name="ElementShortName">[118]</obj_property>
-               <obj_property name="ObjectShortName">[118]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[117]" type="logic">
-               <obj_property name="ElementShortName">[117]</obj_property>
-               <obj_property name="ObjectShortName">[117]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[116]" type="logic">
-               <obj_property name="ElementShortName">[116]</obj_property>
-               <obj_property name="ObjectShortName">[116]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[115]" type="logic">
-               <obj_property name="ElementShortName">[115]</obj_property>
-               <obj_property name="ObjectShortName">[115]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[114]" type="logic">
-               <obj_property name="ElementShortName">[114]</obj_property>
-               <obj_property name="ObjectShortName">[114]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[113]" type="logic">
-               <obj_property name="ElementShortName">[113]</obj_property>
-               <obj_property name="ObjectShortName">[113]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[112]" type="logic">
-               <obj_property name="ElementShortName">[112]</obj_property>
-               <obj_property name="ObjectShortName">[112]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[111]" type="logic">
-               <obj_property name="ElementShortName">[111]</obj_property>
-               <obj_property name="ObjectShortName">[111]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[110]" type="logic">
-               <obj_property name="ElementShortName">[110]</obj_property>
-               <obj_property name="ObjectShortName">[110]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[109]" type="logic">
-               <obj_property name="ElementShortName">[109]</obj_property>
-               <obj_property name="ObjectShortName">[109]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[108]" type="logic">
-               <obj_property name="ElementShortName">[108]</obj_property>
-               <obj_property name="ObjectShortName">[108]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[107]" type="logic">
-               <obj_property name="ElementShortName">[107]</obj_property>
-               <obj_property name="ObjectShortName">[107]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[106]" type="logic">
-               <obj_property name="ElementShortName">[106]</obj_property>
-               <obj_property name="ObjectShortName">[106]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[105]" type="logic">
-               <obj_property name="ElementShortName">[105]</obj_property>
-               <obj_property name="ObjectShortName">[105]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[104]" type="logic">
-               <obj_property name="ElementShortName">[104]</obj_property>
-               <obj_property name="ObjectShortName">[104]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[103]" type="logic">
-               <obj_property name="ElementShortName">[103]</obj_property>
-               <obj_property name="ObjectShortName">[103]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[102]" type="logic">
-               <obj_property name="ElementShortName">[102]</obj_property>
-               <obj_property name="ObjectShortName">[102]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[101]" type="logic">
-               <obj_property name="ElementShortName">[101]</obj_property>
-               <obj_property name="ObjectShortName">[101]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[100]" type="logic">
-               <obj_property name="ElementShortName">[100]</obj_property>
-               <obj_property name="ObjectShortName">[100]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[99]" type="logic">
-               <obj_property name="ElementShortName">[99]</obj_property>
-               <obj_property name="ObjectShortName">[99]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[98]" type="logic">
-               <obj_property name="ElementShortName">[98]</obj_property>
-               <obj_property name="ObjectShortName">[98]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[97]" type="logic">
-               <obj_property name="ElementShortName">[97]</obj_property>
-               <obj_property name="ObjectShortName">[97]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[96]" type="logic">
-               <obj_property name="ElementShortName">[96]</obj_property>
-               <obj_property name="ObjectShortName">[96]</obj_property>
-            </wvobject>
-         </wvobject>
-         <wvobject fp_name="vbus2832" type="vbus">
-            <obj_property name="label">Data2</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[95]" type="logic">
-               <obj_property name="ElementShortName">[95]</obj_property>
-               <obj_property name="ObjectShortName">[95]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[94]" type="logic">
-               <obj_property name="ElementShortName">[94]</obj_property>
-               <obj_property name="ObjectShortName">[94]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[93]" type="logic">
-               <obj_property name="ElementShortName">[93]</obj_property>
-               <obj_property name="ObjectShortName">[93]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[92]" type="logic">
-               <obj_property name="ElementShortName">[92]</obj_property>
-               <obj_property name="ObjectShortName">[92]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[91]" type="logic">
-               <obj_property name="ElementShortName">[91]</obj_property>
-               <obj_property name="ObjectShortName">[91]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[90]" type="logic">
-               <obj_property name="ElementShortName">[90]</obj_property>
-               <obj_property name="ObjectShortName">[90]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[89]" type="logic">
-               <obj_property name="ElementShortName">[89]</obj_property>
-               <obj_property name="ObjectShortName">[89]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[88]" type="logic">
-               <obj_property name="ElementShortName">[88]</obj_property>
-               <obj_property name="ObjectShortName">[88]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[87]" type="logic">
-               <obj_property name="ElementShortName">[87]</obj_property>
-               <obj_property name="ObjectShortName">[87]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[86]" type="logic">
-               <obj_property name="ElementShortName">[86]</obj_property>
-               <obj_property name="ObjectShortName">[86]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[85]" type="logic">
-               <obj_property name="ElementShortName">[85]</obj_property>
-               <obj_property name="ObjectShortName">[85]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[84]" type="logic">
-               <obj_property name="ElementShortName">[84]</obj_property>
-               <obj_property name="ObjectShortName">[84]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[83]" type="logic">
-               <obj_property name="ElementShortName">[83]</obj_property>
-               <obj_property name="ObjectShortName">[83]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[82]" type="logic">
-               <obj_property name="ElementShortName">[82]</obj_property>
-               <obj_property name="ObjectShortName">[82]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[81]" type="logic">
-               <obj_property name="ElementShortName">[81]</obj_property>
-               <obj_property name="ObjectShortName">[81]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[80]" type="logic">
-               <obj_property name="ElementShortName">[80]</obj_property>
-               <obj_property name="ObjectShortName">[80]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[79]" type="logic">
-               <obj_property name="ElementShortName">[79]</obj_property>
-               <obj_property name="ObjectShortName">[79]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[78]" type="logic">
-               <obj_property name="ElementShortName">[78]</obj_property>
-               <obj_property name="ObjectShortName">[78]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[77]" type="logic">
-               <obj_property name="ElementShortName">[77]</obj_property>
-               <obj_property name="ObjectShortName">[77]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[76]" type="logic">
-               <obj_property name="ElementShortName">[76]</obj_property>
-               <obj_property name="ObjectShortName">[76]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[75]" type="logic">
-               <obj_property name="ElementShortName">[75]</obj_property>
-               <obj_property name="ObjectShortName">[75]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[74]" type="logic">
-               <obj_property name="ElementShortName">[74]</obj_property>
-               <obj_property name="ObjectShortName">[74]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[73]" type="logic">
-               <obj_property name="ElementShortName">[73]</obj_property>
-               <obj_property name="ObjectShortName">[73]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[72]" type="logic">
-               <obj_property name="ElementShortName">[72]</obj_property>
-               <obj_property name="ObjectShortName">[72]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[71]" type="logic">
-               <obj_property name="ElementShortName">[71]</obj_property>
-               <obj_property name="ObjectShortName">[71]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[70]" type="logic">
-               <obj_property name="ElementShortName">[70]</obj_property>
-               <obj_property name="ObjectShortName">[70]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[69]" type="logic">
-               <obj_property name="ElementShortName">[69]</obj_property>
-               <obj_property name="ObjectShortName">[69]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[68]" type="logic">
-               <obj_property name="ElementShortName">[68]</obj_property>
-               <obj_property name="ObjectShortName">[68]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[67]" type="logic">
-               <obj_property name="ElementShortName">[67]</obj_property>
-               <obj_property name="ObjectShortName">[67]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[66]" type="logic">
-               <obj_property name="ElementShortName">[66]</obj_property>
-               <obj_property name="ObjectShortName">[66]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[65]" type="logic">
-               <obj_property name="ElementShortName">[65]</obj_property>
-               <obj_property name="ObjectShortName">[65]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[64]" type="logic">
-               <obj_property name="ElementShortName">[64]</obj_property>
-               <obj_property name="ObjectShortName">[64]</obj_property>
-            </wvobject>
-         </wvobject>
-         <wvobject fp_name="vbus2799" type="vbus">
-            <obj_property name="label">Data1</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[63]" type="logic">
-               <obj_property name="ElementShortName">[63]</obj_property>
-               <obj_property name="ObjectShortName">[63]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[62]" type="logic">
-               <obj_property name="ElementShortName">[62]</obj_property>
-               <obj_property name="ObjectShortName">[62]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[61]" type="logic">
-               <obj_property name="ElementShortName">[61]</obj_property>
-               <obj_property name="ObjectShortName">[61]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[60]" type="logic">
-               <obj_property name="ElementShortName">[60]</obj_property>
-               <obj_property name="ObjectShortName">[60]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[59]" type="logic">
-               <obj_property name="ElementShortName">[59]</obj_property>
-               <obj_property name="ObjectShortName">[59]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[58]" type="logic">
-               <obj_property name="ElementShortName">[58]</obj_property>
-               <obj_property name="ObjectShortName">[58]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[57]" type="logic">
-               <obj_property name="ElementShortName">[57]</obj_property>
-               <obj_property name="ObjectShortName">[57]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[56]" type="logic">
-               <obj_property name="ElementShortName">[56]</obj_property>
-               <obj_property name="ObjectShortName">[56]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[55]" type="logic">
-               <obj_property name="ElementShortName">[55]</obj_property>
-               <obj_property name="ObjectShortName">[55]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[54]" type="logic">
-               <obj_property name="ElementShortName">[54]</obj_property>
-               <obj_property name="ObjectShortName">[54]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[53]" type="logic">
-               <obj_property name="ElementShortName">[53]</obj_property>
-               <obj_property name="ObjectShortName">[53]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[52]" type="logic">
-               <obj_property name="ElementShortName">[52]</obj_property>
-               <obj_property name="ObjectShortName">[52]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[51]" type="logic">
-               <obj_property name="ElementShortName">[51]</obj_property>
-               <obj_property name="ObjectShortName">[51]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[50]" type="logic">
-               <obj_property name="ElementShortName">[50]</obj_property>
-               <obj_property name="ObjectShortName">[50]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[49]" type="logic">
-               <obj_property name="ElementShortName">[49]</obj_property>
-               <obj_property name="ObjectShortName">[49]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[48]" type="logic">
-               <obj_property name="ElementShortName">[48]</obj_property>
-               <obj_property name="ObjectShortName">[48]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[47]" type="logic">
-               <obj_property name="ElementShortName">[47]</obj_property>
-               <obj_property name="ObjectShortName">[47]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[46]" type="logic">
-               <obj_property name="ElementShortName">[46]</obj_property>
-               <obj_property name="ObjectShortName">[46]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[45]" type="logic">
-               <obj_property name="ElementShortName">[45]</obj_property>
-               <obj_property name="ObjectShortName">[45]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[44]" type="logic">
-               <obj_property name="ElementShortName">[44]</obj_property>
-               <obj_property name="ObjectShortName">[44]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[43]" type="logic">
-               <obj_property name="ElementShortName">[43]</obj_property>
-               <obj_property name="ObjectShortName">[43]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[42]" type="logic">
-               <obj_property name="ElementShortName">[42]</obj_property>
-               <obj_property name="ObjectShortName">[42]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[41]" type="logic">
-               <obj_property name="ElementShortName">[41]</obj_property>
-               <obj_property name="ObjectShortName">[41]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[40]" type="logic">
-               <obj_property name="ElementShortName">[40]</obj_property>
-               <obj_property name="ObjectShortName">[40]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[39]" type="logic">
-               <obj_property name="ElementShortName">[39]</obj_property>
-               <obj_property name="ObjectShortName">[39]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[38]" type="logic">
-               <obj_property name="ElementShortName">[38]</obj_property>
-               <obj_property name="ObjectShortName">[38]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[37]" type="logic">
-               <obj_property name="ElementShortName">[37]</obj_property>
-               <obj_property name="ObjectShortName">[37]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[36]" type="logic">
-               <obj_property name="ElementShortName">[36]</obj_property>
-               <obj_property name="ObjectShortName">[36]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[35]" type="logic">
-               <obj_property name="ElementShortName">[35]</obj_property>
-               <obj_property name="ObjectShortName">[35]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[34]" type="logic">
-               <obj_property name="ElementShortName">[34]</obj_property>
-               <obj_property name="ObjectShortName">[34]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[33]" type="logic">
-               <obj_property name="ElementShortName">[33]</obj_property>
-               <obj_property name="ObjectShortName">[33]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[32]" type="logic">
-               <obj_property name="ElementShortName">[32]</obj_property>
-               <obj_property name="ObjectShortName">[32]</obj_property>
-            </wvobject>
-         </wvobject>
-         <wvobject fp_name="vbus2766" type="vbus">
-            <obj_property name="label">Data0</obj_property>
-            <obj_property name="DisplayName">label</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[31]" type="logic">
-               <obj_property name="ElementShortName">[31]</obj_property>
-               <obj_property name="ObjectShortName">[31]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[30]" type="logic">
-               <obj_property name="ElementShortName">[30]</obj_property>
-               <obj_property name="ObjectShortName">[30]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[29]" type="logic">
-               <obj_property name="ElementShortName">[29]</obj_property>
-               <obj_property name="ObjectShortName">[29]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[28]" type="logic">
-               <obj_property name="ElementShortName">[28]</obj_property>
-               <obj_property name="ObjectShortName">[28]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[27]" type="logic">
-               <obj_property name="ElementShortName">[27]</obj_property>
-               <obj_property name="ObjectShortName">[27]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[26]" type="logic">
-               <obj_property name="ElementShortName">[26]</obj_property>
-               <obj_property name="ObjectShortName">[26]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[25]" type="logic">
-               <obj_property name="ElementShortName">[25]</obj_property>
-               <obj_property name="ObjectShortName">[25]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[24]" type="logic">
-               <obj_property name="ElementShortName">[24]</obj_property>
-               <obj_property name="ObjectShortName">[24]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[23]" type="logic">
-               <obj_property name="ElementShortName">[23]</obj_property>
-               <obj_property name="ObjectShortName">[23]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[22]" type="logic">
-               <obj_property name="ElementShortName">[22]</obj_property>
-               <obj_property name="ObjectShortName">[22]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[21]" type="logic">
-               <obj_property name="ElementShortName">[21]</obj_property>
-               <obj_property name="ObjectShortName">[21]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[20]" type="logic">
-               <obj_property name="ElementShortName">[20]</obj_property>
-               <obj_property name="ObjectShortName">[20]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[19]" type="logic">
-               <obj_property name="ElementShortName">[19]</obj_property>
-               <obj_property name="ObjectShortName">[19]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[18]" type="logic">
-               <obj_property name="ElementShortName">[18]</obj_property>
-               <obj_property name="ObjectShortName">[18]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[17]" type="logic">
-               <obj_property name="ElementShortName">[17]</obj_property>
-               <obj_property name="ObjectShortName">[17]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[16]" type="logic">
-               <obj_property name="ElementShortName">[16]</obj_property>
-               <obj_property name="ObjectShortName">[16]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[15]" type="logic">
-               <obj_property name="ElementShortName">[15]</obj_property>
-               <obj_property name="ObjectShortName">[15]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[14]" type="logic">
-               <obj_property name="ElementShortName">[14]</obj_property>
-               <obj_property name="ObjectShortName">[14]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[13]" type="logic">
-               <obj_property name="ElementShortName">[13]</obj_property>
-               <obj_property name="ObjectShortName">[13]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[12]" type="logic">
-               <obj_property name="ElementShortName">[12]</obj_property>
-               <obj_property name="ObjectShortName">[12]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[11]" type="logic">
-               <obj_property name="ElementShortName">[11]</obj_property>
-               <obj_property name="ObjectShortName">[11]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[10]" type="logic">
-               <obj_property name="ElementShortName">[10]</obj_property>
-               <obj_property name="ObjectShortName">[10]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[9]" type="logic">
-               <obj_property name="ElementShortName">[9]</obj_property>
-               <obj_property name="ObjectShortName">[9]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[8]" type="logic">
-               <obj_property name="ElementShortName">[8]</obj_property>
-               <obj_property name="ObjectShortName">[8]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[7]" type="logic">
-               <obj_property name="ElementShortName">[7]</obj_property>
-               <obj_property name="ObjectShortName">[7]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[6]" type="logic">
-               <obj_property name="ElementShortName">[6]</obj_property>
-               <obj_property name="ObjectShortName">[6]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[5]" type="logic">
-               <obj_property name="ElementShortName">[5]</obj_property>
-               <obj_property name="ObjectShortName">[5]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[4]" type="logic">
-               <obj_property name="ElementShortName">[4]</obj_property>
-               <obj_property name="ObjectShortName">[4]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[3]" type="logic">
-               <obj_property name="ElementShortName">[3]</obj_property>
-               <obj_property name="ObjectShortName">[3]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[2]" type="logic">
-               <obj_property name="ElementShortName">[2]</obj_property>
-               <obj_property name="ObjectShortName">[2]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[1]" type="logic">
-               <obj_property name="ElementShortName">[1]</obj_property>
-               <obj_property name="ObjectShortName">[1]</obj_property>
-            </wvobject>
-            <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/DATA_TO_L2[0]" type="logic">
-               <obj_property name="ElementShortName">[0]</obj_property>
-               <obj_property name="ObjectShortName">[0]</obj_property>
-            </wvobject>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_CONTROL_TO_L2" type="logic">
-            <obj_property name="ElementShortName">WR_CONTROL_TO_L2</obj_property>
-            <obj_property name="ObjectShortName">WR_CONTROL_TO_L2</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/WR_COMPLETE" type="logic">
-            <obj_property name="ElementShortName">WR_COMPLETE</obj_property>
-            <obj_property name="ObjectShortName">WR_COMPLETE</obj_property>
-         </wvobject>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="group1098" type="group">
       <obj_property name="label">Simulation</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <wvobject fp_name="/Test_Data_Cache/rd_output_addr_reg" type="array">
-         <obj_property name="ElementShortName">rd_output_addr_reg[31:0]</obj_property>
-         <obj_property name="ObjectShortName">rd_output_addr_reg[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/temp1" type="array">
-         <obj_property name="ElementShortName">temp1[31:0]</obj_property>
-         <obj_property name="ObjectShortName">temp1[31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/temp2" type="array">
-         <obj_property name="ElementShortName">temp2[3:0]</obj_property>
-         <obj_property name="ObjectShortName">temp2[3:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/read_value" type="array">
-         <obj_property name="ElementShortName">read_value[3:0][3:0][31:0]</obj_property>
-         <obj_property name="ObjectShortName">read_value[3:0][3:0][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group1481" type="group">
+         <obj_property name="label">Write</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
          <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/Test_Data_Cache/l2_wr_input_state" type="array">
+            <obj_property name="ElementShortName">l2_wr_input_state[7:0]</obj_property>
+            <obj_property name="ObjectShortName">l2_wr_input_state[7:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/current_section" type="array">
+            <obj_property name="ElementShortName">current_section[31:0]</obj_property>
+            <obj_property name="ObjectShortName">current_section[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group1480" type="group">
+         <obj_property name="label">Read</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/rd_output_addr_reg" type="array">
+            <obj_property name="ElementShortName">rd_output_addr_reg[31:0]</obj_property>
+            <obj_property name="ObjectShortName">rd_output_addr_reg[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/temp1" type="array">
+            <obj_property name="ElementShortName">temp1[31:0]</obj_property>
+            <obj_property name="ObjectShortName">temp1[31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/temp2" type="array">
+            <obj_property name="ElementShortName">temp2[3:0]</obj_property>
+            <obj_property name="ObjectShortName">temp2[3:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/read_value" type="array">
+            <obj_property name="ElementShortName">read_value[3:0][3:0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">read_value[3:0][3:0][31:0]</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         </wvobject>
       </wvobject>
    </wvobject>
 </wave_config>

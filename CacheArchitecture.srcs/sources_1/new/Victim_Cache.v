@@ -240,27 +240,30 @@ module Victim_Cache #(
     // A write operation takes 2^(B - W) clock cycles
     reg [B - W              - 1 : 0] victim_rd_state;
     
-    // Buffers for storing the write request to L2
+    // Buffers for storing the write request to L2, status and control signals
     reg                              L2_wr_buf_full;
     wire                             L2_wr_buf_ready; 
     wire                             L2_wr_buf_valid; 
+           
+        
+    // Starting and finishing a read
+    localparam IDLE    = 0;
+    localparam READING = 1;
+    localparam WAITING = 2;
     
-    // Wires for the L2 write request
-    wire                             control_to_L2;
-    wire [ADDR_WIDTH    - 2 - 1 : 0] wr_addr_to_L2;
-    wire [L2_BUS_WIDTH      - 1 : 0] data_to_L2;
-    
-    assign L2_wr_buf_valid = !victim_cache_empty & dirty[victim_rd_pos];
-    assign L2_wr_buf_ready = !L2_wr_buf_full | WR_TO_L2_READY; 
-    assign WR_TO_L2_VALID  = L2_wr_buf_full;
-            
-    assign wr_addr_to_L2 = {addr_memory[victim_rd_pos], {(ADDR_WIDTH - 2 - ADDR_MEMORY_WIDTH){1'b0}}};
-    assign control_to_L2 = ctrl_memory[victim_rd_pos];
-    
-    assign data_to_L2 = data_memory[{victim_rd_pos, victim_rd_state[B - W - 1 -: T]}][L2_BUS_WIDTH * victim_rd_state[B - W - T - 1 : 0] +: L2_BUS_WIDTH];
+    reg [1 : 0] rd_overall_state;
     
     // Write state management
     always @(posedge CLK) begin
+        case (rd_overall_state)
+            IDLE    : if (!victim_cache_empty & dirty[victim_rd_pos])
+                         rd_overall_state <= READING;
+            READING : if (victim_rd_state == {(B - W){1'b1}} & L2_wr_buf_ready & L2_wr_buf_valid)
+                         rd_overall_state <= WAITING;
+            WAITING : if (WR_COMPLETE)
+                         rd_overall_state <= IDLE;
+        endcase
+        
         if (L2_wr_buf_ready & L2_wr_buf_valid) begin
             victim_rd_state <= victim_rd_state + 1;
         end
@@ -270,7 +273,22 @@ module Victim_Cache #(
             {victim_rd_pos_msb, victim_rd_pos} <= {victim_rd_pos_msb, victim_rd_pos} + 1;
         end
     end
-                
+    
+    assign L2_wr_buf_valid = !victim_cache_empty & dirty[victim_rd_pos] & !(rd_overall_state == WAITING);
+    assign L2_wr_buf_ready = !L2_wr_buf_full | WR_TO_L2_READY; 
+    assign WR_TO_L2_VALID  = L2_wr_buf_full;
+         
+    
+    // Wires for the L2 write request
+    wire                             control_to_L2;
+    wire [ADDR_WIDTH    - 2 - 1 : 0] wr_addr_to_L2;
+    wire [L2_BUS_WIDTH      - 1 : 0] data_to_L2;
+            
+    assign wr_addr_to_L2 = {addr_memory[victim_rd_pos], {(ADDR_WIDTH - 2 - ADDR_MEMORY_WIDTH){1'b0}}};
+    assign control_to_L2 = ctrl_memory[victim_rd_pos];
+    
+    assign data_to_L2 = data_memory[{victim_rd_pos, victim_rd_state[B - W - 1 -: T]}][L2_BUS_WIDTH * victim_rd_state[B - W - T - 1 : 0] +: L2_BUS_WIDTH];
+            
     always @(posedge CLK) begin
         // Write data, control and data registers for the L2 cache
         if ((L2_wr_buf_valid & WR_TO_L2_READY) | (!L2_wr_buf_full & L2_wr_buf_valid)) begin
@@ -325,6 +343,7 @@ module Victim_Cache #(
         
         burst_state       = 0;
         
+        rd_overall_state  = 0;
         victim_rd_state   = 0;
         victim_rd_pos     = 0;
         victim_rd_pos_msb = 0;

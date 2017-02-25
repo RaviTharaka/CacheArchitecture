@@ -257,7 +257,7 @@ module Test_Data_Cache ();
     assign WR_COMPLETE    = l2_wr_input_state[L2_DELAY_WR + L2_BURST  - 1];
     
     integer current_section = 0;
-    integer m;
+    integer m,ab,ac;
     
     always @(posedge CLK) begin
         if (WR_TO_L2_READY) begin
@@ -266,7 +266,9 @@ module Test_Data_Cache ();
                 current_section   <= current_section + 1;  
                 
                 for (m = 0; m < (1 << W - 5); m = m + 1) begin
-                    memory[WR_ADDR_TO_L2[ADDR_WIDTH - 1 : 2] + current_section * (1 << (W - 5)) + m] <= DATA_TO_L2[m * DATA_WIDTH +: DATA_WIDTH];
+                    memory[WR_ADDR_TO_L2[ADDR_WIDTH - 3 : 0] + current_section * (1 << (W - 5)) + m] <= DATA_TO_L2[m * DATA_WIDTH +: DATA_WIDTH];
+                    ab = WR_ADDR_TO_L2[ADDR_WIDTH - 3 : 0] + current_section * (1 << (W - 5)) + m;
+                    ac = DATA_TO_L2[m * DATA_WIDTH +: DATA_WIDTH];
                 end
                 
                 writeFile = $fopen("E:/University/GrandFinale/Project/Simulation_Traces/Data_Cache/Output.trac", "a");

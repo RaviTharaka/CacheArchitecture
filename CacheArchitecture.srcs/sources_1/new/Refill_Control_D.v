@@ -94,6 +94,7 @@ module Refill_Control_D #(
         
     reg  test_pass;                                  // Current DM3 request passes the clash and equal tests
     reg  main_pipe_enb_del_1, main_pipe_enb_del_2;   // Delayed processor pipeline enables
+    reg  l1_rd_port_sel_del_1, l1_rd_port_sel_del_2; // Delayed read port selects
     
     reg  real_request;                               // Write request is valid and is not an IDLE
     reg  missable_request;                           // Write request is valid and is a WRITE or READ
@@ -104,12 +105,15 @@ module Refill_Control_D #(
     reg  critical_used;                              // Critical word is used
     
     always @(posedge CLK) begin
-        main_pipe_enb_del_1 <= MAIN_PIPE_ENB;
-        main_pipe_enb_del_2 <= main_pipe_enb_del_1;
+        l1_rd_port_sel_del_1 <= L1_RD_PORT_SELECT;
+        l1_rd_port_sel_del_2 <= l1_rd_port_sel_del_1;
         
-        real_request        <= main_pipe_enb_del_1 & !(CONTROL == 2'b00);
-        missable_request    <= main_pipe_enb_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
-        flush_request       <= main_pipe_enb_del_1 &  (CONTROL == 2'b11);
+        main_pipe_enb_del_1  <= MAIN_PIPE_ENB;
+        main_pipe_enb_del_2  <= main_pipe_enb_del_1;
+        
+        real_request         <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 & !(CONTROL == 2'b00);
+        missable_request     <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
+        flush_request        <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b11);
     end    
     
      
@@ -121,9 +125,9 @@ module Refill_Control_D #(
     // Three is for DM1, DM2 and DM3 and last is for early restart
     
     // Control signals for the queue    
-    wire admit = (test_pass & real_request) | flush_request;            // Admit only if clash/equal tests pass, and is a valid (pipeline is enabled), non-IDLE request
-    wire remove;                                                        // Whether to remove from the refill queue
-    wire evict;                                                         // Indicates that the first eviction in the queue is complete
+    wire admit = (test_pass & real_request) | flush_request;               // Admit only if clash/equal tests pass, and is a valid (pipeline is enabled), non-IDLE request
+    wire remove;                                                           // Whether to remove from the refill queue
+    wire evict;                                                            // Indicates that the first eviction in the queue is complete
     
     
     // Number of elements in the queue
@@ -570,12 +574,7 @@ module Refill_Control_D #(
                     end
                     {T{1'b1}} : begin
                         if (DATA_FROM_L2_BUFFER_VALID) begin
-                            if (critical_used == 0) begin
-                                refill_state_wire = WAITING_CRIT;
-                                no_completed_wire = 0;
-                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
-                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
-                            end else begin
+                            if (critical_used | critical_use) begin
                                 if (no_of_elements == 4'b0001 & !admit) begin
                                     refill_state_wire = IDLE;
                                     no_completed_wire = 0;
@@ -586,7 +585,12 @@ module Refill_Control_D #(
                                     no_completed_wire = 0;
                                     for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
                                         commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
-                                end
+                                end                                
+                            end else begin
+                                refill_state_wire = WAITING_CRIT;
+                                no_completed_wire = 0;
+                                for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
+                                    commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
                             end 
                         end else begin
                             refill_state_wire = refill_state;
@@ -622,11 +626,7 @@ module Refill_Control_D #(
             end 
             
             WAITING_CRIT : begin
-                if (critical_used == 0) begin
-                    refill_state_wire = refill_state;
-                    no_completed_wire = no_completed;
-                    commited_sections_wire = commited_sections;
-                end else begin
+                if (critical_used | critical_use) begin
                     if (no_of_elements == 4'b0001 & !admit) begin
                         refill_state_wire = IDLE;
                         no_completed_wire = 0;
@@ -636,6 +636,10 @@ module Refill_Control_D #(
                         no_completed_wire = 0;
                         commited_sections_wire = 0;
                     end
+                end else begin
+                    refill_state_wire = refill_state;
+                    no_completed_wire = no_completed;
+                    commited_sections_wire = commited_sections;
                 end  
             end
                         
@@ -705,9 +709,9 @@ module Refill_Control_D #(
         commited_sections <= commited_sections_wire;
     end
 
-    assign remove = ((refill_state == WRITING_L2  ) & no_completed == {T{1'b1}} & critical_used & DATA_FROM_L2_BUFFER_VALID ) |
-                    ((refill_state == WRITING_VIC ) & no_completed == {T{1'b1}} & critical_used) |
-                    ((refill_state == WAITING_CRIT) &                             critical_used) |
+    assign remove = ((refill_state == WRITING_L2  ) & no_completed == {T{1'b1}} & (critical_used | critical_use) & DATA_FROM_L2_BUFFER_VALID ) |
+                    ((refill_state == WRITING_VIC ) & no_completed == {T{1'b1}} & (critical_used | critical_use)) |
+                    ((refill_state == WAITING_CRIT) &                             (critical_used | critical_use)) |
                     ((refill_state == FLUSHING    ) & no_completed == {T{1'b1}});
             
         
@@ -979,6 +983,8 @@ module Refill_Control_D #(
         
         refill_state = 1;   
         pc_state = HITTING;      
+        
+        critical_used = 1; 
     end
          
     // Temporary stuff
