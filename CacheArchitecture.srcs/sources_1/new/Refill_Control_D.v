@@ -94,7 +94,7 @@ module Refill_Control_D #(
         
     reg  test_pass;                                  // Current DM3 request passes the clash and equal tests
     reg  main_pipe_enb_del_1, main_pipe_enb_del_2;   // Delayed processor pipeline enables
-    reg  l1_rd_port_sel_del_1, l1_rd_port_sel_del_2; // Delayed read port selects
+    reg  l1_rd_port_sel_del_1;                       // Delayed read port selects
     
     reg  real_request;                               // Write request is valid and is not an IDLE
     reg  missable_request;                           // Write request is valid and is a WRITE or READ
@@ -106,16 +106,18 @@ module Refill_Control_D #(
     
     always @(posedge CLK) begin
         l1_rd_port_sel_del_1 <= L1_RD_PORT_SELECT;
-        l1_rd_port_sel_del_2 <= l1_rd_port_sel_del_1;
         
         main_pipe_enb_del_1  <= MAIN_PIPE_ENB;
         main_pipe_enb_del_2  <= main_pipe_enb_del_1;
         
-        real_request         <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 & !(CONTROL == 2'b00);
-        missable_request     <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
-        flush_request        <= main_pipe_enb_del_1 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b11);
+        real_request         <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 & !(CONTROL == 2'b00);
+        missable_request     <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
+        flush_request        <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b11);
     end    
     
+    wire                           refill_req_link;
+    wire [TAG_WIDTH       - 1 : 0] refill_req_vtag; 
+      
      
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Refill request queue management                                                              //
@@ -166,7 +168,7 @@ module Refill_Control_D #(
     reg  [REQ_LENGTH - 1 : 0] cur,      fir,      sec,      thr;
     reg  [REQ_LENGTH - 1 : 0] cur_wire, fir_wire, sec_wire, thr_wire;
     
-    wire [REQ_LENGTH - 1 : 0] refill_req = {REFILL_REQ_TAG, REFILL_REQ_VTAG, REFILL_REQ_LINE, REFILL_REQ_SECT, 
+    wire [REQ_LENGTH - 1 : 0] refill_req = {REFILL_REQ_TAG, refill_req_vtag, REFILL_REQ_LINE, REFILL_REQ_SECT, 
                                             VICTIM_HIT, REFILL_REQ_DST_SET, REFILL_REQ_DIRTY, REFILL_REQ_CTRL,
                                             refill_req_link};
     assign {cur_tag, cur_vtag, cur_line, cur_sect, cur_src, cur_set, cur_dirt, cur_ctrl, cur_link} = cur;
@@ -342,6 +344,10 @@ module Refill_Control_D #(
     end    
     
     assign refill_req_link = clash_n2 | clash_n1 | clash_n0;
+    assign refill_req_vtag = (clash_n2) ?  sec_tag : 
+                             (clash_n1) ?  fir_tag :
+                             (clash_n0) ?  cur_tag :
+                             REFILL_REQ_VTAG;
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -370,8 +376,13 @@ module Refill_Control_D #(
             case (evic_state)
                 E_HITTING  : begin
                     if (admit & REFILL_REQ_VALID) begin
-                        evic_state <= E_WAITING << 2;
-                        evic_no    <= 1;
+                        if (refill_req_link) begin
+                            evic_state <= E_WAITING;
+                            evic_no    <= 0;
+                        end else begin
+                            evic_state <= E_WAITING << 2;
+                            evic_no    <= 1;
+                        end
                     end    
                 end 
                 E_WAITING  : begin
@@ -449,14 +460,15 @@ module Refill_Control_D #(
     // FSM for refill control                                                                       //
     //////////////////////////////////////////////////////////////////////////////////////////////////
                 
-    localparam IDLE         = 1;
-    localparam TRANSITION   = 2;
-    localparam WRITING_VIC  = 4;
-    localparam WRITING_L2   = 8;
-    localparam FLUSHING     = 16;
-    localparam WAITING_CRIT = 32;
+    localparam IDLE          = 1;
+    localparam TRANSITION    = 2;
+    localparam WRITING_VIC   = 4;                   // Assumes victim cache is primed
+    localparam WRITING_L2    = 8;
+    localparam FLUSHING      = 16;
+    localparam WAITING_CRIT  = 32;
+    localparam WRITING_VIC_P = 64;                  // Unprimed victim cache
     
-    reg [6              - 1 : 0] refill_state,      refill_state_wire;
+    reg [7              - 1 : 0] refill_state,      refill_state_wire;
     reg [T              - 1 : 0] no_completed,      no_completed_wire;
     reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     

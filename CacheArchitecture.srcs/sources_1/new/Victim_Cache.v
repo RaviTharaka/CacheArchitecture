@@ -191,9 +191,11 @@ module Victim_Cache #(
     // Writing data to victim cache                                             //
     //////////////////////////////////////////////////////////////////////////////
      
-    reg [V - 1 : 0] victim_wr_pos;
-    reg             victim_wr_pos_msb;
-    reg [T - 1 : 0] victim_wr_state;
+    reg  [V - 1 : 0] victim_wr_pos;
+    reg              victim_wr_pos_msb;
+    reg  [T - 1 : 0] victim_wr_state;
+    
+    wire [V - 1 : 0] victim_wr_pos_plus_2 = victim_wr_pos + 2;
     
     // READY means that it is ready to take on a cache block section
     assign WR_FROM_L1_READY = !victim_cache_full;
@@ -220,8 +222,8 @@ module Victim_Cache #(
             // At the last stage of the write 
             if (victim_wr_state == {T{1'b1}}) begin
                 // Valid bit is turned off for the next write position and turned on for the current
-                valid[victim_wr_pos]     <= 1'b1;
-                valid[victim_wr_pos + 1] <= 1'b0;
+                valid[victim_wr_pos]        <= 1'b1;
+                valid[victim_wr_pos_plus_2] <= 1'b0;
                 
                 // Write position shifts to the next value
                 {victim_wr_pos_msb, victim_wr_pos} <= {victim_wr_pos_msb, victim_wr_pos} + 1;

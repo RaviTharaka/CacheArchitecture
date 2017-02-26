@@ -34,7 +34,7 @@ module Test_Data_Cache ();
     parameter L2_DELAY_WR       = 4;                     // Write delay of the L2 cache (from sending last data to WR_COMPLETE acknowledgement)
     parameter V                 = 2;                     // Size of the victim cache will be 2^V cache lines
     
-    parameter MEMORY_ADDR_WIDTH = 16;                    // 2^MEMORY_ADDR_WIDTH is the address width of the main memory of the system
+    parameter MEMORY_ADDR_WIDTH = 17;                    // 2^MEMORY_ADDR_WIDTH is the address width of the main memory of the system
                 
     // Calculated parameters
     localparam L2_BUS_WIDTH     = 1 << W;

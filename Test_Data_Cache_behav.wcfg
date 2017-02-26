@@ -11,14 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="65107500000fs"></ZoomStartTime>
-      <ZoomEndTime time="65726000001fs"></ZoomEndTime>
-      <Cursor1Time time="65245000000fs"></Cursor1Time>
+      <ZoomStartTime time="787200833667fs"></ZoomStartTime>
+      <ZoomEndTime time="787457633668fs"></ZoomEndTime>
+      <Cursor1Time time="787348034000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="13" />
    <wave_markers>
-      <marker time="17049267000" label="" />
-      <marker time="32319800000" label="" />
+      <marker time="790059167000" label="" />
    </wave_markers>
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
@@ -249,10 +248,14 @@
       <wvobject fp_name="/Test_Data_Cache/uut/cache_hit" type="logic">
          <obj_property name="ElementShortName">cache_hit</obj_property>
          <obj_property name="ObjectShortName">cache_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/victim_hit" type="logic">
          <obj_property name="ElementShortName">victim_hit</obj_property>
          <obj_property name="ObjectShortName">victim_hit</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/evic_state" type="array">
          <obj_property name="ElementShortName">evic_state[3:0]</obj_property>
@@ -271,6 +274,10 @@
          <obj_property name="ElementShortName">commited_sections[1:0]</obj_property>
          <obj_property name="ObjectShortName">commited_sections[1:0]</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/L1_RD_PORT_SELECT" type="logic">
+         <obj_property name="ElementShortName">L1_RD_PORT_SELECT</obj_property>
+         <obj_property name="ObjectShortName">L1_RD_PORT_SELECT</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/critical_ready" type="logic">
          <obj_property name="ElementShortName">critical_ready</obj_property>
@@ -1996,6 +2003,7 @@
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="CustomSignalColor">#008080</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus1539" type="vbus">
             <obj_property name="label">0</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -3738,10 +3746,6 @@
          <obj_property name="ObjectShortName">no_of_elements[3:0]</obj_property>
          <obj_property name="Radix">BINARYRADIX</obj_property>
       </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/admit" type="logic">
-         <obj_property name="ElementShortName">admit</obj_property>
-         <obj_property name="ObjectShortName">admit</obj_property>
-      </wvobject>
       <wvobject fp_name="group207" type="group">
          <obj_property name="label">Tests</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -3749,42 +3753,53 @@
             <obj_property name="ElementShortName">test_pass</obj_property>
             <obj_property name="ObjectShortName">test_pass</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/clash_n0" type="logic">
-            <obj_property name="ElementShortName">clash_n0</obj_property>
-            <obj_property name="ObjectShortName">clash_n0</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/clash_n1" type="logic">
-            <obj_property name="ElementShortName">clash_n1</obj_property>
-            <obj_property name="ObjectShortName">clash_n1</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/equal_n2" type="logic">
+            <obj_property name="ElementShortName">equal_n2</obj_property>
+            <obj_property name="ObjectShortName">equal_n2</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/clash_n2" type="logic">
             <obj_property name="ElementShortName">clash_n2</obj_property>
             <obj_property name="ObjectShortName">clash_n2</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/equal_n0" type="logic">
-            <obj_property name="ElementShortName">equal_n0</obj_property>
-            <obj_property name="ObjectShortName">equal_n0</obj_property>
-         </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/equal_n1" type="logic">
             <obj_property name="ElementShortName">equal_n1</obj_property>
             <obj_property name="ObjectShortName">equal_n1</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/equal_n2" type="logic">
-            <obj_property name="ElementShortName">equal_n2</obj_property>
-            <obj_property name="ObjectShortName">equal_n2</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/clash_n1" type="logic">
+            <obj_property name="ElementShortName">clash_n1</obj_property>
+            <obj_property name="ObjectShortName">clash_n1</obj_property>
          </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/equal_n0" type="logic">
+            <obj_property name="ElementShortName">equal_n0</obj_property>
+            <obj_property name="ObjectShortName">equal_n0</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/clash_n0" type="logic">
+            <obj_property name="ElementShortName">clash_n0</obj_property>
+            <obj_property name="ObjectShortName">clash_n0</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/admit" type="logic">
+         <obj_property name="ElementShortName">admit</obj_property>
+         <obj_property name="ObjectShortName">admit</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/remove" type="logic">
          <obj_property name="ElementShortName">remove</obj_property>
          <obj_property name="ObjectShortName">remove</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/evict" type="logic">
          <obj_property name="ElementShortName">evict</obj_property>
          <obj_property name="ObjectShortName">evict</obj_property>
+         <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
       </wvobject>
       <wvobject fp_name="group1566" type="group">
          <obj_property name="label">Current</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/cur_src" type="array">
             <obj_property name="ElementShortName">cur_src[0:0]</obj_property>
             <obj_property name="ObjectShortName">cur_src[0:0]</obj_property>
@@ -4139,6 +4154,7 @@
       <wvobject fp_name="group1713" type="group">
          <obj_property name="label">Memories</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="group1982" type="group">
             <obj_property name="label">data_memory[0:7]</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -4412,6 +4428,7 @@
          <wvobject fp_name="group2120" type="group">
             <obj_property name="label">addr_memory</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="isExpanded"></obj_property>
             <wvobject fp_name="vbus2088" type="vbus">
                <obj_property name="label">0</obj_property>
                <obj_property name="DisplayName">label</obj_property>
@@ -4561,6 +4578,7 @@
       <wvobject fp_name="group1114" type="group">
          <obj_property name="label">Read to L1</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus206" type="vbus">
             <obj_property name="label">Search address</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -4619,6 +4637,8 @@
          <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/VICTIM_HIT" type="logic">
             <obj_property name="ElementShortName">VICTIM_HIT</obj_property>
             <obj_property name="ObjectShortName">VICTIM_HIT</obj_property>
+            <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+            <obj_property name="UseCustomSignalColor">true</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/VICTIM_COMMIT" type="logic">
             <obj_property name="ElementShortName">VICTIM_COMMIT</obj_property>
@@ -4762,9 +4782,13 @@
          <obj_property name="label">Write from L1</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="isExpanded"></obj_property>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/evic_state" type="array">
-            <obj_property name="ElementShortName">evic_state[3:0]</obj_property>
-            <obj_property name="ObjectShortName">evic_state[3:0]</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/victim_wr_pos" type="array">
+            <obj_property name="ElementShortName">victim_wr_pos[1:0]</obj_property>
+            <obj_property name="ObjectShortName">victim_wr_pos[1:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/Test_Data_Cache/uut/victim_cache/victim_wr_state" type="array">
+            <obj_property name="ElementShortName">victim_wr_state[0:0]</obj_property>
+            <obj_property name="ObjectShortName">victim_wr_state[0:0]</obj_property>
          </wvobject>
          <wvobject fp_name="vbus1676" type="vbus">
             <obj_property name="label">Address to L1</obj_property>
@@ -5900,7 +5924,6 @@
    <wvobject fp_name="group1098" type="group">
       <obj_property name="label">Simulation</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group1481" type="group">
          <obj_property name="label">Write</obj_property>
          <obj_property name="DisplayName">label</obj_property>
