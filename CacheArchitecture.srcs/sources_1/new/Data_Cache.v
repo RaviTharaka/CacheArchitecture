@@ -114,23 +114,27 @@ module Data_Cache #(
     //////////////////////////////////////////////////////////////////////////////
     
     // Selecting whether the processor or cache itself (to evict data to victim cache) has access to the read port of L1
-    wire                             rd_port_select;                     // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)} 
+    wire [2               - 1 : 0]   rd_port_select;                     // Selects the inputs to the Read ports of L1 {0(from processor), 1(from evict control), 2or3 (from refill request queue)}         
     wire [TAG_WIDTH       - 1 : 0]   evict_tag;
     wire [TAG_ADDR_WIDTH  - 1 : 0]   evict_tag_addr;
     wire [T               - 1 : 0]   evict_sect; 
     wire [LINE_ADDR_WIDTH - 1 : 0]   evict_line = {evict_tag_addr, evict_sect};  
+    wire [TAG_WIDTH       - 1 : 0]   cur_tag;
+    wire [TAG_ADDR_WIDTH  - 1 : 0]   cur_tag_addr;
+    wire [T               - 1 : 0]   cur_sect; 
+    wire [LINE_ADDR_WIDTH - 1 : 0]   cur_line = {cur_tag_addr, cur_sect};  
 
     // Register for the previous stage
     reg  [ADDR_WIDTH      - 1 : 0]   addr_from_proc;
     reg  [DATA_WIDTH      - 1 : 0]   data_from_proc;
     reg  [2               - 1 : 0]   control_from_proc;
         
-    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = (rd_port_select)? 0              : addr_from_proc[0                                  +: BYTES_PER_WORD   ];
-    wire [WORDS_PER_SECT  - 1 : 0]   word_address        = (rd_port_select)? 0              : addr_from_proc[BYTES_PER_WORD                     +: WORDS_PER_SECT   ];
-    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = (rd_port_select)? evict_line     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: LINE_ADDR_WIDTH  ];
-    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = (rd_port_select)? evict_tag_addr : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_BLOCK) +: TAG_ADDR_WIDTH   ];
-    wire [TAG_WIDTH       - 1 : 0]   tag                 = (rd_port_select)? evict_tag      : addr_from_proc[(ADDR_WIDTH - 1)                   -: TAG_WIDTH        ];
-    wire [T               - 1 : 0]   section_address     = (rd_port_select)? evict_sect     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: T                ];    
+    wire [BYTES_PER_WORD  - 1 : 0]   byte_address        = (rd_port_select[1]) ? 0            : (rd_port_select[0])? 0              : addr_from_proc[0                                  +: BYTES_PER_WORD   ];
+    wire [WORDS_PER_SECT  - 1 : 0]   word_address        = (rd_port_select[1]) ? 0            : (rd_port_select[0])? 0              : addr_from_proc[BYTES_PER_WORD                     +: WORDS_PER_SECT   ];
+    wire [LINE_ADDR_WIDTH - 1 : 0]   line_address        = (rd_port_select[1]) ? cur_line     : (rd_port_select[0])? evict_line     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: LINE_ADDR_WIDTH  ];
+    wire [TAG_ADDR_WIDTH  - 1 : 0]   tag_address         = (rd_port_select[1]) ? cur_tag_addr : (rd_port_select[0])? evict_tag_addr : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_BLOCK) +: TAG_ADDR_WIDTH   ];
+    wire [TAG_WIDTH       - 1 : 0]   tag                 = (rd_port_select[1]) ? cur_tag      : (rd_port_select[0])? evict_tag      : addr_from_proc[(ADDR_WIDTH - 1)                   -: TAG_WIDTH        ];
+    wire [T               - 1 : 0]   section_address     = (rd_port_select[1]) ? cur_sect     : (rd_port_select[0])? evict_sect     : addr_from_proc[(BYTES_PER_WORD + WORDS_PER_SECT)  +: T                ];    
     
     // Cache pipeline registers
     reg  [WORDS_PER_SECT  - 1 : 0]   word_address_del_1,    word_address_del_2;
@@ -627,7 +631,9 @@ module Data_Cache #(
     // Primary control systems                                                  //
     //////////////////////////////////////////////////////////////////////////////
     
-     Refill_Control_D #(
+    wire refill_req_valid = valid_set_mux_out;// & (dirty_set_mux_out | !victim_hit);
+    
+    Refill_Control_D #(
         .S(S),
         .B(B),
         .a(a),
@@ -646,7 +652,7 @@ module Data_Cache #(
         .REFILL_REQ_DST_SET(set_select),                    // Destination set for the refill. In binary format. 
         .REFILL_REQ_DIRTY(dirty_set_mux_out),               // Dirty bit coming out of tag memory delayed to DM3
         .REFILL_REQ_CTRL(control_del_2),                    // Instruction at DM3
-        .REFILL_REQ_VALID(valid_set_mux_out),               // Valid bit coming out of tag memory delayed to DM3
+        .REFILL_REQ_VALID(refill_req_valid),                // Valid bit coming out of tag memory delayed to DM3
         // To and from the Victim cache
         .VICTIM_CACHE_READY(victim_cache_ready),            // From victim cache that it is ready to receive
         .VICTIM_CACHE_WRITE(victim_cache_valid),            // To victim cache that it has to write the data from DM3
@@ -656,6 +662,9 @@ module Data_Cache #(
         .EVICT_TAG(evict_tag),                             // Tag for read address at DM1 
         .EVICT_TAG_ADDR(evict_tag_addr),                   // Cache line for read address at DM1 
         .EVICT_SECT(evict_sect),                           // Section for read address at DM1 
+        .CUR_TAG(cur_tag),                                 // Tag for read address at DM1 
+        .CUR_TAG_ADDR(cur_tag_addr),                       // Cache line for read address at DM1 
+        .CUR_SECT(cur_sect),                               // Section for read address at DM1 
         // To the L1 write ports
         .L1_WR_PORT_SELECT(refill_sel),                    // Selects the inputs to the Write ports of L1 {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
         .REFILL_DST(refill_dst),                           // Individual write enables for the line memories

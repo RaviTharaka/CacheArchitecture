@@ -59,10 +59,13 @@ module Refill_Control_D #(
         output reg                           VICTIM_COMMIT,                 // To victim cache that it has hit and must send a burst of data
         
         // To the L1 read ports
-        output                               L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from refill control)}         
+        output     [2               - 1 : 0] L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from evict control), 2or3 (from refill request queue)}         
         output reg [TAG_WIDTH       - 1 : 0] EVICT_TAG,                     // Tag for read address at DM1 
         output reg [TAG_ADDR_WIDTH  - 1 : 0] EVICT_TAG_ADDR,                // Cache line for read address at DM1 
         output reg [T               - 1 : 0] EVICT_SECT,                    // Section for read address at DM1  
+        output     [TAG_WIDTH       - 1 : 0] CUR_TAG,                       // Tag for read address at DM1 
+        output     [TAG_ADDR_WIDTH  - 1 : 0] CUR_TAG_ADDR,                  // Cache line for read address at DM1 
+        output     [T               - 1 : 0] CUR_SECT,                      // Section for read address at DM1  
         
         // To the L1 write ports
         output reg [2               - 1 : 0] L1_WR_PORT_SELECT,             // Selects the inputs to the Write ports of L1 {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
@@ -73,7 +76,7 @@ module Refill_Control_D #(
         output     [T               - 1 : 0] REFILL_SECT,                   // Section address for the refill write
                               
         // Outputs to the main processor pipeline		
-        output                               CACHE_READY,                   // Signal from cache to processor that its pipeline is currently ready to work  
+        output reg                           CACHE_READY,                   // Signal from cache to processor that its pipeline is currently ready to work  
         
         // Related to Data from L2 buffer
         input                                DATA_FROM_L2_BUFFER_VALID,     // Ready signal for refill from L2
@@ -83,9 +86,9 @@ module Refill_Control_D #(
         output                               SEND_RD_ADDR_TO_L2,            // Valid signal for the input of Addr_to_L2 section   
                 
         // Related to controlling the pipeline
-        output MAIN_PIPE_ENB,                       // Enable for main pipeline registers
+        output                               MAIN_PIPE_ENB,                 // Enable for main pipeline registers
         output CACHE_PIPE_ENB,                      // Enable for cache pipeline
-        output ADDR_FROM_PROC_SEL                   // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}   
+        output reg                           ADDR_FROM_PROC_SEL             // addr_from_proc_sel = {0(addr_from_proc_del_2), 1 (ADDR_FROM_PROC)}   
     );
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,10 +97,12 @@ module Refill_Control_D #(
         
     reg  test_pass;                                  // Current DM3 request passes the clash and equal tests
     reg  main_pipe_enb_del_1, main_pipe_enb_del_2;   // Delayed processor pipeline enables
-    reg  l1_rd_port_sel_del_1;                       // Delayed read port selects
+    reg  l1_rd_from_proc, l1_rd_from_proc_del_1;     // Delayed read port selects
+    reg  l1_rd_from_main, l1_rd_from_main_del_1;
     
     reg  real_request;                               // Write request is valid and is not an IDLE
     reg  missable_request;                           // Write request is valid and is a WRITE or READ
+    reg  admissible_request;                         // Write request is fresh from processor and is a WRITE or READ
     reg  flush_request;                              // Write request is valid and is a FLUSH
     
     reg  critical_ready;                             // The critical word currently being pushed into L1 and ready
@@ -105,14 +110,19 @@ module Refill_Control_D #(
     reg  critical_used;                              // Critical word is used
     
     always @(posedge CLK) begin
-        l1_rd_port_sel_del_1 <= L1_RD_PORT_SELECT;
+        l1_rd_from_proc       <= ADDR_FROM_PROC_SEL;
+        l1_rd_from_proc_del_1 <= (L1_RD_PORT_SELECT == 0) & l1_rd_from_proc;
         
-        main_pipe_enb_del_1  <= MAIN_PIPE_ENB;
-        main_pipe_enb_del_2  <= main_pipe_enb_del_1;
+        l1_rd_from_main       <= (L1_RD_PORT_SELECT == 0);
+        l1_rd_from_main_del_1 <= l1_rd_from_main;
         
-        real_request         <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 & !(CONTROL == 2'b00);
-        missable_request     <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
-        flush_request        <= main_pipe_enb_del_2 & !l1_rd_port_sel_del_1 &  (CONTROL == 2'b11);
+        main_pipe_enb_del_1   <= MAIN_PIPE_ENB;
+        main_pipe_enb_del_2   <= main_pipe_enb_del_1;
+        
+        admissible_request    <= main_pipe_enb_del_2 & l1_rd_from_proc_del_1 & !(CONTROL == 2'b00);
+        real_request          <= main_pipe_enb_del_2 &                         !(CONTROL == 2'b00);
+        missable_request      <= main_pipe_enb_del_2 & l1_rd_from_proc_del_1 &  (CONTROL == 2'b01 | CONTROL == 2'b10);
+        flush_request         <= main_pipe_enb_del_2 &                          (CONTROL == 2'b11);
     end    
     
     wire                           refill_req_link;
@@ -127,7 +137,7 @@ module Refill_Control_D #(
     // Three is for DM1, DM2 and DM3 and last is for early restart
     
     // Control signals for the queue    
-    wire admit = (test_pass & real_request) | flush_request;               // Admit only if clash/equal tests pass, and is a valid (pipeline is enabled), non-IDLE request
+    wire admit = (test_pass & admissible_request) | flush_request;         // Admit only if clash/equal tests pass, and is a valid (pipeline is enabled), non-IDLE request
     wire remove;                                                           // Whether to remove from the refill queue
     wire evict;                                                            // Indicates that the first eviction in the queue is complete
     
@@ -176,10 +186,10 @@ module Refill_Control_D #(
     assign {sec_tag, sec_vtag, sec_line, sec_sect, sec_src, sec_set, sec_dirt, sec_ctrl, sec_link} = sec;
     assign {thr_tag, thr_vtag, thr_line, thr_sect, thr_src, thr_set, thr_dirt, thr_ctrl, thr_link} = thr;
        
-    wire cur_link_wire = cur_wire[REQ_LENGTH - 1];   
-    wire fir_link_wire = fir_wire[REQ_LENGTH - 1];   
-    wire sec_link_wire = sec_wire[REQ_LENGTH - 1];   
-    wire thr_link_wire = thr_wire[REQ_LENGTH - 1];   
+    wire cur_link_wire = cur_wire[0];   
+    wire fir_link_wire = fir_wire[0];   
+    wire sec_link_wire = sec_wire[0];   
+    wire thr_link_wire = thr_wire[0];   
                                             
     // A queue storing missed requests (also each element is accessible to the outside, to run the tests)
     always @(*) begin
@@ -310,6 +320,10 @@ module Refill_Control_D #(
         thr_evic <= thr_evic_wire;
     end
     
+    assign CUR_TAG      = cur_tag;
+    assign CUR_TAG_ADDR = cur_line;
+    assign CUR_SECT     = cur_sect;
+
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests to decide whether to include the IF3 request in to the queue                           //
@@ -368,8 +382,8 @@ module Refill_Control_D #(
     
     assign evict              = (evic_state == E_EVIC_FIN);
     
-    assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID) | |(evic_state_del_2[2 + BLOCK_SECTIONS - 1  : 2]);
-    assign L1_RD_PORT_SELECT  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
+    assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID & !refill_req_link) | |(evic_state_del_2[2 + BLOCK_SECTIONS - 1  : 2]);
+    assign L1_RD_PORT_SELECT[0]  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
             
     always @(posedge CLK) begin
         if (VICTIM_CACHE_READY) begin
@@ -462,11 +476,11 @@ module Refill_Control_D #(
                 
     localparam IDLE          = 1;
     localparam TRANSITION    = 2;
-    localparam WRITING_VIC   = 4;                   // Assumes victim cache is primed
+    localparam WRITING_VIC   = 4;                 
     localparam WRITING_L2    = 8;
     localparam FLUSHING      = 16;
     localparam WAITING_CRIT  = 32;
-    localparam WRITING_VIC_P = 64;                  // Unprimed victim cache
+    localparam VICTIM_PRIME  = 64;
     
     reg [7              - 1 : 0] refill_state,      refill_state_wire;
     reg [T              - 1 : 0] no_completed,      no_completed_wire;
@@ -675,17 +689,22 @@ module Refill_Control_D #(
                         end
                     end else begin
                         if (cur_evic == 0) begin
-                            refill_state_wire = WRITING_VIC;
-                            no_completed_wire = 1;
-                            for (i = 0; i < BLOCK_SECTIONS; i = i + 1)
-                                commited_sections_wire[i] = (i[T - 1 : 0] == cur_sect + no_completed) ? 1 : commited_sections[i];
+                            refill_state_wire = VICTIM_PRIME;
+                            no_completed_wire = 0;
+                            commited_sections_wire = 0;
                         end else begin
-                            refill_state_wire = WRITING_VIC;
+                            refill_state_wire = TRANSITION;
                             no_completed_wire = 0;
                             commited_sections_wire = 0;
                         end
                     end
                 end                
+            end
+            
+            VICTIM_PRIME : begin
+                refill_state_wire = WRITING_VIC;
+                no_completed_wire = 0;
+                commited_sections_wire = 0;
             end
             
             default : begin
@@ -725,7 +744,9 @@ module Refill_Control_D #(
                     ((refill_state == WRITING_VIC ) & no_completed == {T{1'b1}} & (critical_used | critical_use)) |
                     ((refill_state == WAITING_CRIT) &                             (critical_used | critical_use)) |
                     ((refill_state == FLUSHING    ) & no_completed == {T{1'b1}});
-            
+    
+    assign L1_RD_PORT_SELECT[1]  = (refill_state == TRANSITION & cur_ctrl != 2'b11 & cur_src != 0 & cur_evic == 0);
+                                
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for writing to tag memory and line memory                                       //
@@ -738,7 +759,7 @@ module Refill_Control_D #(
             TRANSITION   :  
                 case ({cur_ctrl == 2'b11, cur_src == 0})
                     2'b01   : L1_WR_PORT_SELECT = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)) ? 2'b11 : 2'b00; 
-                    2'b00   : L1_WR_PORT_SELECT = (cur_evic == 0) ? 2'b10 : 2'b00; 
+                    2'b00   : L1_WR_PORT_SELECT = 2'b00; 
                     default : L1_WR_PORT_SELECT = 2'b00;
                 endcase
             WRITING_L2   : 
@@ -756,6 +777,7 @@ module Refill_Control_D #(
                     default   : L1_WR_PORT_SELECT = 2'b10; 
                 endcase     
             WAITING_CRIT : L1_WR_PORT_SELECT = 2'b00;
+            VICTIM_PRIME : L1_WR_PORT_SELECT = 2'b00;
             default      : L1_WR_PORT_SELECT = 2'b00;
         endcase
     end 
@@ -776,7 +798,7 @@ module Refill_Control_D #(
             TRANSITION   :  
                 case ({cur_ctrl == 2'b11, cur_src == 0})
                     2'b01   : write_test = (DATA_FROM_L2_BUFFER_VALID & (cur_evic == 0)); 
-                    2'b00   : write_test = (cur_evic == 0); 
+                    2'b00   : write_test = 0; 
                     default : write_test = 0;
                 endcase
             WRITING_L2   :
@@ -794,6 +816,7 @@ module Refill_Control_D #(
                     default   : write_test = 1;  
                 endcase               
             WAITING_CRIT : write_test = 0;
+            VICTIM_PRIME : write_test = 0;
             default      : write_test = 0;
         endcase
     end    
@@ -813,11 +836,8 @@ module Refill_Control_D #(
     always @(*) begin
         case (refill_state) 
             IDLE         : VICTIM_COMMIT = (!CACHE_HIT & missable_request & VICTIM_HIT);
-            TRANSITION   :  
-                case ({cur_ctrl == 2'b11, cur_src == 0})
-                    2'b00   : VICTIM_COMMIT = (cur_evic == 0); 
-                    default : VICTIM_COMMIT = 0;
-                endcase
+            TRANSITION   : VICTIM_COMMIT = 0;
+            VICTIM_PRIME : VICTIM_COMMIT = 0;
             WRITING_L2   : VICTIM_COMMIT = 0;                
             WRITING_VIC  : 
                 case (no_completed) 
@@ -868,11 +888,11 @@ module Refill_Control_D #(
         // For critical ready
         case (refill_state) 
             IDLE         : critical_ready = !CACHE_HIT & VICTIM_HIT & missable_request;
-            TRANSITION   : critical_ready = (cur_ctrl != 2'b11) & (((cur_src == 0) & (cur_evic == 0) & DATA_FROM_L2_BUFFER_VALID) | 
-                                                                   ((cur_src != 0) & (cur_evic == 0)));
+            TRANSITION   : critical_ready = (cur_ctrl != 2'b11) & ((cur_src == 0) & (cur_evic == 0) & DATA_FROM_L2_BUFFER_VALID);
             WRITING_L2   : critical_ready = (cur_evic == 0) & (no_completed == 0) & DATA_FROM_L2_BUFFER_VALID;
             WRITING_VIC  : critical_ready = (cur_evic == 0) & (no_completed == 0);
             WAITING_CRIT : critical_ready = 0;
+            VICTIM_PRIME : critical_ready = 0;
             default      : critical_ready = 0;
         endcase
         
@@ -883,6 +903,13 @@ module Refill_Control_D #(
                     2'b00 : critical_use = 1;                       // This should never happen
                     2'b10 : critical_use = CACHE_HIT & !L1_WR_PORT_SELECT[1];
                     2'b01 : critical_use = CACHE_HIT;
+                    2'b11 : critical_use = 1; 
+                endcase
+            TRANSIT  : 
+                case (REFILL_REQ_CTRL)
+                    2'b00 : critical_use = 0;                  
+                    2'b10 : critical_use = CACHE_HIT & equal_n0 & !L1_WR_PORT_SELECT[1];
+                    2'b01 : critical_use = CACHE_HIT & equal_n0;
                     2'b11 : critical_use = 1; 
                 endcase
             default  : critical_use = 0;
@@ -901,14 +928,48 @@ module Refill_Control_D #(
     always @(posedge CLK) begin
         case (pc_state) 
             HITTING : 
-                if (real_request)
-                    case ({VICTIM_HIT, CACHE_HIT})
-                        2'b00 : pc_state <= WAIT;
-                        2'b01 : pc_state <= HITTING;
-                        2'b10 : pc_state <= SHIFT0;
-                        2'b11 : pc_state <= HITTING;
-                    endcase
-            
+                case (REFILL_REQ_CTRL)
+                    2'b00 : pc_state <= HITTING;
+                    2'b01 : if (CACHE_HIT)
+                                if (real_request)
+                                    pc_state <= HITTING;
+                                else 
+                                    pc_state <= SHIFT0;    
+                            else
+                                if (real_request)
+                                    if (VICTIM_HIT)
+                                        pc_state <= SHIFT0;
+                                    else 
+                                        pc_state <= WAIT;
+                                else 
+                                    pc_state <= SHIFT0;     
+                    2'b10 : if (CACHE_HIT)
+                                if (real_request & !L1_WR_PORT_SELECT[1])
+                                    pc_state <= HITTING;
+                                else 
+                                    pc_state <= SHIFT0;    
+                            else
+                                if (real_request)
+                                    if (VICTIM_HIT)
+                                        pc_state <= SHIFT0;
+                                    else 
+                                        pc_state <= WAIT;
+                                else 
+                                    pc_state <= SHIFT0;     
+                    2'b11 : pc_state <= HITTING;
+                endcase
+                
+//                if (admissible_request)
+//                    case ({VICTIM_HIT, CACHE_HIT})
+//                        2'b00 : pc_state <= WAIT;
+//                        2'b01 : pc_state <= HITTING;
+//                        2'b10 : pc_state <= SHIFT0;
+//                        2'b11 : pc_state <= HITTING;
+//                    endcase
+//                else if ((real_request & !CACHE_HIT) | (real_request & !l1_rd_from_main_del_1)) 
+//                    pc_state <= SHIFT0;
+//                else 
+//                    pc_state <= HITTING;
             WAIT    :
                 if (critical_used == 0 | critical_ready)  //Maybe | (CACHE_HIT & pc_state_del_2 == WAIT) is also needed here
                     pc_state <= SHIFT0;
@@ -923,10 +984,10 @@ module Refill_Control_D #(
                 case (REFILL_REQ_CTRL)
                     2'b00 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT);                       // This should never happen
                     2'b10 : pc_state <= (CACHE_HIT & !L1_WR_PORT_SELECT[1])?
-                                                 ((no_of_elements == 1)? HITTING : TRANSIT) : 
+                                                 ((no_of_elements == 1 | no_of_elements == 0)? HITTING : TRANSIT) : 
                                                  SHIFT0;
                     2'b01 : pc_state <= (CACHE_HIT)?
-                                                 ((no_of_elements == 1)? HITTING : TRANSIT) : 
+                                                 ((no_of_elements == 1 | no_of_elements == 0)? HITTING : TRANSIT) : 
                                                  SHIFT0;
                     2'b11 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT); 
                 endcase                
@@ -939,51 +1000,216 @@ module Refill_Control_D #(
                         2'b11 : pc_state <= HITTING;
                     endcase
                 end else begin 
-                    case ({VICTIM_HIT, CACHE_HIT | !real_request})
-                        2'b00 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
-                        2'b01 : pc_state <= TRANSIT;
-                        2'b10 : pc_state <= (critical_used != 0 | critical_ready)? SHIFT0 : WAIT;
+                    case (REFILL_REQ_CTRL)
+                        2'b00 : pc_state <= TRANSIT;                        // Let the request through
+                        2'b10 : if (equal_n0)
+                                    if (CACHE_HIT & !L1_WR_PORT_SELECT[1])
+                                        pc_state <= TRANSIT;                // Let the request through
+                                    else 
+                                        if (cur_src == 0)
+                                            if (critical_ready | critical_used == 0)
+                                                pc_state <= SHIFT0;
+                                            else
+                                                pc_state <= WAIT;    
+                                        else
+                                            pc_state <= SHIFT0;
+                                else
+                                    if (CACHE_HIT & !L1_WR_PORT_SELECT[1])
+                                        if (l1_rd_from_main_del_1)        
+                                            pc_state <= TRANSIT;            // Let the request through
+                                        else
+                                            pc_state <= SHIFT0;
+                                    else 
+                                        pc_state <= SHIFT0;
+                        2'b01 : if (equal_n0)
+                                    if (CACHE_HIT)
+                                        pc_state <= TRANSIT;                // Let the request through
+                                    else 
+                                        if (cur_src == 0)
+                                            if (critical_ready | critical_used == 0)
+                                                pc_state <= SHIFT0;
+                                            else
+                                                pc_state <= WAIT;    
+                                        else
+                                            pc_state <= SHIFT0;
+                                else
+                                    if (CACHE_HIT)
+                                        if (l1_rd_from_main_del_1)        
+                                            pc_state <= TRANSIT;            // Let the request through
+                                        else
+                                            pc_state <= SHIFT0;
+                                    else 
+                                        pc_state <= SHIFT0;
                         2'b11 : pc_state <= TRANSIT;
-                    endcase
+                    endcase                    
                 end
         endcase
-    end 
-    
-    reg temp;
+    end
+        
     always @(*) begin
-        case (REFILL_REQ_CTRL)
-            2'b00 : temp = 1;
-            2'b10 : temp = CACHE_HIT & !L1_WR_PORT_SELECT[1];
-            2'b01 : temp = CACHE_HIT;
-            2'b11 : temp = 1;
+        case (pc_state)
+            HITTING : case (REFILL_REQ_CTRL)
+                        2'b00 : ADDR_FROM_PROC_SEL = 1;
+                        2'b01 : if (CACHE_HIT & real_request)
+                                    ADDR_FROM_PROC_SEL = 1;
+                                else
+                                    ADDR_FROM_PROC_SEL = 0;
+                        2'b10 : if (CACHE_HIT & real_request & !L1_WR_PORT_SELECT[1])
+                                    ADDR_FROM_PROC_SEL = 1;
+                                else
+                                    ADDR_FROM_PROC_SEL = 0;
+                        2'b11 : ADDR_FROM_PROC_SEL = 1;
+                      endcase
+            WAIT    : ADDR_FROM_PROC_SEL = 0;
+            SHIFT0  : ADDR_FROM_PROC_SEL = 0;
+            SHIFT1  : ADDR_FROM_PROC_SEL = 0;
+            SHIFT2  : case (REFILL_REQ_CTRL)
+                        2'b00 : ADDR_FROM_PROC_SEL = 1;                       
+                        2'b10 : ADDR_FROM_PROC_SEL = (CACHE_HIT & !L1_WR_PORT_SELECT[1])? 1 : 0;
+                        2'b01 : ADDR_FROM_PROC_SEL = (CACHE_HIT)? 1 : 0;
+                        2'b11 : ADDR_FROM_PROC_SEL = 1; 
+                     endcase    
+            TRANSIT : if (no_of_elements == 0) begin
+                         case (REFILL_REQ_CTRL)
+                            2'b00 : ADDR_FROM_PROC_SEL = 1;
+                            2'b01 : if (CACHE_HIT & real_request)
+                                        ADDR_FROM_PROC_SEL = 1;
+                                    else
+                                        ADDR_FROM_PROC_SEL = 0;
+                            2'b10 : if (CACHE_HIT & real_request & !L1_WR_PORT_SELECT[1])
+                                        ADDR_FROM_PROC_SEL = 1;
+                                    else
+                                        ADDR_FROM_PROC_SEL = 0;
+                            2'b11 : ADDR_FROM_PROC_SEL = 1;
+                          endcase
+                     end else begin 
+                         case (REFILL_REQ_CTRL)
+                             2'b00 : ADDR_FROM_PROC_SEL = 1;                     // Let the request through
+                             2'b10 : if (equal_n0)
+                                         if (CACHE_HIT & !L1_WR_PORT_SELECT[1])
+                                             ADDR_FROM_PROC_SEL = 1;             // Let the request through
+                                         else 
+                                             ADDR_FROM_PROC_SEL = 0; 
+                                     else
+                                         if (CACHE_HIT & !L1_WR_PORT_SELECT[1] & l1_rd_from_main_del_1)        
+                                             ADDR_FROM_PROC_SEL = 1; 
+                                         else 
+                                             ADDR_FROM_PROC_SEL = 0; 
+                             2'b01 : if (equal_n0)
+                                         if (CACHE_HIT)
+                                             ADDR_FROM_PROC_SEL = 1;             // Let the request through
+                                         else 
+                                             ADDR_FROM_PROC_SEL = 0; 
+                                     else
+                                         if (CACHE_HIT & l1_rd_from_main_del_1)        
+                                             ADDR_FROM_PROC_SEL = 1;             // Let the request through
+                                         else 
+                                             ADDR_FROM_PROC_SEL = 0; 
+                             2'b11 : ADDR_FROM_PROC_SEL = 1; 
+                         endcase                    
+                     end
+        endcase
+        
+        case (pc_state)
+            HITTING : case (REFILL_REQ_CTRL)
+                        2'b00 : CACHE_READY = 1;
+                        2'b01 : if (CACHE_HIT & real_request)
+                                    CACHE_READY = 1;
+                                else
+                                    CACHE_READY = 0; 
+                        2'b10 : if (CACHE_HIT & real_request & !L1_WR_PORT_SELECT[1])
+                                    CACHE_READY = 1;  
+                                else
+                                    CACHE_READY = 0;     
+                        2'b11 : CACHE_READY = 1;
+                      endcase
+            WAIT    : CACHE_READY = 0;
+            SHIFT0  : CACHE_READY = 0;
+            SHIFT1  : CACHE_READY = 0;
+            SHIFT2  : case (REFILL_REQ_CTRL)
+                        2'b00 : CACHE_READY = 1;                       // This should never happen
+                        2'b10 : CACHE_READY = (CACHE_HIT & !L1_WR_PORT_SELECT[1])? 1 : 0;
+                        2'b01 : CACHE_READY = (CACHE_HIT)? 1 : 0;
+                        2'b11 : CACHE_READY = 1; 
+                      endcase         
+            TRANSIT : if (no_of_elements == 0) begin
+                          case (REFILL_REQ_CTRL)
+                            2'b00 : CACHE_READY = 1;
+                            2'b01 : if (CACHE_HIT & real_request)
+                                        CACHE_READY = 1;
+                                    else
+                                        CACHE_READY = 0; 
+                            2'b10 : if (CACHE_HIT & real_request & !L1_WR_PORT_SELECT[1])
+                                        CACHE_READY = 1;  
+                                    else
+                                        CACHE_READY = 0;     
+                            2'b11 : CACHE_READY = 1;
+                          endcase
+                      end else begin 
+                          case (REFILL_REQ_CTRL)
+                              2'b00 : CACHE_READY = 1;                        // Let the request through
+                              2'b10 : if (equal_n0)
+                                          if (CACHE_HIT & !L1_WR_PORT_SELECT[1])
+                                              CACHE_READY = 1;                // Let the request through
+                                          else 
+                                              CACHE_READY = 0;
+                                      else
+                                          if (CACHE_HIT & !L1_WR_PORT_SELECT[1] & l1_rd_from_main_del_1)        
+                                              CACHE_READY = 1;                // Let the request through
+                                          else 
+                                              CACHE_READY = 0;
+                              2'b01 : if (equal_n0)
+                                          if (CACHE_HIT)
+                                              CACHE_READY = 1;               // Let the request through
+                                          else 
+                                              CACHE_READY = 0;
+                                      else
+                                          if (CACHE_HIT & l1_rd_from_main_del_1)        
+                                              CACHE_READY = 1;            // Let the request through
+                                          else 
+                                              CACHE_READY = 0;
+                              2'b11 : CACHE_READY = 1;
+                          endcase                    
+                      end
         endcase
     end
     
     assign MAIN_PIPE_ENB      = (pc_state != WAIT) & !(pc_state == SHIFT0 & L1_RD_PORT_SELECT != 0);
-    assign ADDR_FROM_PROC_SEL = !(   pc_state == SHIFT0
-                                  |  pc_state == SHIFT1 
-                                  | (pc_state == SHIFT2  & !CACHE_HIT)
-                                  | (pc_state == HITTING & !CACHE_HIT & real_request)
-                                  |  pc_state == WAIT   
-                                  | (pc_state == TRANSIT & !CACHE_HIT & real_request));
     
-    assign CACHE_READY        = (pc_state == HITTING | 
-                                 pc_state == TRANSIT | 
-                                 pc_state == SHIFT2)   & temp;
+//    assign ADDR_FROM_PROC_SEL = !(   pc_state == SHIFT0
+//                                  |  pc_state == SHIFT1 
+//                                  | (pc_state == SHIFT2  & !CACHE_HIT)
+//                                  | (pc_state == HITTING & !pc_state_wire == HITTING)
+//                                  |  pc_state == WAIT   
+//                                  | (pc_state == TRANSIT & pc_state_wire == TRANSIT)
+//                                 ); // ???
+    
+//    assign CACHE_READY        = (   pc_state == HITTING & temp                     
+//                                 | (pc_state == TRANSIT & pc_state_wire == TRANSIT)
+//                                 |  pc_state == SHIFT2  & temp 
+//                                );
     
        
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Initial values                                                                               //
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    
+        
     initial begin
         no_of_elements = 0;
        
         main_pipe_enb_del_2 = 1;
         main_pipe_enb_del_1 = 1;
+        
         real_request        = 0;
         missable_request    = 0;
         flush_request       = 0;
+        admissible_request  = 0;
+        
+        l1_rd_from_main       = 0;
+        l1_rd_from_main_del_1 = 0;
+        
+        l1_rd_from_proc       = 1;
+        l1_rd_from_proc_del_1 = 1;
         
         evic_state     = E_HITTING;
         evic_no        = 0;
