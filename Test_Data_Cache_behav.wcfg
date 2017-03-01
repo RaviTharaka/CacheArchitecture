@@ -11,11 +11,14 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="4299000000fs"></ZoomStartTime>
-      <ZoomEndTime time="6603000001fs"></ZoomEndTime>
-      <Cursor1Time time="4775000000fs"></Cursor1Time>
+      <ZoomStartTime time="2633381966667fs"></ZoomStartTime>
+      <ZoomEndTime time="2633642566668fs"></ZoomEndTime>
+      <Cursor1Time time="2633529767000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="13" />
+   <wave_markers>
+      <marker time="1157939433000" label="" />
+   </wave_markers>
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
       <obj_property name="ObjectShortName">CLK</obj_property>
@@ -241,6 +244,10 @@
       <wvobject fp_name="group1433" type="group">
          <obj_property name="label">Extras</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/ADDR_FROM_PROC_SEL" type="logic">
+            <obj_property name="ElementShortName">ADDR_FROM_PROC_SEL</obj_property>
+            <obj_property name="ObjectShortName">ADDR_FROM_PROC_SEL</obj_property>
+         </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/l1_rd_from_proc" type="logic">
             <obj_property name="ElementShortName">l1_rd_from_proc</obj_property>
             <obj_property name="ObjectShortName">l1_rd_from_proc</obj_property>
@@ -260,10 +267,6 @@
          <wvobject fp_name="/Test_Data_Cache/uut/refill_control/real_request" type="logic">
             <obj_property name="ElementShortName">real_request</obj_property>
             <obj_property name="ObjectShortName">real_request</obj_property>
-         </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/refill_control/ADDR_FROM_PROC_SEL" type="logic">
-            <obj_property name="ElementShortName">ADDR_FROM_PROC_SEL</obj_property>
-            <obj_property name="ObjectShortName">ADDR_FROM_PROC_SEL</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/rd_port_select" type="array">
             <obj_property name="ElementShortName">rd_port_select[1:0]</obj_property>
@@ -293,10 +296,6 @@
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/pc_state" type="array">
          <obj_property name="ElementShortName">pc_state[2:0]</obj_property>
          <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/Test_Data_Cache/uut/refill_control/pc_state_wire" type="array">
-         <obj_property name="ElementShortName">pc_state_wire[2:0]</obj_property>
-         <obj_property name="ObjectShortName">pc_state_wire[2:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
          <obj_property name="ElementShortName">refill_state[6:0]</obj_property>

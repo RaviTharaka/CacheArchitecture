@@ -936,7 +936,7 @@ module Refill_Control_D #(
                                 else 
                                     pc_state <= SHIFT0;    
                             else
-                                if (real_request)
+                                if (admissible_request)
                                     if (VICTIM_HIT)
                                         pc_state <= SHIFT0;
                                     else 
@@ -949,7 +949,7 @@ module Refill_Control_D #(
                                 else 
                                     pc_state <= SHIFT0;    
                             else
-                                if (real_request)
+                                if (admissible_request)
                                     if (VICTIM_HIT)
                                         pc_state <= SHIFT0;
                                     else 
@@ -984,10 +984,10 @@ module Refill_Control_D #(
                 case (REFILL_REQ_CTRL)
                     2'b00 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT);                       // This should never happen
                     2'b10 : pc_state <= (CACHE_HIT & !L1_WR_PORT_SELECT[1])?
-                                                 ((no_of_elements == 1 | no_of_elements == 0)? HITTING : TRANSIT) : 
+                                                 (((no_of_elements == 1 & remove) | no_of_elements == 0)? HITTING : TRANSIT) : 
                                                  SHIFT0;
                     2'b01 : pc_state <= (CACHE_HIT)?
-                                                 ((no_of_elements == 1 | no_of_elements == 0)? HITTING : TRANSIT) : 
+                                                 (((no_of_elements == 1 & remove) | no_of_elements == 0)? HITTING : TRANSIT) : 
                                                  SHIFT0;
                     2'b11 : pc_state <= ((no_of_elements == 1)? HITTING : TRANSIT); 
                 endcase                
@@ -1045,7 +1045,7 @@ module Refill_Control_D #(
                 end
         endcase
     end
-        
+                               
     always @(*) begin
         case (pc_state)
             HITTING : case (REFILL_REQ_CTRL)
@@ -1109,7 +1109,7 @@ module Refill_Control_D #(
                          endcase                    
                      end
         endcase
-        
+                                      
         case (pc_state)
             HITTING : case (REFILL_REQ_CTRL)
                         2'b00 : CACHE_READY = 1;
@@ -1175,19 +1175,6 @@ module Refill_Control_D #(
     end
     
     assign MAIN_PIPE_ENB      = (pc_state != WAIT) & !(pc_state == SHIFT0 & L1_RD_PORT_SELECT != 0);
-    
-//    assign ADDR_FROM_PROC_SEL = !(   pc_state == SHIFT0
-//                                  |  pc_state == SHIFT1 
-//                                  | (pc_state == SHIFT2  & !CACHE_HIT)
-//                                  | (pc_state == HITTING & !pc_state_wire == HITTING)
-//                                  |  pc_state == WAIT   
-//                                  | (pc_state == TRANSIT & pc_state_wire == TRANSIT)
-//                                 ); // ???
-    
-//    assign CACHE_READY        = (   pc_state == HITTING & temp                     
-//                                 | (pc_state == TRANSIT & pc_state_wire == TRANSIT)
-//                                 |  pc_state == SHIFT2  & temp 
-//                                );
     
        
     //////////////////////////////////////////////////////////////////////////////////////////////////
