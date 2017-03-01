@@ -11,13 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="2633381966667fs"></ZoomStartTime>
-      <ZoomEndTime time="2633642566668fs"></ZoomEndTime>
-      <Cursor1Time time="2633529767000fs"></Cursor1Time>
+      <ZoomStartTime time="894279833333fs"></ZoomStartTime>
+      <ZoomEndTime time="894544033334fs"></ZoomEndTime>
+      <Cursor1Time time="894500000000fs"></Cursor1Time>
    </zoom_setting>
    <WVObjectSize size="13" />
    <wave_markers>
       <marker time="1157939433000" label="" />
+      <marker time="805101817000" label="" />
+      <marker time="805679683000" label="" />
    </wave_markers>
    <wvobject fp_name="/Test_Data_Cache/CLK" type="logic">
       <obj_property name="ElementShortName">CLK</obj_property>
@@ -92,6 +94,7 @@
          <obj_property name="label">Addr_DM1</obj_property>
          <obj_property name="DisplayName">label</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/Test_Data_Cache/uut/tag" type="array">
             <obj_property name="ElementShortName">tag[18:0]</obj_property>
             <obj_property name="ObjectShortName">tag[18:0]</obj_property>
@@ -104,24 +107,28 @@
             <obj_property name="ObjectShortName">tag_address[6:0]</obj_property>
             <obj_property name="CustomSignalColor">#FF0080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/section_address" type="array">
             <obj_property name="ElementShortName">section_address[0:0]</obj_property>
             <obj_property name="ObjectShortName">section_address[0:0]</obj_property>
             <obj_property name="CustomSignalColor">#FF0080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/word_address" type="array">
             <obj_property name="ElementShortName">word_address[2:0]</obj_property>
             <obj_property name="ObjectShortName">word_address[2:0]</obj_property>
             <obj_property name="CustomSignalColor">#FF0080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/byte_address" type="array">
             <obj_property name="ElementShortName">byte_address[1:0]</obj_property>
             <obj_property name="ObjectShortName">byte_address[1:0]</obj_property>
             <obj_property name="CustomSignalColor">#FF0080</obj_property>
             <obj_property name="UseCustomSignalColor">true</obj_property>
+            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
          </wvobject>
       </wvobject>
       <wvobject fp_name="vbus50" type="vbus">
@@ -268,9 +275,9 @@
             <obj_property name="ElementShortName">real_request</obj_property>
             <obj_property name="ObjectShortName">real_request</obj_property>
          </wvobject>
-         <wvobject fp_name="/Test_Data_Cache/uut/rd_port_select" type="array">
-            <obj_property name="ElementShortName">rd_port_select[1:0]</obj_property>
-            <obj_property name="ObjectShortName">rd_port_select[1:0]</obj_property>
+         <wvobject fp_name="/Test_Data_Cache/uut/rd_port_select" type="logic">
+            <obj_property name="ElementShortName">rd_port_select</obj_property>
+            <obj_property name="ObjectShortName">rd_port_select</obj_property>
          </wvobject>
          <wvobject fp_name="/Test_Data_Cache/uut/hit_set_wire" type="array">
             <obj_property name="ElementShortName">hit_set_wire[1:0]</obj_property>
@@ -298,8 +305,8 @@
          <obj_property name="ObjectShortName">pc_state[2:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/refill_state" type="array">
-         <obj_property name="ElementShortName">refill_state[6:0]</obj_property>
-         <obj_property name="ObjectShortName">refill_state[6:0]</obj_property>
+         <obj_property name="ElementShortName">refill_state[5:0]</obj_property>
+         <obj_property name="ObjectShortName">refill_state[5:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/Test_Data_Cache/uut/refill_control/commited_sections" type="array">
@@ -451,6 +458,7 @@
       <wvobject fp_name="group1565" type="group">
          <obj_property name="label">Victims</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus1504" type="vbus">
             <obj_property name="label">CurrentVictim</obj_property>
             <obj_property name="DisplayName">label</obj_property>
@@ -4220,6 +4228,7 @@
          <wvobject fp_name="group1982" type="group">
             <obj_property name="label">data_memory[0:7]</obj_property>
             <obj_property name="DisplayName">label</obj_property>
+            <obj_property name="isExpanded"></obj_property>
             <wvobject fp_name="vbus1893" type="vbus">
                <obj_property name="label">Memory 0</obj_property>
                <obj_property name="DisplayName">label</obj_property>
@@ -4640,6 +4649,7 @@
       <wvobject fp_name="group1114" type="group">
          <obj_property name="label">Read to L1</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="vbus206" type="vbus">
             <obj_property name="label">Search address</obj_property>
             <obj_property name="DisplayName">label</obj_property>

@@ -60,10 +60,15 @@ module Victim_Cache #(
         
         // Search port from L1 cache
         input      [SEARCH_ADDR_WIDTH - 1 : 0] SEARCH_ADDR,
-        input                                  VICTIM_COMMIT, 
+        
+        // Other specialized ports from L1
+        input                                  VICTIM_COMMIT,               // Start sending a burst of data to L1, search disabled for the duration
+        input                                  BYPASS,                      // Bypass the normal search procedure
+        input      [V + T             - 1 : 0] BYPASS_ADDRESS,              // Next cycle's data out would be the values at bypass address
         
         // Ports back to L1 cache
         output reg                             VICTIM_HIT,
+        output reg [V + T             - 1 : 0] HIT_ADDRESS,
         output reg [LINE_RAM_WIDTH    - 1 : 0] DATA_TO_L1,
         
         // Write port to L2
@@ -104,23 +109,13 @@ module Victim_Cache #(
         end
     end
     
-    
     // Delay the section address of the SEARCH_ADDR
     reg [T - 1 : 0] sect_address;  
     
     always @(posedge CLK) begin
         sect_address <= SEARCH_ADDR[0 +: T];
     end
-    
-    
-    // Victim hit if any of the entries are equal to the SEARCH_ADDR
-    wire victim_hit = |(equality);
-    
-    always @(posedge CLK) begin
-        VICTIM_HIT <= victim_hit;
-    end
-    
-    
+        
     // Convert the one-hot type encoding of equality to binary
     reg [V - 1 : 0] hit_address;
     reg [V - 1 : 0] temp;
@@ -139,6 +134,14 @@ module Victim_Cache #(
         else begin
             hit_address = 0;
         end
+    end
+    
+    // Victim hit if any of the entries are equal to the SEARCH_ADDR
+    wire victim_hit = |(equality);
+    
+    always @(posedge CLK) begin
+        VICTIM_HIT  <= victim_hit;
+        HIT_ADDRESS <= {hit_address, sect_address};
     end
     
     // States for sending data burst to L1
@@ -169,22 +172,23 @@ module Victim_Cache #(
     wire [V + T - 1 : 0] data_sel_in_burst   = {hit_addr_in_burst, sect_sel_in_burst}; 
              
     always @(posedge CLK) begin
-        sect_sel_del_1 <= sect_address;
-        hit_addr_del_1 <= hit_address;
+        {hit_addr_del_1, sect_sel_del_1} <= (BYPASS) ? BYPASS_ADDRESS : {hit_address, sect_address};
         
         if (VICTIM_COMMIT) begin
-            sect_sel_in_burst <= sect_sel_del_1;
-            hit_addr_in_burst <= hit_addr_del_1;
+            {hit_addr_in_burst, sect_sel_in_burst} <= {hit_addr_del_1, sect_sel_del_1};
         end
         
-        case ({VICTIM_COMMIT, victim_hit, burst_state != 0})
-            3'b000  : DATA_TO_L1 <= DATA_TO_L1;           
-            3'b001  : DATA_TO_L1 <= data_memory[data_sel_in_burst];   
-            3'b010  : DATA_TO_L1 <= data_memory[data_sel]; 
-            3'b011  : DATA_TO_L1 <= data_memory[data_sel_in_burst]; 
-              
-            default : DATA_TO_L1 <= data_memory[data_sel_in_commit]; 
-        endcase  
+        if (BYPASS) 
+            DATA_TO_L1 <= data_memory[BYPASS_ADDRESS];
+        else
+            case ({VICTIM_COMMIT, victim_hit, burst_state != 0})
+                3'b000  : DATA_TO_L1 <= DATA_TO_L1;           
+                3'b001  : DATA_TO_L1 <= data_memory[data_sel_in_burst];   
+                3'b010  : DATA_TO_L1 <= data_memory[data_sel]; 
+                3'b011  : DATA_TO_L1 <= data_memory[data_sel_in_burst]; 
+                  
+                default : DATA_TO_L1 <= data_memory[data_sel_in_commit]; 
+            endcase  
     end
     
     //////////////////////////////////////////////////////////////////////////////

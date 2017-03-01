@@ -29,6 +29,7 @@ module Refill_Control_D #(
         parameter B                 = 9, 
         parameter a                 = 1,
         parameter T                 = 1,
+        parameter V                 = 2,
         
         // Derived parameters
         localparam TAG_WIDTH        = ADDR_WIDTH + 3 + a - S,
@@ -42,6 +43,7 @@ module Refill_Control_D #(
         // Current request at IF3
         input                                CACHE_HIT,                      // Whether the L1 cache hits or misses 
         input                                VICTIM_HIT,                     // Whether the victim cache has hit
+        input      [V + T           - 1 : 0] VICTIM_HIT_ADDRESS,             // Hit position in the victim cache
         input      [2               - 1 : 0] CONTROL,                        // Control portion of request at DM2 
         
         input      [TAG_WIDTH       - 1 : 0] REFILL_REQ_TAG,                 // Tag portion of the ADDR at DM3
@@ -57,15 +59,14 @@ module Refill_Control_D #(
         input                                VICTIM_CACHE_READY,            // From victim cache that it is ready to receive
         output                               VICTIM_CACHE_WRITE,            // To victim cache that it has to write the data from DM3
         output reg                           VICTIM_COMMIT,                 // To victim cache that it has hit and must send a burst of data
-        
+        output                               VICTIM_BYPASS,                 // Bypass the normal search routine of victim cache to directly insert a read address
+        output     [V + T           - 1 : 0] VICTIM_BYPASS_ADDRESS,         // Read address of the victim cache
+                        
         // To the L1 read ports
-        output     [2               - 1 : 0] L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from evict control), 2or3 (from refill request queue)}         
+        output                               L1_RD_PORT_SELECT,             // Selects the inputs to the Read ports of L1 {0(from processor), 1(from evict control)}         
         output reg [TAG_WIDTH       - 1 : 0] EVICT_TAG,                     // Tag for read address at DM1 
         output reg [TAG_ADDR_WIDTH  - 1 : 0] EVICT_TAG_ADDR,                // Cache line for read address at DM1 
         output reg [T               - 1 : 0] EVICT_SECT,                    // Section for read address at DM1  
-        output     [TAG_WIDTH       - 1 : 0] CUR_TAG,                       // Tag for read address at DM1 
-        output     [TAG_ADDR_WIDTH  - 1 : 0] CUR_TAG_ADDR,                  // Cache line for read address at DM1 
-        output     [T               - 1 : 0] CUR_SECT,                      // Section for read address at DM1  
         
         // To the L1 write ports
         output reg [2               - 1 : 0] L1_WR_PORT_SELECT,             // Selects the inputs to the Write ports of L1 {0 or 1(for a L1 data write), 2(victim cache refill), 3 (for L2 refill)}
@@ -160,7 +161,7 @@ module Refill_Control_D #(
             
         
     // Contents of the queue                    
-    localparam REQ_LENGTH = TAG_WIDTH * 2 + TAG_ADDR_WIDTH + T + a + 5;
+    localparam REQ_LENGTH = TAG_WIDTH * 2 + TAG_ADDR_WIDTH + T + a + 5 + V + T;
         
     wire [TAG_WIDTH      - 1 : 0] cur_tag,  fir_tag,  sec_tag,  thr_tag;         // Tag for the L1 write
     wire [TAG_WIDTH      - 1 : 0] cur_vtag, fir_vtag, sec_vtag, thr_vtag;        // Tag for the victim cache
@@ -168,6 +169,7 @@ module Refill_Control_D #(
     wire [T              - 1 : 0] cur_sect, fir_sect, sec_sect, thr_sect;        // Section within block to write first (for L1 and victim)
     
     wire [1              - 1 : 0] cur_src,  fir_src,  sec_src,  thr_src;         // Source = whether to refill from L2 (0) or from victim cache (1) 
+    wire [V + T          - 1 : 0] cur_vhit, fir_vhit, sec_vhit, thr_vhit;        // If victim hit, the search address in victim cache, else garbage       
     wire [a              - 1 : 0] cur_set,  fir_set,  sec_set,  thr_set;         // Set = destination set of the request (in binary format)
     wire [1              - 1 : 0] cur_dirt, fir_dirt, sec_dirt, thr_dirt;        // Whether filling the victim cache is necessary
     wire [2              - 1 : 0] cur_ctrl, fir_ctrl, sec_ctrl, thr_ctrl;        // Control signals of the request (read, write, flush)
@@ -178,13 +180,14 @@ module Refill_Control_D #(
     reg  [REQ_LENGTH - 1 : 0] cur,      fir,      sec,      thr;
     reg  [REQ_LENGTH - 1 : 0] cur_wire, fir_wire, sec_wire, thr_wire;
     
-    wire [REQ_LENGTH - 1 : 0] refill_req = {REFILL_REQ_TAG, refill_req_vtag, REFILL_REQ_LINE, REFILL_REQ_SECT, 
-                                            VICTIM_HIT, REFILL_REQ_DST_SET, REFILL_REQ_DIRTY, REFILL_REQ_CTRL,
-                                            refill_req_link};
-    assign {cur_tag, cur_vtag, cur_line, cur_sect, cur_src, cur_set, cur_dirt, cur_ctrl, cur_link} = cur;
-    assign {fir_tag, fir_vtag, fir_line, fir_sect, fir_src, fir_set, fir_dirt, fir_ctrl, fir_link} = fir;
-    assign {sec_tag, sec_vtag, sec_line, sec_sect, sec_src, sec_set, sec_dirt, sec_ctrl, sec_link} = sec;
-    assign {thr_tag, thr_vtag, thr_line, thr_sect, thr_src, thr_set, thr_dirt, thr_ctrl, thr_link} = thr;
+    wire [REQ_LENGTH - 1 : 0] refill_req = {REFILL_REQ_TAG,  refill_req_vtag,    REFILL_REQ_LINE,    REFILL_REQ_SECT, 
+                                            VICTIM_HIT,      VICTIM_HIT_ADDRESS, REFILL_REQ_DST_SET, REFILL_REQ_DIRTY, 
+                                            REFILL_REQ_CTRL, refill_req_link};
+                                            
+    assign {cur_tag, cur_vtag, cur_line, cur_sect, cur_src, cur_vhit, cur_set, cur_dirt, cur_ctrl, cur_link} = cur;
+    assign {fir_tag, fir_vtag, fir_line, fir_sect, fir_src, fir_vhit, fir_set, fir_dirt, fir_ctrl, fir_link} = fir;
+    assign {sec_tag, sec_vtag, sec_line, sec_sect, sec_src, sec_vhit, sec_set, sec_dirt, sec_ctrl, sec_link} = sec;
+    assign {thr_tag, thr_vtag, thr_line, thr_sect, thr_src, thr_vhit, thr_set, thr_dirt, thr_ctrl, thr_link} = thr;
        
     wire cur_link_wire = cur_wire[0];   
     wire fir_link_wire = fir_wire[0];   
@@ -320,10 +323,6 @@ module Refill_Control_D #(
         thr_evic <= thr_evic_wire;
     end
     
-    assign CUR_TAG      = cur_tag;
-    assign CUR_TAG_ADDR = cur_line;
-    assign CUR_SECT     = cur_sect;
-
     
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests to decide whether to include the IF3 request in to the queue                           //
@@ -383,7 +382,7 @@ module Refill_Control_D #(
     assign evict              = (evic_state == E_EVIC_FIN);
     
     assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID & !refill_req_link) | |(evic_state_del_2[2 + BLOCK_SECTIONS - 1  : 2]);
-    assign L1_RD_PORT_SELECT[0]  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
+    assign L1_RD_PORT_SELECT  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
             
     always @(posedge CLK) begin
         if (VICTIM_CACHE_READY) begin
@@ -480,9 +479,8 @@ module Refill_Control_D #(
     localparam WRITING_L2    = 8;
     localparam FLUSHING      = 16;
     localparam WAITING_CRIT  = 32;
-    localparam VICTIM_PRIME  = 64;
     
-    reg [7              - 1 : 0] refill_state,      refill_state_wire;
+    reg [6              - 1 : 0] refill_state,      refill_state_wire;
     reg [T              - 1 : 0] no_completed,      no_completed_wire;
     reg [BLOCK_SECTIONS - 1 : 0] commited_sections, commited_sections_wire;
     
@@ -689,7 +687,7 @@ module Refill_Control_D #(
                         end
                     end else begin
                         if (cur_evic == 0) begin
-                            refill_state_wire = VICTIM_PRIME;
+                            refill_state_wire = WRITING_VIC;
                             no_completed_wire = 0;
                             commited_sections_wire = 0;
                         end else begin
@@ -700,13 +698,7 @@ module Refill_Control_D #(
                     end
                 end                
             end
-            
-            VICTIM_PRIME : begin
-                refill_state_wire = WRITING_VIC;
-                no_completed_wire = 0;
-                commited_sections_wire = 0;
-            end
-            
+                        
             default : begin
                 // Case of flushing                        
                 if (cur_evic == 0) begin
@@ -745,8 +737,9 @@ module Refill_Control_D #(
                     ((refill_state == WAITING_CRIT) &                             (critical_used | critical_use)) |
                     ((refill_state == FLUSHING    ) & no_completed == {T{1'b1}});
     
-    assign L1_RD_PORT_SELECT[1]  = (refill_state == TRANSITION & cur_ctrl != 2'b11 & cur_src != 0 & cur_evic == 0);
-                                
+    
+    assign VICTIM_BYPASS = (refill_state == TRANSITION & cur_ctrl != 2'b11 & cur_src != 0 & cur_evic == 0);
+    assign VICTIM_BYPASS_ADDRESS = cur_vhit;                            
         
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // Instructions for writing to tag memory and line memory                                       //
@@ -777,7 +770,6 @@ module Refill_Control_D #(
                     default   : L1_WR_PORT_SELECT = 2'b10; 
                 endcase     
             WAITING_CRIT : L1_WR_PORT_SELECT = 2'b00;
-            VICTIM_PRIME : L1_WR_PORT_SELECT = 2'b00;
             default      : L1_WR_PORT_SELECT = 2'b00;
         endcase
     end 
@@ -816,7 +808,6 @@ module Refill_Control_D #(
                     default   : write_test = 1;  
                 endcase               
             WAITING_CRIT : write_test = 0;
-            VICTIM_PRIME : write_test = 0;
             default      : write_test = 0;
         endcase
     end    
@@ -837,7 +828,6 @@ module Refill_Control_D #(
         case (refill_state) 
             IDLE         : VICTIM_COMMIT = (!CACHE_HIT & missable_request & VICTIM_HIT);
             TRANSITION   : VICTIM_COMMIT = 0;
-            VICTIM_PRIME : VICTIM_COMMIT = 0;
             WRITING_L2   : VICTIM_COMMIT = 0;                
             WRITING_VIC  : 
                 case (no_completed) 
@@ -892,7 +882,6 @@ module Refill_Control_D #(
             WRITING_L2   : critical_ready = (cur_evic == 0) & (no_completed == 0) & DATA_FROM_L2_BUFFER_VALID;
             WRITING_VIC  : critical_ready = (cur_evic == 0) & (no_completed == 0);
             WAITING_CRIT : critical_ready = 0;
-            VICTIM_PRIME : critical_ready = 0;
             default      : critical_ready = 0;
         endcase
         
