@@ -373,16 +373,18 @@ module Refill_Control_D #(
     
     localparam E_HITTING  = 1;                                      // When there are no requests in the refill queue (no_of_elements == 0)
     localparam E_WAITING  = 2;                                      // Waiting for refill to finish since there is a link in the current request
-    localparam E_EVIC_STA = 4;                                      // Starting an eviction from start
-    localparam E_EVIC_FIN = {1'b1, {(1 + BLOCK_SECTIONS){1'b0}}};   // Finished an eviction
-    
-    reg [2 + BLOCK_SECTIONS - 1 : 0] evic_state, evic_state_del_1, evic_state_del_2;
+    localparam E_IDLE1    = 4;                                      // Wait two cycles till last request exits the queue
+    localparam E_IDLE2    = 8;                                      // Wait two cycles till last request exits the queue
+    localparam E_EVIC_STA = 16;                                     // Starting an eviction from start
+    localparam E_EVIC_FIN = {1'b1, {(3 + BLOCK_SECTIONS){1'b0}}};   // Finished an eviction
+        
+    reg [4 + BLOCK_SECTIONS - 1 : 0] evic_state, evic_state_del_1, evic_state_del_2;
     reg [T                  - 1 : 0] evic_no;
     
     assign evict              = (evic_state == E_EVIC_FIN);
     
-    assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID & !refill_req_link) | |(evic_state_del_2[2 + BLOCK_SECTIONS - 1  : 2]);
-    assign L1_RD_PORT_SELECT  = !((evic_state == E_HITTING) | (evic_state == E_WAITING));
+    assign VICTIM_CACHE_WRITE = (evic_state == E_HITTING & admit & REFILL_REQ_VALID & !refill_req_link) | |(evic_state_del_2[4 + BLOCK_SECTIONS - 1  : 4]);
+    assign L1_RD_PORT_SELECT  = !((evic_state == E_HITTING) | (evic_state == E_WAITING) | (evic_state == E_IDLE1) | (evic_state == E_IDLE2));
             
     always @(posedge CLK) begin
         if (VICTIM_CACHE_READY) begin
@@ -393,16 +395,24 @@ module Refill_Control_D #(
                             evic_state <= E_WAITING;
                             evic_no    <= 0;
                         end else begin
-                            evic_state <= E_WAITING << 2;
+                            evic_state <= E_IDLE2 << 2;
                             evic_no    <= 1;
                         end
                     end    
                 end 
                 E_WAITING  : begin
-                    evic_state <= (cur_evic_wire)? E_WAITING << 1 : E_WAITING;  
-                    evic_no    <= (cur_evic_wire)? 0              : 0;  
+                    evic_state <= (cur_evic_wire)? E_IDLE2 << 1 : E_WAITING;  
+                    evic_no    <= (cur_evic_wire)? 0            : 0;  
                 end
                 E_EVIC_FIN : begin
+                    evic_state <= E_IDLE1;
+                    evic_no    <= 0;
+                end    
+                E_IDLE1   : begin
+                    evic_state <= E_IDLE2;
+                    evic_no    <= 0;
+                end
+                E_IDLE2   : begin
                     case ({evic_empty_wire, next_evic_ready})
                         2'b00   : begin
                             evic_state <= E_WAITING;
@@ -417,7 +427,7 @@ module Refill_Control_D #(
                             evic_no    <= 0;
                         end
                     endcase
-                end    
+                end
                 default   : begin
                     evic_state <= evic_state << 1;
                     evic_no    <= evic_no + 1;

@@ -332,8 +332,8 @@ module Data_Cache #(
             // Find if previous request and current request are same
             equal_n1_del_1 <= equal_n1;   
                         
-            equal_n0 <= (tag_del_2 == tag_del_1) & ({tag_address_del_2, section_address_del_2} == {tag_address_del_1, section_address_del_1}) & (control_del_2 == 2'b10); //(DM3 == DM2)
-            equal_n1 <= (tag_del_2 == tag      ) & ({tag_address_del_2, section_address_del_2} == {tag_address      , section_address      }) & (control_del_2 == 2'b10); //(DM3 == DM1) 
+            equal_n0 <= (tag_del_2 == tag_del_1) & ({tag_address_del_2, section_address_del_2} == {tag_address_del_1, section_address_del_1}) & (control_del_2 == 2'b10) & CACHE_READY; //(DM3 == DM2)
+            equal_n1 <= (tag_del_2 == tag      ) & ({tag_address_del_2, section_address_del_2} == {tag_address      , section_address      }) & (control_del_2 == 2'b10) & CACHE_READY; //(DM3 == DM1) 
             
             // Requires previous data and addresses    
             word_address_del_3 <= word_address_del_2;
@@ -617,12 +617,12 @@ module Data_Cache #(
     
     // Line memory write port controls
     assign lin_mem_wr_addr = (refill_sel[1]) ? {refill_tag_addr, refill_sect} : {tag_address_del_2, section_address_del_2};
-    assign lin_mem_wr_enb  = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
+    assign lin_mem_wr_enb  = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & CACHE_READY & {ASSOCIATIVITY {control_del_2 == 2'b10}});
     
     // Tag memory write port controls
     assign tag_mem_wr_addr  = (refill_sel[1]) ? refill_tag_addr                : tag_address_del_2;
     assign tag_mem_wr_enb   = (refill_sel[1]) ? refill_dst                     : 0;
-    assign dirty_mem_wr_enb = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & {ASSOCIATIVITY {control_del_2 == 2'b10}});
+    assign dirty_mem_wr_enb = (refill_sel[1]) ? refill_dst                     : (hit_set_wire & CACHE_READY & {ASSOCIATIVITY {control_del_2 == 2'b10}});
     
     // Tag RAM data in multiplexer
     assign tag_valid_to_ram = refill_tag_valid;
@@ -634,7 +634,7 @@ module Data_Cache #(
     // Primary control systems                                                  //
     //////////////////////////////////////////////////////////////////////////////
     
-    wire refill_req_valid = valid_set_mux_out;// & (dirty_set_mux_out | !victim_hit);
+    wire refill_req_valid = valid_set_mux_out;              // & (dirty_set_mux_out | !victim_hit);
     
     Refill_Control_D #(
         .S(S),
